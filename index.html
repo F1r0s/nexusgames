@@ -747,6 +747,8 @@
                 // Use Cache
                 console.log("Loading from Cache...");
                 gamesDB = parseCSV(cachedData);
+                document.getElementById('db-status').innerText = "DATABASE: ONLINE (CACHE) // " + gamesDB.length + " MODULES ACTIVE";
+                document.getElementById('db-status').style.color = "var(--neon-green)";
                 renderGames();
                 return; 
             }
@@ -764,6 +766,8 @@
                 localStorage.setItem(CACHE_TS_KEY, now.toString());
 
                 gamesDB = parseCSV(data);
+                document.getElementById('db-status').innerText = "DATABASE: ONLINE // " + gamesDB.length + " MODULES ACTIVE";
+                document.getElementById('db-status').style.color = "var(--neon-green)";
                 renderGames();
             } catch (e) {
                 // Fallback to Proxy (Best for Local)
@@ -778,6 +782,8 @@
                     localStorage.setItem(CACHE_TS_KEY, now.toString());
 
                     gamesDB = parseCSV(data);
+                    document.getElementById('db-status').innerText = "DATABASE: ONLINE (PROXY) // " + gamesDB.length + " MODULES ACTIVE";
+                    document.getElementById('db-status').style.color = "var(--neon-green)";
                     renderGames();
                 } catch (err) {
                     console.error("DB Error:", err);
@@ -786,6 +792,8 @@
                     if (cachedData) {
                         console.warn("Using expired cache as fallback.");
                         gamesDB = parseCSV(cachedData);
+                        document.getElementById('db-status').innerText = "DATABASE: OFFLINE (BACKUP) // " + gamesDB.length + " MODULES ACTIVE";
+                        document.getElementById('db-status').style.color = "var(--alert-yellow)";
                         renderGames();
                         return;
                     }
