@@ -9,6 +9,11 @@ const PORT = process.env.PORT || 3000;
 // Enable CORS so your frontend (index.html) can talk to this server
 app.use(cors());
 
+// Serve the frontend
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/index.html');
+});
+
 // The Secure Endpoint
 app.get('/api/offers', async (req, res) => {
     try {
