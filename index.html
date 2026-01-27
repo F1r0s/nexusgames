@@ -746,7 +746,7 @@
             const container = document.getElementById('gamesGrid');
             const CACHE_KEY = 'gamesDB_cache';
             const CACHE_TS_KEY = 'gamesDB_ts';
-            const CACHE_DURATION = 10 * 60 * 1000; // 10 Minutes
+            const CACHE_DURATION = 1 * 1000; // 1 Second (Updates instantly on refresh)
 
             // 1. Check Cache
             const cachedData = localStorage.getItem(CACHE_KEY);
