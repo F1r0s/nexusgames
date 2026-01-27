@@ -59,7 +59,13 @@ app.get('/api/offers', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`\n>>> Secure Server is running at http://localhost:${PORT}`);
-    console.log(`>>> Your API Key is hidden safely in the .env file.\n`);
-});
+// Export the app for Vercel (Serverless)
+module.exports = app;
+
+// Only start the server if running locally (not imported)
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`\n>>> Secure Server is running at http://localhost:${PORT}`);
+        console.log(`>>> Your API Key is hidden safely in the .env file.\n`);
+    });
+}
