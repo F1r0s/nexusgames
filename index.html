@@ -734,6 +734,451 @@
         </div>
     </div>
 
-    <script src="obfuscated.js"></script>
+    <script>
+        // --- 1. DYNAMIC DATABASE CONFIGURATION ---
+        const BASE_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTmd9N77OuTj1k_QFR0hyiqVjxfZvfnYUPO55kUSFN8RyW7MoZNICzc8gGYZuG0uVL_ccPXnG96ltKT/pub?output=csv";
+        const PROXY_PREFIX = "https://corsproxy.io/?";
+
+        let gamesDB = [];
+
+        // --- 2. DATABASE LOADER (OPTIMIZED WITH CACHE) ---
+        async function loadDatabase() {
+            const container = document.getElementById('gamesGrid');
+            const CACHE_KEY = 'gamesDB_cache';
+            const CACHE_TS_KEY = 'gamesDB_ts';
+            const CACHE_DURATION = 10 * 60 * 1000; // 10 Minutes
+
+            // 1. Check Cache
+            const cachedData = localStorage.getItem(CACHE_KEY);
+            const cachedTs = localStorage.getItem(CACHE_TS_KEY);
+            const now = Date.now();
+
+            if (cachedData && cachedTs && (now - parseInt(cachedTs) < CACHE_DURATION)) {
+                // Use Cache
+                console.log("Loading from Cache...");
+                gamesDB = parseCSV(cachedData);
+                document.getElementById('db-status').innerText = "DATABASE: ONLINE (CACHE) // " + gamesDB.length + " MODULES ACTIVE";
+                document.getElementById('db-status').style.color = "var(--neon-green)";
+                renderGames();
+                return;
+            }
+
+            // 2. Fetch Fresh Data
+            try {
+                // Try Direct Fetch first (Best for Live)
+                const directURL = BASE_SHEET_URL + "&t=" + now;
+                let response = await fetch(directURL);
+                if (!response.ok) throw new Error("Direct fetch failed");
+                let data = await response.text();
+
+                // Save to Cache
+                localStorage.setItem(CACHE_KEY, data);
+                localStorage.setItem(CACHE_TS_KEY, now.toString());
+
+                gamesDB = parseCSV(data);
+                document.getElementById('db-status').innerText = "DATABASE: ONLINE // " + gamesDB.length + " MODULES ACTIVE";
+                document.getElementById('db-status').style.color = "var(--neon-green)";
+                renderGames();
+            } catch (e) {
+                // Fallback to Proxy (Best for Local)
+                try {
+                    console.warn("Direct fetch failed, trying proxy...");
+                    const proxyUrl = PROXY_PREFIX + encodeURIComponent(BASE_SHEET_URL + "&t=" + now);
+                    let response = await fetch(proxyUrl);
+                    let data = await response.text();
+
+                    // Save to Cache
+                    localStorage.setItem(CACHE_KEY, data);
+                    localStorage.setItem(CACHE_TS_KEY, now.toString());
+
+                    gamesDB = parseCSV(data);
+                    document.getElementById('db-status').innerText = "DATABASE: ONLINE (PROXY) // " + gamesDB.length + " MODULES ACTIVE";
+                    document.getElementById('db-status').style.color = "var(--neon-green)";        
+                    renderGames();
+                } catch (err) {
+                    console.error("DB Error:", err);
+
+                    // If fetch fails but we have OLD cache, use it as fallback
+                    if (cachedData) {
+                        console.warn("Using expired cache as fallback.");
+                        gamesDB = parseCSV(cachedData);
+                        document.getElementById('db-status').innerText = "DATABASE: OFFLINE (BACKUP) // " + gamesDB.length + " MODULES ACTIVE";
+                        document.getElementById('db-status').style.color = "var(--alert-yellow)";  
+                        renderGames();
+                        return;
+                    }
+
+                    container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#ff4d4d; border:1px solid #ff4d4d; border-radius:8px;">
+                        <strong>DATABASE CONNECTION FAILED</strong><br>
+                        ${err.message}<br>
+                        <small>Check Internet Connection</small>
+                    </div>`;
+                }
+            }
+        }
+
+        // CSV Parser (Smart Auto-Map)
+        function parseCSV(csvText) {
+            const lines = csvText.split(/\r?\n/);
+            const result = [];
+
+            // 1. Detect Header Row
+            let headerRowIndex = -1;
+            let colMap = { name: -1, ver: -1, size: -1, os: -1, tags: -1, img: -1, link: -1, desc: -1 };
+
+            for(let i=0; i<Math.min(lines.length, 10); i++) {
+                if(!lines[i]) continue;
+                const lineUpper = lines[i].toUpperCase();
+                if(lineUpper.includes("MODULE") || lineUpper.includes("NAME") || lineUpper.includes("VISUAL")) {
+                    headerRowIndex = i;
+                    const headers = lines[i].split(',').map(h => (h||"").trim().replace(/^"|"$/g, '').toUpperCase());
+
+                    headers.forEach((h, index) => {
+                        if(h.includes("MODULE") || h.includes("NAME")) colMap.name = index;        
+                        else if(h.includes("VERSION") || h.includes("BUILD")) colMap.ver = index;  
+                        else if(h.includes("SIZE")) colMap.size = index;
+                        else if(h.includes("OS") || h.includes("ARCH")) colMap.os = index;
+                        else if(h.includes("TAGS")) colMap.tags = index;
+                        else if(h.includes("VISUAL") || h.includes("ASSET") || h.includes("IMAGE")) colMap.img = index;
+                        else if(h.includes("ACCESS") || h.includes("LINK")) colMap.link = index;   
+                        else if(h.includes("LOG") || h.includes("DESC")) colMap.desc = index;      
+                    });
+                    break;
+                }
+            }
+
+            if(headerRowIndex === -1) {
+                // Fallback Mapping if headers missing (Fixed to 0-based)
+                colMap = { name: 0, ver: 1, size: 2, os: 3, tags: 4, img: 5, link: 6, desc: 7 };   
+                headerRowIndex = -1; // Start from first line if no header found
+            }
+
+            // 2. Parse Data
+            for (let i = headerRowIndex + 1; i < lines.length; i++) {
+                if (!lines[i] || !lines[i].trim()) continue;
+
+                // FIXED PARSER: Handle commas inside quotes correctly, allow spaces
+                const values = lines[i].split(/,(?=(?:(?:[^\"]*\"){2})*[^\"]*$)/);
+                const cleanValues = values.map(val => (val||"").trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+
+                const title = colMap.name > -1 ? (cleanValues[colMap.name] || "") : "";
+                const img = (colMap.img > -1 && cleanValues[colMap.img]) ? cleanValues[colMap.img] : "https://placehold.co/400x300?text=No+Image";
+
+                // CRASH FIX: Safe Access
+                const rawOS = (colMap.os > -1 ? cleanValues[colMap.os] : "") || "android";
+                const rawTags = (colMap.tags > -1 ? cleanValues[colMap.tags] : "") || "General";   
+
+                // Validation: Skip header-like rows or empty titles
+                if (!title || title.toUpperCase() === "MODULE NAME" || title.toUpperCase() === "NAME" || title.startsWith("Ex: ")) {
+                    continue;
+                }
+
+                const entry = {
+                    id: Date.now() + Math.random(),
+                    title: title,
+                    version: (colMap.ver > -1 ? cleanValues[colMap.ver] : "v1.0"),
+                    size: (colMap.size > -1 ? cleanValues[colMap.size] : "N/A"),
+                    os: rawOS.toLowerCase().split(',').map(s=>s.trim()),
+                    categories: rawTags.split(',').map(s=>s.trim()),
+                    img: img,
+                    link: (colMap.link > -1 ? cleanValues[colMap.link] : "#"),
+                    desc: (colMap.desc > -1 ? cleanValues[colMap.desc] : "No description.")        
+                };
+
+                result.push(entry);
+            }
+            return result;
+        }
+
+        // --- 3. RENDER LOGIC ---
+        const grid = document.getElementById('gamesGrid');
+        const searchInput = document.getElementById('searchInput');
+        const categoryBtns = document.querySelectorAll('.cat-btn');
+
+        function renderGames(filterText = '', filterCat = 'All') {
+            grid.innerHTML = '';
+            const filtered = gamesDB.filter(game => {
+                const matchesText = game.title.toLowerCase().includes(filterText.toLowerCase());   
+                const matchesCat = filterCat === 'All' || (game.categories && game.categories.some(c => c.includes(filterCat)));
+                return matchesText && matchesCat;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); padding:40px;">No modules found matching your query.</div>';
+                return;
+            }
+
+            filtered.forEach(game => {
+                const catDisplay = game.categories ? game.categories.join(' / ') : 'Game';
+                const card = document.createElement('div');
+                card.className = 'game-card';
+                // Handlers set directly on elements below
+
+                card.innerHTML = `
+                    <div class="card-img-container" onclick="viewGame('${game.id}', 'info')">      
+                        <img src="${game.img}" alt="${game.title}" loading="lazy">
+                        <span class="badge-cat">${catDisplay}</span>
+                    </div>
+                    <div class="card-content">
+                        <h3 class="game-title" onclick="viewGame('${game.id}', 'info')">${game.title}</h3>
+                        <div class="info-row">
+                            <span><i class="fas fa-code-branch"></i> ${game.version}</span>        
+                            <span><i class="fas fa-hdd"></i> ${game.size}</span>
+                        </div>
+                        <div class="play-btn" onclick="viewGame('${game.id}', 'locker')" style="pointer-events:auto; cursor:pointer;">
+                            <i class="fas fa-bolt"></i> DIRECT INJECT
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        searchInput.addEventListener('input', (e) => renderGames(e.target.value));
+        categoryBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                categoryBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderGames(searchInput.value, btn.dataset.cat);
+            });
+        });
+
+        // --- 4. MODAL LOGIC & LOCKER ---
+        const viewModal = document.getElementById('viewGameModal');
+        let currentGameLink = '';
+
+        window.viewGame = function(id, mode = 'info') {
+            const game = gamesDB.find(g => g.id == id);
+            if(!game) return;
+
+            currentGameLink = game.link;
+
+            // Populate Info View
+            document.getElementById('viewImg').src = game.img;
+            document.getElementById('viewTitle').innerText = game.title;
+            document.getElementById('viewVer').innerHTML = `<i class="fas fa-code-branch"></i> ${game.version}`;
+            document.getElementById('viewSize').innerHTML = `<i class="fas fa-hdd"></i> ${game.size}`;
+            document.getElementById('viewDesc').innerText = game.desc;
+
+            let osHtml = '';
+            if (game.os.includes('android')) osHtml += '<i class="fab fa-android" style="color:#3DDC84; margin-left:10px;"></i> Android ';
+            if (game.os.includes('ios')) osHtml += '<i class="fab fa-apple" style="color:#fff; margin-left:10px;"></i> iOS';
+            document.getElementById('viewOS').innerHTML = osHtml;
+
+            // Populate Locker Info
+            document.getElementById('lockerImg').src = game.img;
+            document.getElementById('lockerTitle').innerText = game.title;
+
+            // Reset States
+            viewModal.style.display = 'flex';
+
+            if (mode === 'locker') {
+                initializeInjection();
+            } else {
+                switchModalView('info');
+            }
+        }
+
+        window.closeViewModal = function() {
+            viewModal.style.display = 'none';
+            if(activePoll) { clearInterval(activePoll); activePoll = null; } // Stop polling when closed
+        }
+
+        window.switchModalView = function(viewName) {
+            document.querySelectorAll('.modal-view').forEach(v => v.classList.remove('active'));   
+            document.getElementById('modal-view-' + viewName).classList.add('active');
+        }
+
+        window.initializeInjection = function() {
+            switchModalView('locker');
+            fetchOffers(); // Start fetching offers immediately
+        }
+
+        window.onclick = (e) => { if (e.target == viewModal) closeViewModal(); }
+
+        // --- 5. API LOCKER LOGIC (SECURE PROXY) ---
+        // The API Key is now hidden in the backend (server.js)
+        const API_ENDPOINT = 'http://localhost:3000/api/offers'; 
+        const REQUIRED_OFFERS = 1;
+
+        let completedOffers = new Set();
+        let activePoll = null;
+
+        // Display Logic
+        function displayOffers(offers) {
+            const container = document.getElementById('offersContainer');
+            if(offers.length === 0) {
+                container.innerHTML = `
+                    <div style="background:rgba(255, 77, 77, 0.1); border:1px solid var(--alert-red); padding:15px; border-radius:4px; text-align:center;">
+                        <i class="fas fa-exclamation-triangle" style="color:var(--alert-red); font-size:1.5rem; margin-bottom:10px;"></i><br>
+                        <strong style="color:#fff;">NO CONNECTION NODES FOUND</strong><br>
+                        <span style="color:#ccc; font-size:0.8rem;">
+                            Your current region may be restricted.<br>
+                            1. Disable AdBlock / Web Shield.<br>
+                            2. <strong>Try using a VPN (USA/Europe).</strong>
+                        </span><br>
+                        <button onclick="fetchOffers()" style="margin-top:10px; background:var(--alert-red); border:none; color:white; padding:5px 15px; border-radius:3px; cursor:pointer; font-weight:bold;">
+                            <i class="fas fa-sync"></i> RETRY SCAN
+                        </button>
+                    </div>`;
+                return;
+            }
+
+            let html = '';
+            offers.forEach(offer => {
+                const isCompleted = completedOffers.has(offer.offerid);
+                const statusClass = isCompleted ? 'completed' : '';
+                const btnText = isCompleted ? 'VERIFIED' : 'VERIFY';
+
+                // Safe Link Injection
+                const safeLink = (offer.link || '#').replace(/'/g, "\'\'");
+
+                html += `
+                    <div class="offer-card ${statusClass}" onclick="handleOfferClick(${offer.offerid}, '${safeLink}')">
+                        <div class="offer-info">
+                            <div class="offer-title-text">${offer.name_short || offer.name}</div>  
+                            <div class="offer-desc">${offer.adcopy || 'Install and run to verify.'}</div>
+                        </div>
+                        <div class="offer-action">${btnText}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // Click Handler & Polling Start
+        window.handleOfferClick = function(id, link) {
+            if(completedOffers.has(id)) return;
+
+            // 1. Open Offer (Multi-method for mobile stability)
+            const offerWindow = window.open(link, '_blank');
+            if(!offerWindow) window.location.href = link; 
+
+            // 2. Visual State: "Verifying..."
+            const cards = document.querySelectorAll('.offer-card');
+            cards.forEach(c => {
+                if(c.getAttribute('onclick').includes(id)) {
+                    const actionBtn = c.querySelector('.offer-action');
+                    actionBtn.innerText = 'CHECKING...';
+                    actionBtn.style.background = 'transparent';
+                    actionBtn.style.color = 'var(--neon-cyan)';
+                    actionBtn.style.animation = 'blink 1s infinite';
+                }
+            });
+
+            // 3. Start Polling
+            if(!activePoll) {
+                activePoll = setInterval(fetchOffers, 7000); // Poll every 7 seconds
+            }
+        }
+
+        // Core Fetch Logic
+        async function fetchOffers() {
+            let ip = 'unknown';
+
+            const container = document.getElementById('offersContainer');
+            if(!activePoll && container.innerHTML.indexOf('offer-card') === -1) {
+                 container.innerHTML = `
+                <div class="spinner"></div>
+                <div style="text-align:center; color:#666; font-size:0.8rem;">
+                    ESTABLISHING SECURE CONNECTION...<br>
+                    <span style="color:var(--neon-cyan); font-size:0.7rem;">ENCRYPTING REQUEST</span>
+                </div>`;
+            }
+
+            try {
+                const ipPromise = fetch('https://api.ipify.org?format=json').then(res=>res.ok?res.json():null).then(d=>d?d.ip:'unknown');
+                const timeoutPromise = new Promise(r=>setTimeout(()=>r('timeout'), 1500));
+                const result = await Promise.race([ipPromise, timeoutPromise]);
+                if(result !== 'timeout' && result !== 'unknown') ip = result;
+            } catch (e) {}
+
+            try {
+                // Prepare params for OUR LOCAL SERVER (not the external API directly)
+                const params = new URLSearchParams({
+                    user_agent: navigator.userAgent,
+                    ip: ip !== 'unknown' ? ip : undefined,
+                    ctype: 1, max: 6
+                });
+                if(ip === 'unknown') params.delete('ip');
+
+                // Call local proxy instead of external API
+                // No Authorization headers needed here - server handles it!
+                const [cpiRes, stdRes] = await Promise.allSettled([
+                    fetch(`${API_ENDPOINT}?${params.toString()}`),
+                    fetch(`${API_ENDPOINT}?${params.toString().replace('ctype=1', 'ctype=2')}`)
+                ]);
+
+                let offers = [];
+                let leadDetected = false;
+
+                if(cpiRes.status === 'fulfilled' && cpiRes.value.ok) {
+                    const data = await cpiRes.value.json();
+                    if(data.success) offers = offers.concat(data.offers.map(o => ({...o, isCPI:true})));
+                    if (data.leads && data.leads > 0) leadDetected = true;
+                }
+                if(stdRes.status === 'fulfilled' && stdRes.value.ok) {
+                    const data = await stdRes.value.json();
+                    if(data.success) offers = offers.concat(data.offers);
+                    if (data.leads && data.leads > 0) leadDetected = true;
+                }
+
+                if(leadDetected) {
+                    completedOffers.add('API_CONFIRMED');
+                    updateProgress();
+                }
+
+                displayOffers(offers.slice(0, 6));
+
+            } catch (e) {
+                console.error("Locker Error:", e);
+                if(!activePoll) container.innerHTML = '<div style="color:var(--alert-red); text-align:center;">CONNECTION INTERRUPTED.</div>';
+            }
+        }
+
+        function updateProgress() {
+            const count = completedOffers.size;
+            const pct = Math.min((count / REQUIRED_OFFERS) * 100, 100);
+            const fill = document.getElementById('progressFill');
+            const txt = document.getElementById('progressPercent');
+            const btn = document.getElementById('finalDownloadBtn');
+
+            fill.style.width = pct + '%';
+            txt.innerText = Math.floor(pct) + '%';
+
+            if(count >= REQUIRED_OFFERS) {
+                // UI SUCCESS STATE
+                btn.disabled = false;
+                btn.classList.add('active');
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> ACCESS GRANTED - DOWNLOAD NOW';
+
+                // Manual Click Activation
+                btn.onclick = () => {
+                    window.location.href = currentGameLink;
+                };
+
+                document.querySelector('.terminal-status').innerText = '[HANDSHAKE COMPLETE]';     
+                document.querySelector('.terminal-status').style.color = 'var(--neon-green)';      
+                document.querySelector('.terminal-status').style.animation = 'none';
+
+                // VISUAL PROGRESS FILL
+                fill.style.background = 'var(--neon-green)';
+                document.getElementById('progressText').innerText = "VERIFICATION COMPLETE";       
+                document.getElementById('progressText').style.color = "var(--neon-green)";
+
+                // AUTO-REDIRECT SAFETY (2 seconds)
+                setTimeout(() => {
+                    if (window.location.href.indexOf(currentGameLink) === -1) {
+                        window.location.href = currentGameLink;
+                    }
+                }, 2500);
+
+                if(activePoll) clearInterval(activePoll);
+            }
+        }
+
+        // Initialize App
+        loadDatabase();
+    </script>
 </body>
 </html>
