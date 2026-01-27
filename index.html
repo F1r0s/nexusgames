@@ -766,7 +766,8 @@
             // 2. Fetch Fresh Data
             try {
                 // Try Direct Fetch first (Best for Live)
-                const directURL = BASE_SHEET_URL + "&t=" + now;
+                const cacheBuster = Math.random().toString(36).substring(7);
+                const directURL = BASE_SHEET_URL + "&t=" + now + "&cb=" + cacheBuster;
                 let response = await fetch(directURL);
                 if (!response.ok) throw new Error("Direct fetch failed");
                 let data = await response.text();
@@ -783,7 +784,8 @@
                 // Fallback to Proxy (Best for Local)
                 try {
                     console.warn("Direct fetch failed, trying proxy...");
-                    const proxyUrl = PROXY_PREFIX + encodeURIComponent(BASE_SHEET_URL + "&t=" + now);
+                    const cacheBuster = Math.random().toString(36).substring(7);
+                    const proxyUrl = PROXY_PREFIX + encodeURIComponent(BASE_SHEET_URL + "&t=" + now + "&cb=" + cacheBuster);
                     let response = await fetch(proxyUrl);
                     let data = await response.text();
 
