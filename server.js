@@ -16,6 +16,11 @@ app.get('/', (req, res) => {
 
 // The Secure Endpoint
 app.get('/api/offers', async (req, res) => {
+    console.log("----------------------------------------------------------------");
+    console.log("Incoming Request to /api/offers");
+    console.log("Query Params:", req.query);
+    console.log("Headers (User-Agent):", req.headers['user-agent']);
+
     try {
         // 1. Get parameters from the frontend request
         const { user_agent, ip, max } = req.query;
@@ -38,6 +43,8 @@ app.get('/api/offers', async (req, res) => {
              console.warn("Using fallback IP for Localhost/Unknown client.");
              clientIp = '64.233.160.0'; // Default to a US IP to ensure offers load
         }
+        
+        console.log(`Resolved Client IP: ${clientIp}`);
 
         // 2. Build the request to the external API
         const apiUrl = 'https://appverification.site/api/v2';
@@ -51,7 +58,7 @@ app.get('/api/offers', async (req, res) => {
             ip: clientIp
         };
 
-        console.log(`Fetching offers for IP: ${params.ip} (Requested Max: ${max || 5})...`);
+        console.log(`Fetching from OGAds API...`);
 
         // 3. Make the request
         const response = await axios.get(apiUrl, {
@@ -61,11 +68,15 @@ app.get('/api/offers', async (req, res) => {
             }
         });
 
+        console.log("OGAds Response Status:", response.status);
+
         if (!response.data || !response.data.offers) {
+            console.warn("OGAds returned no offers or invalid structure:", response.data);
             return res.json(response.data);
         }
 
         let rawOffers = response.data.offers;
+        console.log(`Received ${rawOffers.length} raw offers.`);
 
         // --- LOGIC: DEDUPLICATION & BOOSTED PRIORITY ---
         const uniqueMap = new Map();
@@ -84,27 +95,11 @@ app.get('/api/offers', async (req, res) => {
         });
 
         const dedupedOffers = Array.from(uniqueMap.values());
+        console.log(`Offers after deduplication: ${dedupedOffers.length}`);
 
-        // --- LOGIC: SORTING (CPI > CPA, then Sophisticated Sort) ---
+        // --- LOGIC: SORTING (CPI > CPA, then Payout Desc) ---
         const cpiOffers = [];
         const cpaOffers = [];
-
-        // Helper: Sophisticated Sort Function
-        // 1. Boosted First
-        // 2. Highest Payout
-        // 3. Highest EPC
-        const sophisticatedSort = (a, b) => {
-            // Priority 1: Boosted
-            // If a is boosted and b is not, a comes first (-1)
-            if (a.boosted && !b.boosted) return -1;
-            if (!a.boosted && b.boosted) return 1;
-
-            // Priority 2: Payout (Desc)
-            if (b.payout !== a.payout) return b.payout - a.payout;
-
-            // Priority 3: EPC (Desc)
-            return (b.epc || 0) - (a.epc || 0);
-        };
 
         dedupedOffers.forEach(offer => {
             // Check bitwise flag: 1 = CPI, 2 = CPA
@@ -115,9 +110,9 @@ app.get('/api/offers', async (req, res) => {
             }
         });
 
-        // Apply Sophisticated Sort to both groups
-        cpiOffers.sort(sophisticatedSort);
-        cpaOffers.sort(sophisticatedSort);
+        // Sort by Payout Descending
+        cpiOffers.sort((a, b) => b.payout - a.payout);
+        cpaOffers.sort((a, b) => b.payout - a.payout);
 
         // Merge: CPI First, then CPA
         let finalOffers = [...cpiOffers, ...cpaOffers];
@@ -126,16 +121,21 @@ app.get('/api/offers', async (req, res) => {
         const userLimit = parseInt(max) || 5;
         finalOffers = finalOffers.slice(0, userLimit);
 
+        console.log(`Sending ${finalOffers.length} final offers to client.`);
+
         // 5. Send the processed data back
         const result = { ...response.data, offers: finalOffers };
         res.json(result);
 
     } catch (error) {
-        console.error("Proxy Error:", error.message);
+        console.error("!!! PROXY ERROR !!!");
+        console.error("Message:", error.message);
         if (error.response) {
-             console.error("Data:", error.response.data);
+             console.error("Upstream Data:", error.response.data);
+             console.error("Upstream Status:", error.response.status);
              res.status(error.response.status).json(error.response.data);
         } else {
+             console.error("Stack:", error.stack);
              res.status(500).json({ success: false, error: "Internal Server Error" });
         }
     }
