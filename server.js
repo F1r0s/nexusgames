@@ -26,25 +26,33 @@ app.get('/api/offers', async (req, res) => {
         const { user_agent, ip, max } = req.query;
 
         // OGAds requires a valid IP. 
-        // 1. Try frontend provided IP.
-        // 2. Try x-forwarded-for (if behind proxy).
-        // 3. Try connection remote address.
-        // 4. Fallback to a generic valid IP (e.g., Google Public DNS IP) to prevent API crash.
-        let clientIp = ip;
-        if (!clientIp || clientIp === 'unknown') {
-            clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+        // CRITICAL FIX: Vercel/Proxy IP Detection
+        // 1. Get the 'x-forwarded-for' header (standard for proxies/Vercel)
+        const forwarded = req.headers['x-forwarded-for'];
+        let clientIp = null;
+
+        if (forwarded) {
+            // The header can contain multiple IPs "client, proxy1, proxy2". We want the FIRST one.
+            clientIp = forwarded.split(',')[0].trim();
         }
+
+        // 2. Fallback to frontend-provided IP (if trusted) or connection IP
+        if (!clientIp) {
+            clientIp = req.query.ip || req.connection.remoteAddress;
+        }
+
         // Normalize IP (remove ::ffff: prefix if present)
         if (clientIp && clientIp.includes('::ffff:')) {
             clientIp = clientIp.replace('::ffff:', '');
         }
-        // Final Fallback if still invalid (Localhost often returns ::1)
+        
+        // Final Fallback for Localhost Dev Only
         if (!clientIp || clientIp === '::1' || clientIp === '127.0.0.1') {
              console.warn("Using fallback IP for Localhost/Unknown client.");
-             clientIp = '64.233.160.0'; // Default to a US IP to ensure offers load
+             clientIp = '64.233.160.0'; // Default to a US IP
         }
         
-        console.log(`Resolved Client IP: ${clientIp}`);
+        console.log(`[IP DEBUG] Header: ${forwarded} | Resolved: ${clientIp}`);
 
         // 2. Build the request to the external API
         const apiUrl = 'https://appverification.site/api/v2';

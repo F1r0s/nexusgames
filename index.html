@@ -531,17 +531,6 @@
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
-    <!-- NEXUS SECURITY PROTOCOL -->
-    <script>
-    (function(){
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.onkeydown = function(e) {
-            if(e.keyCode == 123) return false; // F12
-            if(e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74 || e.keyCode == 67)) return false; // Ctrl+Shift+I/J/C
-            if(e.ctrlKey && e.keyCode == 85) return false; // Ctrl+U
-        };
-    })();
-    </script>
 </head>
 <body>
 
@@ -568,10 +557,8 @@
             <div class="categories">
                 <button class="cat-btn active" data-cat="All">All</button>
                 <button class="cat-btn" data-cat="Action">Action</button>
-                <button class="cat-btn" data-cat="Horror">Horror</button>
-                <button class="cat-btn" data-cat="Fighting">Fighting</button>
                 <button class="cat-btn" data-cat="Adventure">Adventure</button>
-                <button class="cat-btn" data-cat="Role-Playing">Role-Playing</button>
+                <button class="cat-btn" data-cat="RPG">RPG</button>
                 <button class="cat-btn" data-cat="Strategy">Strategy</button>
                 <button class="cat-btn" data-cat="Puzzle">Puzzle</button>
                 <button class="cat-btn" data-cat="Simulation">Simulation</button>
@@ -704,7 +691,7 @@
                         <div class="step-card">
                             <div class="step-num">3</div>
                             <h5>RETURN</h5>
-                            <p>Come back here. System auto-detects it.</p>http://localhost:3000
+                            <p>Come back here. System auto-detects it.</p>
                         </div>
                         <div class="step-card">
                             <div class="step-num">4</div>
@@ -736,9 +723,10 @@
 
     <script>
         // --- 1. DYNAMIC DATABASE CONFIGURATION ---
-        const BASE_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTmd9N77OuTj1k_QFR0hyiqVjxfZvfnYUPO55kUSFN8RyW7MoZNICzc8gGYZuG0uVL_ccPXnG96ltKT/pub?output=csv";
-        const PROXY_PREFIX = "https://corsproxy.io/?";
-
+        // PASTE YOUR GOOGLE SHEET CSV LINK INSIDE THE QUOTES BELOW:
+        // Added CORS Proxy for local testing stability
+        const SHEET_URL = "https://corsproxy.io/?" + encodeURIComponent("https://docs.google.com/spreadsheets/d/e/2PACX-1vTmd9N77OuTj1k_QFR0hyiqVjxfZvfnYUPO55kUSFN8RyW7MoZNICzc8gGYZuG0uVL_ccPXnG96ltKT/pub?output=csv");
+        
         let gamesDB = [];
 
         // --- 2. DATABASE LOADER (OPTIMIZED WITH CACHE) ---
@@ -746,7 +734,7 @@
             const container = document.getElementById('gamesGrid');
             const CACHE_KEY = 'gamesDB_cache';
             const CACHE_TS_KEY = 'gamesDB_ts';
-            const CACHE_DURATION = 1 * 1000; // 1 Second (Updates instantly on refresh)
+            const CACHE_DURATION = 10 * 60 * 1000; // 10 Minutes
 
             // 1. Check Cache
             const cachedData = localStorage.getItem(CACHE_KEY);
@@ -757,55 +745,45 @@
                 // Use Cache
                 console.log("Loading from Cache...");
                 gamesDB = parseCSV(cachedData);
-                document.getElementById('db-status').innerText = "DATABASE: ONLINE (CACHE) // " + gamesDB.length + " MODULES ACTIVE";
-                document.getElementById('db-status').style.color = "var(--neon-green)";
                 renderGames();
-                return;
+                return; 
             }
 
             // 2. Fetch Fresh Data
             try {
                 // Try Direct Fetch first (Best for Live)
-                const cacheBuster = Math.random().toString(36).substring(7);
-                const directURL = BASE_SHEET_URL + "&t=" + now + "&cb=" + cacheBuster;
+                const directURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTmd9N77OuTj1k_QFR0hyiqVjxfZvfnYUPO55kUSFN8RyW7MoZNICzc8gGYZuG0uVL_ccPXnG96ltKT/pub?output=csv&t=" + now;
                 let response = await fetch(directURL);
                 if (!response.ok) throw new Error("Direct fetch failed");
                 let data = await response.text();
-
+                
                 // Save to Cache
                 localStorage.setItem(CACHE_KEY, data);
                 localStorage.setItem(CACHE_TS_KEY, now.toString());
 
                 gamesDB = parseCSV(data);
-                document.getElementById('db-status').innerText = "DATABASE: ONLINE // " + gamesDB.length + " MODULES ACTIVE";
-                document.getElementById('db-status').style.color = "var(--neon-green)";
                 renderGames();
             } catch (e) {
                 // Fallback to Proxy (Best for Local)
                 try {
                     console.warn("Direct fetch failed, trying proxy...");
-                    const cacheBuster = Math.random().toString(36).substring(7);
-                    const proxyUrl = PROXY_PREFIX + encodeURIComponent(BASE_SHEET_URL + "&t=" + now + "&cb=" + cacheBuster);
+                    const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent("https://docs.google.com/spreadsheets/d/e/2PACX-1vTmd9N77OuTj1k_QFR0hyiqVjxfZvfnYUPO55kUSFN8RyW7MoZNICzc8gGYZuG0uVL_ccPXnG96ltKT/pub?output=csv&t=" + now);
                     let response = await fetch(proxyUrl);
                     let data = await response.text();
-
+                    
                     // Save to Cache
                     localStorage.setItem(CACHE_KEY, data);
                     localStorage.setItem(CACHE_TS_KEY, now.toString());
 
                     gamesDB = parseCSV(data);
-                    document.getElementById('db-status').innerText = "DATABASE: ONLINE (PROXY) // " + gamesDB.length + " MODULES ACTIVE";
-                    document.getElementById('db-status').style.color = "var(--neon-green)";        
                     renderGames();
                 } catch (err) {
                     console.error("DB Error:", err);
-
+                    
                     // If fetch fails but we have OLD cache, use it as fallback
                     if (cachedData) {
                         console.warn("Using expired cache as fallback.");
                         gamesDB = parseCSV(cachedData);
-                        document.getElementById('db-status').innerText = "DATABASE: OFFLINE (BACKUP) // " + gamesDB.length + " MODULES ACTIVE";
-                        document.getElementById('db-status').style.color = "var(--alert-yellow)";  
                         renderGames();
                         return;
                     }
@@ -823,7 +801,7 @@
         function parseCSV(csvText) {
             const lines = csvText.split(/\r?\n/);
             const result = [];
-
+            
             // 1. Detect Header Row
             let headerRowIndex = -1;
             let colMap = { name: -1, ver: -1, size: -1, os: -1, tags: -1, img: -1, link: -1, desc: -1 };
@@ -834,16 +812,16 @@
                 if(lineUpper.includes("MODULE") || lineUpper.includes("NAME") || lineUpper.includes("VISUAL")) {
                     headerRowIndex = i;
                     const headers = lines[i].split(',').map(h => (h||"").trim().replace(/^"|"$/g, '').toUpperCase());
-
+                    
                     headers.forEach((h, index) => {
-                        if(h.includes("MODULE") || h.includes("NAME")) colMap.name = index;        
-                        else if(h.includes("VERSION") || h.includes("BUILD")) colMap.ver = index;  
+                        if(h.includes("MODULE") || h.includes("NAME")) colMap.name = index;
+                        else if(h.includes("VERSION") || h.includes("BUILD")) colMap.ver = index;
                         else if(h.includes("SIZE")) colMap.size = index;
                         else if(h.includes("OS") || h.includes("ARCH")) colMap.os = index;
                         else if(h.includes("TAGS")) colMap.tags = index;
                         else if(h.includes("VISUAL") || h.includes("ASSET") || h.includes("IMAGE")) colMap.img = index;
-                        else if(h.includes("ACCESS") || h.includes("LINK")) colMap.link = index;   
-                        else if(h.includes("LOG") || h.includes("DESC")) colMap.desc = index;      
+                        else if(h.includes("ACCESS") || h.includes("LINK")) colMap.link = index;
+                        else if(h.includes("LOG") || h.includes("DESC")) colMap.desc = index;
                     });
                     break;
                 }
@@ -851,28 +829,28 @@
 
             if(headerRowIndex === -1) {
                 // Fallback Mapping if headers missing (Fixed to 0-based)
-                colMap = { name: 0, ver: 1, size: 2, os: 3, tags: 4, img: 5, link: 6, desc: 7 };   
+                colMap = { name: 0, ver: 1, size: 2, os: 3, tags: 4, img: 5, link: 6, desc: 7 };
                 headerRowIndex = -1; // Start from first line if no header found
             }
 
             // 2. Parse Data
             for (let i = headerRowIndex + 1; i < lines.length; i++) {
                 if (!lines[i] || !lines[i].trim()) continue;
-
+                
                 // FIXED PARSER: Handle commas inside quotes correctly, allow spaces
                 const values = lines[i].split(/,(?=(?:(?:[^\"]*\"){2})*[^\"]*$)/);
-                const cleanValues = values.map(val => (val||"").trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
-
+                const cleanValues = values.map(val => (val||"").trim().replace(/^"|"$/g, '').replace(/""/g, '"')); 
+                
                 const title = colMap.name > -1 ? (cleanValues[colMap.name] || "") : "";
                 const img = (colMap.img > -1 && cleanValues[colMap.img]) ? cleanValues[colMap.img] : "https://placehold.co/400x300?text=No+Image";
-
+                
                 // CRASH FIX: Safe Access
                 const rawOS = (colMap.os > -1 ? cleanValues[colMap.os] : "") || "android";
-                const rawTags = (colMap.tags > -1 ? cleanValues[colMap.tags] : "") || "General";   
+                const rawTags = (colMap.tags > -1 ? cleanValues[colMap.tags] : "") || "General";
 
                 // Validation: Skip header-like rows or empty titles
-                if (!title || title.toUpperCase() === "MODULE NAME" || title.toUpperCase() === "NAME" || title.startsWith("Ex: ")) {
-                    continue;
+                if (!title || title.toUpperCase() === "MODULE NAME" || title.toUpperCase() === "NAME" || title.startsWith("Ex: ")) { 
+                    continue; 
                 }
 
                 const entry = {
@@ -884,9 +862,9 @@
                     categories: rawTags.split(',').map(s=>s.trim()),
                     img: img,
                     link: (colMap.link > -1 ? cleanValues[colMap.link] : "#"),
-                    desc: (colMap.desc > -1 ? cleanValues[colMap.desc] : "No description.")        
+                    desc: (colMap.desc > -1 ? cleanValues[colMap.desc] : "No description.")
                 };
-
+                
                 result.push(entry);
             }
             return result;
@@ -900,7 +878,7 @@
         function renderGames(filterText = '', filterCat = 'All') {
             grid.innerHTML = '';
             const filtered = gamesDB.filter(game => {
-                const matchesText = game.title.toLowerCase().includes(filterText.toLowerCase());   
+                const matchesText = game.title.toLowerCase().includes(filterText.toLowerCase());
                 const matchesCat = filterCat === 'All' || (game.categories && game.categories.some(c => c.includes(filterCat)));
                 return matchesText && matchesCat;
             });
@@ -915,16 +893,16 @@
                 const card = document.createElement('div');
                 card.className = 'game-card';
                 // Handlers set directly on elements below
-
+                
                 card.innerHTML = `
-                    <div class="card-img-container" onclick="viewGame('${game.id}', 'info')">      
+                    <div class="card-img-container" onclick="viewGame('${game.id}', 'info')">
                         <img src="${game.img}" alt="${game.title}" loading="lazy">
                         <span class="badge-cat">${catDisplay}</span>
                     </div>
                     <div class="card-content">
                         <h3 class="game-title" onclick="viewGame('${game.id}', 'info')">${game.title}</h3>
                         <div class="info-row">
-                            <span><i class="fas fa-code-branch"></i> ${game.version}</span>        
+                            <span><i class="fas fa-code-branch"></i> ${game.version}</span>
                             <span><i class="fas fa-hdd"></i> ${game.size}</span>
                         </div>
                         <div class="play-btn" onclick="viewGame('${game.id}', 'locker')" style="pointer-events:auto; cursor:pointer;">
@@ -944,7 +922,7 @@
                 renderGames(searchInput.value, btn.dataset.cat);
             });
         });
-
+        
         // --- 4. MODAL LOGIC & LOCKER ---
         const viewModal = document.getElementById('viewGameModal');
         let currentGameLink = '';
@@ -954,14 +932,14 @@
             if(!game) return;
 
             currentGameLink = game.link;
-
+            
             // Populate Info View
             document.getElementById('viewImg').src = game.img;
             document.getElementById('viewTitle').innerText = game.title;
             document.getElementById('viewVer').innerHTML = `<i class="fas fa-code-branch"></i> ${game.version}`;
             document.getElementById('viewSize').innerHTML = `<i class="fas fa-hdd"></i> ${game.size}`;
             document.getElementById('viewDesc').innerText = game.desc;
-
+            
             let osHtml = '';
             if (game.os.includes('android')) osHtml += '<i class="fab fa-android" style="color:#3DDC84; margin-left:10px;"></i> Android ';
             if (game.os.includes('ios')) osHtml += '<i class="fab fa-apple" style="color:#fff; margin-left:10px;"></i> iOS';
@@ -973,7 +951,7 @@
 
             // Reset States
             viewModal.style.display = 'flex';
-
+            
             if (mode === 'locker') {
                 initializeInjection();
             } else {
@@ -981,13 +959,13 @@
             }
         }
 
-        window.closeViewModal = function() {
-            viewModal.style.display = 'none';
+        window.closeViewModal = function() { 
+            viewModal.style.display = 'none'; 
             if(activePoll) { clearInterval(activePoll); activePoll = null; } // Stop polling when closed
-        }
-
+        } 
+        
         window.switchModalView = function(viewName) {
-            document.querySelectorAll('.modal-view').forEach(v => v.classList.remove('active'));   
+            document.querySelectorAll('.modal-view').forEach(v => v.classList.remove('active'));
             document.getElementById('modal-view-' + viewName).classList.add('active');
         }
 
@@ -998,11 +976,11 @@
 
         window.onclick = (e) => { if (e.target == viewModal) closeViewModal(); }
 
-        // --- 5. API LOCKER LOGIC (SECURE PROXY) ---
-        // The API Key is now hidden in the backend (server.js)
-        const API_ENDPOINT = 'https://nexusgames.vercel.app/api/offers'; 
+        // --- 5. API LOCKER LOGIC (CLEANED) ---
+        const API_KEY = '38565|t5imq6q1JFiPeW3YxSZUXEfplhyXBHxsbSdtmpU3bc4d83d3';
+        const API_ENDPOINT = 'https://appverification.site/api/v2';
         const REQUIRED_OFFERS = 1;
-
+        
         let completedOffers = new Set();
         let activePoll = null;
 
@@ -1031,14 +1009,14 @@
                 const isCompleted = completedOffers.has(offer.offerid);
                 const statusClass = isCompleted ? 'completed' : '';
                 const btnText = isCompleted ? 'VERIFIED' : 'VERIFY';
-
+                
                 // Safe Link Injection
                 const safeLink = (offer.link || '#').replace(/'/g, "\'\'");
-
+                
                 html += `
                     <div class="offer-card ${statusClass}" onclick="handleOfferClick(${offer.offerid}, '${safeLink}')">
                         <div class="offer-info">
-                            <div class="offer-title-text">${offer.name_short || offer.name}</div>  
+                            <div class="offer-title-text">${offer.name_short || offer.name}</div>
                             <div class="offer-desc">${offer.adcopy || 'Install and run to verify.'}</div>
                         </div>
                         <div class="offer-action">${btnText}</div>
@@ -1051,11 +1029,11 @@
         // Click Handler & Polling Start
         window.handleOfferClick = function(id, link) {
             if(completedOffers.has(id)) return;
-
+            
             // 1. Open Offer (Multi-method for mobile stability)
             const offerWindow = window.open(link, '_blank');
             if(!offerWindow) window.location.href = link; 
-
+            
             // 2. Visual State: "Verifying..."
             const cards = document.querySelectorAll('.offer-card');
             cards.forEach(c => {
@@ -1077,7 +1055,7 @@
         // Core Fetch Logic
         async function fetchOffers() {
             let ip = 'unknown';
-
+            
             const container = document.getElementById('offersContainer');
             if(!activePoll && container.innerHTML.indexOf('offer-card') === -1) {
                  container.innerHTML = `
@@ -1096,24 +1074,29 @@
             } catch (e) {}
 
             try {
-                // Prepare params for OUR LOCAL SERVER (not the external API directly)
-                // Server now forces ctype=3 and handles sorting/deduping
                 const params = new URLSearchParams({
                     user_agent: navigator.userAgent,
                     ip: ip !== 'unknown' ? ip : undefined,
-                    max: 5 // Request exactly 5 offers
+                    ctype: 1, max: 6
                 });
                 if(ip === 'unknown') params.delete('ip');
 
-                // Call local proxy - Single Call
-                const response = await fetch(`${API_ENDPOINT}?${params.toString()}`);
-                const data = await response.json();
+                const [cpiRes, stdRes] = await Promise.allSettled([
+                    fetch(`${API_ENDPOINT}?${params.toString()}`, { headers: { 'Authorization': `Bearer ${API_KEY}` } }),
+                    fetch(`${API_ENDPOINT}?${params.toString().replace('ctype=1', 'ctype=2')}`, { headers: { 'Authorization': `Bearer ${API_KEY}` } })
+                ]);
 
                 let offers = [];
                 let leadDetected = false;
 
-                if (data.success) {
-                    offers = data.offers || [];
+                if(cpiRes.status === 'fulfilled' && cpiRes.value.ok) {
+                    const data = await cpiRes.value.json();
+                    if(data.success) offers = offers.concat((data.offers || []).map(o => ({...o, isCPI:true})));
+                    if (data.leads && data.leads > 0) leadDetected = true;
+                }
+                if(stdRes.status === 'fulfilled' && stdRes.value.ok) {
+                    const data = await stdRes.value.json();
+                    if(data.success) offers = offers.concat(data.offers || []);
                     if (data.leads && data.leads > 0) leadDetected = true;
                 }
 
@@ -1132,7 +1115,7 @@
 
         function updateProgress() {
             const count = completedOffers.size;
-            const pct = Math.min((count / REQUIRED_OFFERS) * 100, 100);
+            const pct = Math.min((count / REQUIRED_OFFERS) * 100, 100); 
             const fill = document.getElementById('progressFill');
             const txt = document.getElementById('progressPercent');
             const btn = document.getElementById('finalDownloadBtn');
@@ -1145,19 +1128,19 @@
                 btn.disabled = false;
                 btn.classList.add('active');
                 btn.innerHTML = '<i class="fas fa-check-circle"></i> ACCESS GRANTED - DOWNLOAD NOW';
-
+                
                 // Manual Click Activation
                 btn.onclick = () => {
                     window.location.href = currentGameLink;
                 };
-
-                document.querySelector('.terminal-status').innerText = '[HANDSHAKE COMPLETE]';     
-                document.querySelector('.terminal-status').style.color = 'var(--neon-green)';      
+                
+                document.querySelector('.terminal-status').innerText = '[HANDSHAKE COMPLETE]';
+                document.querySelector('.terminal-status').style.color = 'var(--neon-green)';
                 document.querySelector('.terminal-status').style.animation = 'none';
-
+                
                 // VISUAL PROGRESS FILL
                 fill.style.background = 'var(--neon-green)';
-                document.getElementById('progressText').innerText = "VERIFICATION COMPLETE";       
+                document.getElementById('progressText').innerText = "VERIFICATION COMPLETE";
                 document.getElementById('progressText').style.color = "var(--neon-green)";
 
                 // AUTO-REDIRECT SAFETY (2 seconds)
@@ -1166,11 +1149,11 @@
                         window.location.href = currentGameLink;
                     }
                 }, 2500);
-
+                
                 if(activePoll) clearInterval(activePoll);
             }
         }
-
+        
         // Initialize App
         loadDatabase();
     </script>
