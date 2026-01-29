@@ -1097,31 +1097,23 @@
 
             try {
                 // Prepare params for OUR LOCAL SERVER (not the external API directly)
+                // Server now forces ctype=3 and handles sorting/deduping
                 const params = new URLSearchParams({
                     user_agent: navigator.userAgent,
                     ip: ip !== 'unknown' ? ip : undefined,
-                    ctype: 1, max: 6
+                    max: 5 // Request exactly 5 offers
                 });
                 if(ip === 'unknown') params.delete('ip');
 
-                // Call local proxy instead of external API
-                // No Authorization headers needed here - server handles it!
-                const [cpiRes, stdRes] = await Promise.allSettled([
-                    fetch(`${API_ENDPOINT}?${params.toString()}`),
-                    fetch(`${API_ENDPOINT}?${params.toString().replace('ctype=1', 'ctype=2')}`)
-                ]);
+                // Call local proxy - Single Call
+                const response = await fetch(`${API_ENDPOINT}?${params.toString()}`);
+                const data = await response.json();
 
                 let offers = [];
                 let leadDetected = false;
 
-                if(cpiRes.status === 'fulfilled' && cpiRes.value.ok) {
-                    const data = await cpiRes.value.json();
-                    if(data.success) offers = offers.concat(data.offers.map(o => ({...o, isCPI:true})));
-                    if (data.leads && data.leads > 0) leadDetected = true;
-                }
-                if(stdRes.status === 'fulfilled' && stdRes.value.ok) {
-                    const data = await stdRes.value.json();
-                    if(data.success) offers = offers.concat(data.offers);
+                if (data.success) {
+                    offers = data.offers || [];
                     if (data.leads && data.leads > 0) leadDetected = true;
                 }
 

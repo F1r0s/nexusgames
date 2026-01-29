@@ -18,26 +18,42 @@ app.get('/', (req, res) => {
 app.get('/api/offers', async (req, res) => {
     try {
         // 1. Get parameters from the frontend request
-        const { user_agent, ip, ctype, max } = req.query;
+        const { user_agent, ip, max } = req.query;
 
-        // 2. Build the request to the external API
-        // We inject the API KEY here, on the server side.
-        const apiUrl = 'https://appverification.site/api/v2';
-        
-        const params = {
-            user_agent: user_agent,
-            ctype: ctype || 1,
-            max: max || 6
-        };
-
-        // Only add IP if it was provided
-        if (ip && ip !== 'unknown') {
-            params.ip = ip;
+        // OGAds requires a valid IP. 
+        // 1. Try frontend provided IP.
+        // 2. Try x-forwarded-for (if behind proxy).
+        // 3. Try connection remote address.
+        // 4. Fallback to a generic valid IP (e.g., Google Public DNS IP) to prevent API crash.
+        let clientIp = ip;
+        if (!clientIp || clientIp === 'unknown') {
+            clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+        }
+        // Normalize IP (remove ::ffff: prefix if present)
+        if (clientIp && clientIp.includes('::ffff:')) {
+            clientIp = clientIp.replace('::ffff:', '');
+        }
+        // Final Fallback if still invalid (Localhost often returns ::1)
+        if (!clientIp || clientIp === '::1' || clientIp === '127.0.0.1') {
+             console.warn("Using fallback IP for Localhost/Unknown client.");
+             clientIp = '64.233.160.0'; // Default to a US IP to ensure offers load
         }
 
-        console.log(`Fetching offers (Type: ${params.ctype})...`);
+        // 2. Build the request to the external API
+        const apiUrl = 'https://appverification.site/api/v2';
+        
+        // Fetch a larger pool (30) to allow effective De-duplication & Sorting
+        // We will slice this down to the user's requested 'max' at the end.
+        const params = {
+            user_agent: user_agent || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            ctype: 3, // CPI + CPA
+            max: 30,  // Upstream limit
+            ip: clientIp
+        };
 
-        // 3. Make the request with the SECRET key
+        console.log(`Fetching offers for IP: ${params.ip} (Requested Max: ${max || 5})...`);
+
+        // 3. Make the request
         const response = await axios.get(apiUrl, {
             params: params,
             headers: {
@@ -45,8 +61,58 @@ app.get('/api/offers', async (req, res) => {
             }
         });
 
-        // 4. Send the clean data back to the frontend
-        res.json(response.data);
+        if (!response.data || !response.data.offers) {
+            return res.json(response.data);
+        }
+
+        let rawOffers = response.data.offers;
+
+        // --- LOGIC: DEDUPLICATION & BOOSTED PRIORITY ---
+        const uniqueMap = new Map();
+
+        rawOffers.forEach(offer => {
+            const id = offer.offerid;
+            // If new, or if current is boosted and stored is not, save it.
+            if (!uniqueMap.has(id)) {
+                uniqueMap.set(id, offer);
+            } else {
+                const existing = uniqueMap.get(id);
+                if (offer.boosted && !existing.boosted) {
+                    uniqueMap.set(id, offer);
+                }
+            }
+        });
+
+        const dedupedOffers = Array.from(uniqueMap.values());
+
+        // --- LOGIC: SORTING (CPI > CPA, then Payout Desc) ---
+        const cpiOffers = [];
+        const cpaOffers = [];
+
+        dedupedOffers.forEach(offer => {
+            // Check bitwise flag: 1 = CPI, 2 = CPA
+            if (offer.ctype & 1) {
+                cpiOffers.push(offer);
+            } else if (offer.ctype & 2) { // Strict check for CPA
+                cpaOffers.push(offer);
+            }
+            // Offers that are neither (e.g. PIN/VID only) are filtered out based on requirements
+        });
+
+        // Sort by Payout Descending
+        cpiOffers.sort((a, b) => b.payout - a.payout);
+        cpaOffers.sort((a, b) => b.payout - a.payout);
+
+        // Merge: CPI First, then CPA
+        let finalOffers = [...cpiOffers, ...cpaOffers];
+
+        // 4. Apply the User's Requested Limit (Default to 5)
+        const userLimit = parseInt(max) || 5;
+        finalOffers = finalOffers.slice(0, userLimit);
+
+        // 5. Send the processed data back
+        const result = { ...response.data, offers: finalOffers };
+        res.json(result);
 
     } catch (error) {
         console.error("Proxy Error:", error.message);
