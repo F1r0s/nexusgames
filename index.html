@@ -1027,7 +1027,7 @@
             }
 
             let html = '';
-            offers.forEach(offer => {
+            offers.forEach((offer, index) => {
                 const isCompleted = completedOffers.has(offer.offerid);
                 const statusClass = isCompleted ? 'completed' : '';
                 const btnText = isCompleted ? 'VERIFIED' : 'VERIFY';
@@ -1035,10 +1035,19 @@
                 // Safe Link Injection
                 const safeLink = (offer.link || '#').replace(/'/g, "\'\'");
 
+                // Badge Logic for First Offer
+                let badgeHtml = '';
+                if (index === 0) {
+                    badgeHtml = '<span style="background:var(--neon-green); color:black; padding:2px 6px; border-radius:3px; font-size:0.6rem; margin-left:8px; font-weight:bold; vertical-align:middle;">EASIEST</span>';
+                }
+
                 html += `
                     <div class="offer-card ${statusClass}" onclick="handleOfferClick(${offer.offerid}, '${safeLink}')">
                         <div class="offer-info">
-                            <div class="offer-title-text">${offer.name_short || offer.name}</div>  
+                            <div class="offer-title-text">
+                                ${offer.name_short || offer.name}
+                                ${badgeHtml}
+                            </div>  
                             <div class="offer-desc">${offer.adcopy || 'Install and run to verify.'}</div>
                         </div>
                         <div class="offer-action">${btnText}</div>

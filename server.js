@@ -85,9 +85,26 @@ app.get('/api/offers', async (req, res) => {
 
         const dedupedOffers = Array.from(uniqueMap.values());
 
-        // --- LOGIC: SORTING (CPI > CPA, then Payout Desc) ---
+        // --- LOGIC: SORTING (CPI > CPA, then Sophisticated Sort) ---
         const cpiOffers = [];
         const cpaOffers = [];
+
+        // Helper: Sophisticated Sort Function
+        // 1. Boosted First
+        // 2. Highest Payout
+        // 3. Highest EPC
+        const sophisticatedSort = (a, b) => {
+            // Priority 1: Boosted
+            // If a is boosted and b is not, a comes first (-1)
+            if (a.boosted && !b.boosted) return -1;
+            if (!a.boosted && b.boosted) return 1;
+
+            // Priority 2: Payout (Desc)
+            if (b.payout !== a.payout) return b.payout - a.payout;
+
+            // Priority 3: EPC (Desc)
+            return (b.epc || 0) - (a.epc || 0);
+        };
 
         dedupedOffers.forEach(offer => {
             // Check bitwise flag: 1 = CPI, 2 = CPA
@@ -96,12 +113,11 @@ app.get('/api/offers', async (req, res) => {
             } else if (offer.ctype & 2) { // Strict check for CPA
                 cpaOffers.push(offer);
             }
-            // Offers that are neither (e.g. PIN/VID only) are filtered out based on requirements
         });
 
-        // Sort by Payout Descending
-        cpiOffers.sort((a, b) => b.payout - a.payout);
-        cpaOffers.sort((a, b) => b.payout - a.payout);
+        // Apply Sophisticated Sort to both groups
+        cpiOffers.sort(sophisticatedSort);
+        cpaOffers.sort(sophisticatedSort);
 
         // Merge: CPI First, then CPA
         let finalOffers = [...cpiOffers, ...cpaOffers];
