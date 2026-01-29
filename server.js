@@ -105,29 +105,28 @@ app.get('/api/offers', async (req, res) => {
         const dedupedOffers = Array.from(uniqueMap.values());
         console.log(`Offers after deduplication: ${dedupedOffers.length}`);
 
-        // --- LOGIC: SORTING (CPI > CPA, then Payout Desc) ---
-        const cpiOffers = [];
-        const cpaOffers = [];
+        // --- LOGIC: SORTING (CPI/CPA First, then Payout Desc) ---
+        // Refactored to match requested logic:
+        // 1. Primary: Prioritize offers where type is 'CPI' or 'CPA'.
+        // 2. Secondary: Sort by 'payout' descending.
 
-        dedupedOffers.forEach(offer => {
-            // Check bitwise flag: 1 = CPI, 2 = CPA
-            if (offer.ctype & 1) {
-                cpiOffers.push(offer);
-            } else if (offer.ctype & 2) { // Strict check for CPA
-                cpaOffers.push(offer);
-            }
+        dedupedOffers.sort((a, b) => {
+            // Determine priority based on ctype (1=CPI, 2=CPA)
+            const isPriorityA = (a.ctype & 1) || (a.ctype & 2);
+            const isPriorityB = (b.ctype & 1) || (b.ctype & 2);
+
+            if (isPriorityA && !isPriorityB) return -1;
+            if (!isPriorityA && isPriorityB) return 1;
+
+            // Secondary: Payout DESC
+            const payoutA = parseFloat(a.payout || 0);
+            const payoutB = parseFloat(b.payout || 0);
+            return payoutB - payoutA;
         });
-
-        // Sort by Payout Descending
-        cpiOffers.sort((a, b) => b.payout - a.payout);
-        cpaOffers.sort((a, b) => b.payout - a.payout);
-
-        // Merge: CPI First, then CPA
-        let finalOffers = [...cpiOffers, ...cpaOffers];
 
         // 4. Apply the User's Requested Limit (Default to 5)
         const userLimit = parseInt(max) || 5;
-        finalOffers = finalOffers.slice(0, userLimit);
+        let finalOffers = dedupedOffers.slice(0, userLimit);
 
         console.log(`Sending ${finalOffers.length} final offers to client.`);
 

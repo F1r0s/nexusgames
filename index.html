@@ -976,9 +976,7 @@
 
         window.onclick = (e) => { if (e.target == viewModal) closeViewModal(); }
 
-        // --- 5. API LOCKER LOGIC (CLEANED) ---
-        const API_KEY = '38565|t5imq6q1JFiPeW3YxSZUXEfplhyXBHxsbSdtmpU3bc4d83d3';
-        const API_ENDPOINT = 'https://appverification.site/api/v2';
+        // --- 5. API LOCKER LOGIC (SECURE BACKEND PROXY) ---
         const REQUIRED_OFFERS = 1;
         
         let completedOffers = new Set();
@@ -1057,6 +1055,7 @@
             let ip = 'unknown';
             
             const container = document.getElementById('offersContainer');
+            // Only show spinner if empty
             if(!activePoll && container.innerHTML.indexOf('offer-card') === -1) {
                  container.innerHTML = `
                 <div class="spinner"></div>
@@ -1067,49 +1066,47 @@
             }
 
             try {
-                const ipPromise = fetch('https://api.ipify.org?format=json').then(res=>res.ok?res.json():null).then(d=>d?d.ip:'unknown');
-                const timeoutPromise = new Promise(r=>setTimeout(()=>r('timeout'), 1500));
-                const result = await Promise.race([ipPromise, timeoutPromise]);
-                if(result !== 'timeout' && result !== 'unknown') ip = result;
-            } catch (e) {}
+                // Optional: Get IP for better logging, though server handles this too
+                try {
+                    const ipRes = await fetch('https://api.ipify.org?format=json');
+                    if(ipRes.ok) {
+                        const d = await ipRes.json();
+                        ip = d.ip;
+                    }
+                } catch(e) {}
 
-            try {
+                // Build Request to LOCAL Server (Secure Proxy)
                 const params = new URLSearchParams({
                     user_agent: navigator.userAgent,
                     ip: ip !== 'unknown' ? ip : undefined,
-                    ctype: 1, max: 6
+                    max: 6
                 });
-                if(ip === 'unknown') params.delete('ip');
-
-                const [cpiRes, stdRes] = await Promise.allSettled([
-                    fetch(`${API_ENDPOINT}?${params.toString()}`, { headers: { 'Authorization': `Bearer ${API_KEY}` } }),
-                    fetch(`${API_ENDPOINT}?${params.toString().replace('ctype=1', 'ctype=2')}`, { headers: { 'Authorization': `Bearer ${API_KEY}` } })
-                ]);
-
-                let offers = [];
-                let leadDetected = false;
-
-                if(cpiRes.status === 'fulfilled' && cpiRes.value.ok) {
-                    const data = await cpiRes.value.json();
-                    if(data.success) offers = offers.concat((data.offers || []).map(o => ({...o, isCPI:true})));
-                    if (data.leads && data.leads > 0) leadDetected = true;
-                }
-                if(stdRes.status === 'fulfilled' && stdRes.value.ok) {
-                    const data = await stdRes.value.json();
-                    if(data.success) offers = offers.concat(data.offers || []);
-                    if (data.leads && data.leads > 0) leadDetected = true;
-                }
+                
+                // Call our own server endpoint instead of external API
+                const response = await fetch(`/api/offers?${params.toString()}`);
+                if (!response.ok) throw new Error("Server Proxy Error: " + response.status);
+                
+                const data = await response.json();
+                
+                // Process Data
+                const offers = data.offers || [];
+                const leadDetected = (data.leads && data.leads > 0);
 
                 if(leadDetected) {
                     completedOffers.add('API_CONFIRMED');
                     updateProgress();
                 }
 
-                displayOffers(offers.slice(0, 6));
+                // Sorting is already done by the server, but we can double-check locally if needed.
+                // Trusting server response for now.
+                displayOffers(offers);
 
             } catch (e) {
                 console.error("Locker Error:", e);
-                if(!activePoll) container.innerHTML = '<div style="color:var(--alert-red); text-align:center;">CONNECTION INTERRUPTED.</div>';
+                // Only show error if we have no offers yet
+                if(!activePoll && container.innerHTML.indexOf('offer-card') === -1) {
+                    container.innerHTML = '<div style="color:var(--alert-red); text-align:center;">CONNECTION INTERRUPTED.</div>';
+                }
             }
         }
 
