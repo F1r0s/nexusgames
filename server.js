@@ -105,18 +105,25 @@ app.get('/api/offers', async (req, res) => {
         const dedupedOffers = Array.from(uniqueMap.values());
         console.log(`Offers after deduplication: ${dedupedOffers.length}`);
 
-        // --- LOGIC: SORTING (CPI/CPA First, then Payout Desc) ---
-        // Refactored to match requested logic:
-        // 1. Primary: Prioritize offers where type is 'CPI' or 'CPA'.
-        // 2. Secondary: Sort by 'payout' descending.
+        // --- LOGIC: SORTING (CPI+Boosted, then CPA, then Payout Desc) ---
+        // 1. CPI offers with 'boosted' active.
+        // 2. CPA offers.
+        // 3. Payout descending (highest payout first).
 
         dedupedOffers.sort((a, b) => {
-            // Determine priority based on ctype (1=CPI, 2=CPA)
-            const isPriorityA = (a.ctype & 1) || (a.ctype & 2);
-            const isPriorityB = (b.ctype & 1) || (b.ctype & 2);
+            const getRank = (o) => {
+                // Rank 1: CPI (1) and Boosted
+                if ((o.ctype & 1) && o.boosted) return 1;
+                // Rank 2: CPA (2)
+                if (o.ctype & 2) return 2;
+                // Rank 3: Others
+                return 3;
+            };
 
-            if (isPriorityA && !isPriorityB) return -1;
-            if (!isPriorityA && isPriorityB) return 1;
+            const rankA = getRank(a);
+            const rankB = getRank(b);
+
+            if (rankA !== rankB) return rankA - rankB;
 
             // Secondary: Payout DESC
             const payoutA = parseFloat(a.payout || 0);
