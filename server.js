@@ -105,17 +105,25 @@ app.get('/api/offers', async (req, res) => {
         const dedupedOffers = Array.from(uniqueMap.values());
         console.log(`Offers after deduplication: ${dedupedOffers.length}`);
 
-        // --- LOGIC: SORTING (CPI+Boosted, then CPA, then Payout Desc) ---
-        // 1. CPI offers with 'boosted' active.
-        // 2. CPA offers.
-        // 3. Payout descending (highest payout first).
+        // --- LOGIC: SORTING (VIP IDs -> Boosted CPI -> CPA -> Payout Desc) ---
+        // 1. VIP IDs: 67939 (Underdog) & 70489 (WorldWinner)
+        // 2. CPI offers with 'boosted' active.
+        // 3. CPA offers.
+        // 4. Payout descending.
+
+        const VIP_IDS = [67939, 70489];
 
         dedupedOffers.sort((a, b) => {
             const getRank = (o) => {
+                // Rank 0: VIP IDs (Highest Priority)
+                if (VIP_IDS.includes(parseInt(o.offerid))) return 0;
+
                 // Rank 1: CPI (1) and Boosted
                 if ((o.ctype & 1) && o.boosted) return 1;
+                
                 // Rank 2: CPA (2)
                 if (o.ctype & 2) return 2;
+                
                 // Rank 3: Others
                 return 3;
             };
