@@ -105,12 +105,11 @@ app.get('/api/offers', async (req, res) => {
         const dedupedOffers = Array.from(uniqueMap.values());
         console.log(`Offers after deduplication: ${dedupedOffers.length}`);
 
-        // --- LOGIC: SORTING (VIP IDs -> Boosted -> CPI -> CPA -> Payout Desc) ---
+        // --- LOGIC: SORTING (VIP IDs -> Boosted CPI -> Regular CPI -> Others) ---
         // 1. VIP IDs: 67939 (Underdog) & 70489 (WorldWinner)
-        // 2. Boosted offers (Any Type).
-        // 3. CPI offers.
-        // 4. CPA offers.
-        // 5. Payout descending.
+        // 2. Boosted CPI Offers (App Installs).
+        // 3. Regular CPI Offers.
+        // 4. All other types (CPA, CPE, PIN, etc.) - Payout descending.
 
         const VIP_IDS = [67939, 70489];
 
@@ -119,17 +118,14 @@ app.get('/api/offers', async (req, res) => {
                 // Rank 0: VIP IDs (Highest Priority)
                 if (VIP_IDS.includes(parseInt(o.offerid))) return 0;
 
-                // Rank 1: Boosted (Any type)
-                if (o.boosted) return 1;
+                // Rank 1: Boosted CPI Offers (Must be CPI type AND Boosted)
+                if ((o.ctype & 1) && o.boosted) return 1;
 
-                // Rank 2: CPI (1)
+                // Rank 2: Regular CPI Offers (Any CPI)
                 if (o.ctype & 1) return 2;
                 
-                // Rank 3: CPA (2)
-                if (o.ctype & 2) return 3;
-                
-                // Rank 4: Others
-                return 4;
+                // Rank 3: All other types (CPA, CPE, PIN, etc.)
+                return 3;
             };
 
             const rankA = getRank(a);
