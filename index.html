@@ -755,7 +755,7 @@
             const container = document.getElementById('gamesGrid');
             const CACHE_KEY = 'gamesDB_cache';
             const CACHE_TS_KEY = 'gamesDB_ts';
-            const CACHE_DURATION = 10 * 60 * 1000; // 10 Minutes
+            const CACHE_DURATION = 2 * 60 * 1000; // 2 Minutes
 
             // 1. Check Cache
             const cachedData = localStorage.getItem(CACHE_KEY);
@@ -820,20 +820,48 @@
 
         // CSV Parser (Smart Auto-Map)
         function parseCSV(csvText) {
-            const lines = csvText.split(/\r?\n/);
             const result = [];
-            
+            const rows = [];
+            let currentRow = [];
+            let currentField = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < csvText.length; i++) {
+                const char = csvText[i];
+                const nextChar = csvText[i + 1];
+
+                if (char === '"' && inQuotes && nextChar === '"') {
+                    currentField += '"';
+                    i++;
+                } else if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    currentRow.push(currentField);
+                    currentField = '';
+                } else if ((char === '\r' || char === '\n') && !inQuotes) {
+                    if (char === '\r' && nextChar === '\n') i++;
+                    currentRow.push(currentField);
+                    rows.push(currentRow);
+                    currentRow = [];
+                    currentField = '';
+                } else {
+                    currentField += char;
+                }
+            }
+            if (currentRow.length > 0 || currentField !== '') {
+                currentRow.push(currentField);
+                rows.push(currentRow);
+            }
+
             // 1. Detect Header Row
             let headerRowIndex = -1;
             let colMap = { name: -1, ver: -1, size: -1, os: -1, tags: -1, img: -1, link: -1, desc: -1 };
 
-            for(let i=0; i<Math.min(lines.length, 10); i++) {
-                if(!lines[i]) continue;
-                const lineUpper = lines[i].toUpperCase();
-                if(lineUpper.includes("MODULE") || lineUpper.includes("NAME") || lineUpper.includes("VISUAL")) {
+            for(let i=0; i<Math.min(rows.length, 10); i++) {
+                const headers = rows[i].map(h => (h||"").trim().toUpperCase());
+                const headerStr = headers.join('|');
+                if(headerStr.includes("MODULE") || headerStr.includes("NAME") || headerStr.includes("VISUAL")) {
                     headerRowIndex = i;
-                    const headers = lines[i].split(',').map(h => (h||"").trim().replace(/^"|"$/g, '').toUpperCase());
-                    
                     headers.forEach((h, index) => {
                         if(h.includes("MODULE") || h.includes("NAME")) colMap.name = index;
                         else if(h.includes("VERSION") || h.includes("BUILD")) colMap.ver = index;
@@ -855,24 +883,18 @@
             }
 
             // 2. Parse Data
-            for (let i = headerRowIndex + 1; i < lines.length; i++) {
-                if (!lines[i] || !lines[i].trim()) continue;
-                
-                // FIXED PARSER: Handle commas inside quotes correctly, allow spaces
-                const values = lines[i].split(/,(?=(?:(?:[^\"]*\"){2})*[^\"]*$)/);
-                const cleanValues = values.map(val => (val||"").trim().replace(/^"|"$/g, '').replace(/""/g, '"')); 
-                
+            for (let i = headerRowIndex + 1; i < rows.length; i++) {
+                const cleanValues = rows[i].map(val => (val||"").trim());
                 const title = colMap.name > -1 ? (cleanValues[colMap.name] || "") : "";
-                const img = (colMap.img > -1 && cleanValues[colMap.img]) ? cleanValues[colMap.img] : "https://placehold.co/400x300?text=No+Image";
                 
-                // CRASH FIX: Safe Access
-                const rawOS = (colMap.os > -1 ? cleanValues[colMap.os] : "") || "android";
-                const rawTags = (colMap.tags > -1 ? cleanValues[colMap.tags] : "") || "General";
-
                 // Validation: Skip header-like rows or empty titles
                 if (!title || title.toUpperCase() === "MODULE NAME" || title.toUpperCase() === "NAME" || title.startsWith("Ex: ")) { 
                     continue; 
                 }
+
+                const img = (colMap.img > -1 && cleanValues[colMap.img]) ? cleanValues[colMap.img] : "https://placehold.co/400x300?text=No+Image";
+                const rawOS = (colMap.os > -1 ? cleanValues[colMap.os] : "") || "android";
+                const rawTags = (colMap.tags > -1 ? cleanValues[colMap.tags] : "") || "General";
 
                 const entry = {
                     id: Date.now() + Math.random(),
