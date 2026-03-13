@@ -159,7 +159,7 @@
         }
         .cta-btn:hover { transform: translateY(-3px); box-shadow: 0 0 25px var(--neon-pink); }
 
-        /* --- 4. CONTROLS --- */
+        /* --- CONTROLS PANEL --- */
         .controls-section {
             padding: 0 20px;
             margin-top: -40px;
@@ -170,81 +170,134 @@
         .hud-panel {
             background: rgba(22, 22, 30, 0.95);
             border: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(12px);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(15px);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+            gap: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        .hud-panel::before { content: ''; position: absolute; top: -1px; left: -1px; width: 20px; height: 20px; border-top: 3px solid var(--neon-cyan); border-left: 3px solid var(--neon-cyan); }
+        .hud-panel::after { content: ''; position: absolute; bottom: -1px; right: -1px; width: 20px; height: 20px; border-bottom: 3px solid var(--neon-cyan); border-right: 3px solid var(--neon-cyan); }
+
+        /* Left Side: 3D Carousel (Enhanced PC Size) */
+        .hud-left {
+            flex: 0 0 250px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            border-right: 1px solid rgba(255,255,255,0.05);
+            padding-right: 15px;
+        }
+        
+        .carousel-title {
+            font-size: 0.8rem; color: var(--neon-cyan); font-family: var(--font-head);
+            margin-bottom: 12px; letter-spacing: 2px; text-shadow: 0 0 10px var(--neon-cyan);
+            font-weight: bold;
+        }
+
+        .carousel-3d {
+            width: 100%;
+            height: 140px;
+            perspective: 1200px;
             position: relative;
         }
-        
-        .hud-panel::before { content: ''; position: absolute; top: -1px; left: -1px; width: 15px; height: 15px; border-top: 2px solid var(--neon-cyan); border-left: 2px solid var(--neon-cyan); }
-        .hud-panel::after { content: ''; position: absolute; bottom: -1px; right: -1px; width: 15px; height: 15px; border-bottom: 2px solid var(--neon-cyan); border-right: 2px solid var(--neon-cyan); }
 
-        .search-box { position: relative; width: 100%; }
-        
-        .search-box i { 
-            position: absolute; 
-            left: 20px;
-            top: 50%; 
-            transform: translateY(-50%); 
-            color: var(--neon-cyan);
-            font-size: 1.3rem;
+        .carousel-item {
+            width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0;
+            border-radius: 8px; overflow: hidden;
+            border: 2px solid rgba(0, 243, 255, 0.3);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.6s ease;
+            opacity: 0;
+            transform: rotateY(90deg) translateZ(100px) scale(0.8);
+            cursor: pointer;
             pointer-events: none;
         }
-        
-        .search-input {
-            width: 100%;
-            background: rgba(0,0,0,0.4);
-            border: 2px solid rgba(255,255,255,0.15);
-            padding: 18px 18px 18px 55px;
-            color: white;
-            font-family: var(--font-body);
-            font-size: 1.2rem;
-            border-radius: 6px;
-            transition: 0.3s;
+        .carousel-item.active {
+            opacity: 1;
+            transform: rotateY(0deg) translateZ(0) scale(1);
+            z-index: 5;
+            pointer-events: auto;
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.4);
         }
-        .search-input:focus { 
-            border-color: var(--neon-cyan); 
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+        .carousel-item.prev {
+            opacity: 0;
+            transform: rotateY(-90deg) translateZ(100px) scale(0.8);
+            z-index: 1;
+        }
+        
+        .carousel-item img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
+        .carousel-item:hover img { transform: scale(1.1); }
+
+        .carousel-item .mini-title {
+            position: absolute; bottom: 0; width: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
+            color: #fff; text-align: center; padding: 20px 5px 8px;
+            font-size: 0.75rem; font-family: var(--font-head);
+            font-weight: bold;
         }
 
+        /* Right Side: Tags and Search */
+        .hud-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        /* Categories on Top */
         .categories { 
-            display: flex; gap: 10px; overflow-x: auto; 
-            padding-bottom: 12px;
-            scrollbar-width: thin;
-            scrollbar-color: var(--neon-cyan) rgba(0,0,0,0.3);
+            display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px;
+            scrollbar-width: thin; scrollbar-color: var(--neon-cyan) rgba(0,0,0,0.3);
         }
-        
-        .categories::-webkit-scrollbar { display: block; height: 8px; }
-        .categories::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); border-radius: 4px; }
-        .categories::-webkit-scrollbar-thumb { 
-            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-blue));
-            border-radius: 4px; 
-            box-shadow: 0 0 5px var(--neon-cyan);
-        }
+        .categories::-webkit-scrollbar { height: 4px; }
+        .categories::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 10px; }
         
         .cat-btn {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: var(--text-muted);
-            padding: 12px 22px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-family: var(--font-head);
-            font-size: 0.8rem;
-            white-space: nowrap;
-            flex-shrink: 0;
-            transition: 0.3s;
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-muted); padding: 10px 20px; border-radius: 6px;
+            cursor: pointer; font-family: var(--font-head); font-size: 0.8rem;
+            white-space: nowrap; transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        .cat-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--text-muted); }
+        .cat-btn:hover { background: rgba(0, 243, 255, 0.05); border-color: var(--neon-cyan); color: #fff; }
         .cat-btn.active { 
-            background: rgba(0, 243, 255, 0.15); 
-            border-color: var(--neon-cyan);
-            color: var(--neon-cyan);
-            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+            background: linear-gradient(90deg, rgba(0, 243, 255, 0.2), rgba(0, 136, 255, 0.2));
+            border-color: var(--neon-cyan); color: var(--neon-cyan); 
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+        }
+
+        /* Search Bar */
+        .search-box { position: relative; width: 100%; }
+        .search-box i { 
+            position: absolute; left: 20px; top: 50%; transform: translateY(-50%); 
+            color: var(--neon-cyan); font-size: 1.2rem; pointer-events: none;
+        }
+        .search-input {
+            width: 100%; background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.1);
+            padding: 16px 16px 16px 55px; color: white; font-family: var(--font-body);
+            font-size: 1.2rem; border-radius: 8px; transition: 0.3s;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .search-input:focus { border-color: var(--neon-cyan); background: rgba(0,0,0,0.7); box-shadow: 0 0 20px rgba(0, 243, 255, 0.15); }
+
+        @media (max-width: 900px) {
+            .hud-panel { flex-direction: column; align-items: stretch; gap: 20px; padding: 20px; }
+            .hud-left { flex: none; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05); padding-right: 0; padding-bottom: 20px; }
+            .carousel-3d { max-width: 300px; height: 150px; }
+            .hud-right { gap: 15px; }
+            .search-input { padding: 12px 12px 12px 45px; font-size: 1rem; }
         }
 
         /* --- 5. GAMES GRID --- */
@@ -343,6 +396,81 @@
             .search-box i { left: 12px; font-size: 1rem; }
             .categories { padding-bottom: 8px; }
             .cat-btn { padding: 8px 16px; font-size: 0.75rem; }
+        }
+
+        /* --- SPECIAL EFFECTS FOR CARDS --- */
+        .game-card.legendary {
+            border: 2px solid #ffd700 !important;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4) !important;
+            background: linear-gradient(145deg, #1a1a2e, #0f0f1a);
+            z-index: 2;
+            animation: legendaryPulse 4s infinite alternate;
+        }
+        
+        @keyframes legendaryPulse {
+            0% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.3); }
+            100% { box-shadow: 0 0 35px rgba(255, 215, 0, 0.7); }
+        }
+
+        /* Legendary Badge */
+        .game-card.legendary::before {
+            content: 'LEGENDARY';
+            position: absolute; top: 10px; left: 10px; z-index: 5;
+            background: linear-gradient(90deg, #ffd700, #ffae00); 
+            color: black;
+            font-family: var(--font-head); font-weight: 900; font-size: 0.65rem;
+            padding: 2px 10px; border-radius: 3px;
+            box-shadow: 0 0 15px #ffd700;
+            letter-spacing: 1px;
+        }
+
+        /* Golden Shimmer Animation */
+        .game-card.legendary::after {
+            content: '';
+            position: absolute;
+            top: -150%; left: -150%;
+            width: 300%; height: 300%;
+            background: linear-gradient(45deg, transparent, rgba(255, 215, 0, 0.2), transparent);
+            transform: rotate(45deg);
+            animation: shimmer 3s infinite;
+            pointer-events: none;
+        }
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            30%, 100% { transform: translateX(100%) rotate(45deg); }
+        }
+
+        .game-card.new-tag, .game-card.hot-tag {
+            animation: cardPulse 3s infinite ease-in-out;
+            z-index: 1;
+        }
+        @keyframes cardPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); box-shadow: 0 0 25px rgba(0, 243, 255, 0.2); }
+        }
+
+        .game-card.new-tag {
+            border: 2px solid var(--neon-green) !important;
+        }
+        .game-card.new-tag::before {
+            content: 'NEW';
+            position: absolute; top: 10px; left: 10px; z-index: 5;
+            background: var(--neon-green); color: black;
+            font-family: var(--font-head); font-weight: 900; font-size: 0.7rem;
+            padding: 2px 8px; border-radius: 3px;
+            box-shadow: 0 0 10px var(--neon-green);
+        }
+
+        .game-card.hot-tag {
+            border: 2px solid var(--neon-pink) !important;
+        }
+        .game-card.hot-tag::before {
+            content: 'HOT';
+            position: absolute; top: 10px; left: 10px; z-index: 5;
+            background: var(--neon-pink); color: white;
+            font-family: var(--font-head); font-weight: 900; font-size: 0.7rem;
+            padding: 2px 8px; border-radius: 3px;
+            box-shadow: 0 0 10px var(--neon-pink);
         }
 
         /* --- 6. COMMUNITY & FOOTER --- */
@@ -603,9 +731,9 @@
 <body>
 
     <header>
-        <div class="logo">
+        <a href="#" class="logo" onclick="window.scrollTo({top: 0, behavior: 'smooth'}); return false;" style="text-decoration: none;">
             <img src="https://i.postimg.cc/VNFQDf1c/best-mobile-games-photo.png" alt="NEXUS LOGO">
-        </div>
+        </a>
     </header>
 
     <section class="hero">
@@ -620,31 +748,44 @@
 
     <div class="controls-section">
         <div class="hud-panel">
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" class="search-input" placeholder="Search for games...">
+            
+            <!-- Left Side: 3D Auto-Scrolling Carousel -->
+            <div class="hud-left">
+                <div class="carousel-title"><i class="fas fa-fire" style="color:var(--neon-pink); margin-right:5px;"></i> TRENDING</div>
+                <div class="carousel-3d" id="carousel3d">
+                    <!-- Loaded via JS -->
+                </div>
             </div>
-            <div class="categories">
-                <button class="cat-btn active" data-cat="All">All</button>
-                <button class="cat-btn" data-cat="Action">Action</button>
-                <button class="cat-btn" data-cat="Shooter">Shooter</button>
-                <button class="cat-btn" data-cat="Adventure">Adventure</button>
-                <button class="cat-btn" data-cat="RPG">RPG</button>
-                <button class="cat-btn" data-cat="Strategy">Strategy</button>
-                <button class="cat-btn" data-cat="Fighting">Fighting</button>
-                <button class="cat-btn" data-cat="Puzzle">Puzzle</button>
-                <button class="cat-btn" data-cat="Simulation">Simulation</button>
-        
-                <button class="cat-btn" data-cat="Sports">Sports</button>
-                <button class="cat-btn" data-cat="Racing">Racing</button>
-                <button class="cat-btn" data-cat="Horror">Horror</button>
-                <button class="cat-btn" data-cat="Survival">Survival</button>
-                <button class="cat-btn" data-cat="Casual">Casual</button>
-                <button class="cat-btn" data-cat="Card">Card & Board</button>
-                <button class="cat-btn" data-cat="Music">Music / Rhythm</button>
-                <button class="cat-btn" data-cat="Educational">Educational</button>
-                <button class="cat-btn" data-cat="Sandbox">Sandbox / Creative</button>
+
+            <!-- Right Side: Tags and Search -->
+            <div class="hud-right">
+                <div class="categories">
+                    <button class="cat-btn active" data-cat="All">All</button>
+                    <button class="cat-btn" data-cat="Action">Action</button>
+                    <button class="cat-btn" data-cat="Shooter">Shooter</button>
+                    <button class="cat-btn" data-cat="Adventure">Adventure</button>
+                    <button class="cat-btn" data-cat="RPG">RPG</button>
+                    <button class="cat-btn" data-cat="Strategy">Strategy</button>
+                    <button class="cat-btn" data-cat="Fighting">Fighting</button>
+                    <button class="cat-btn" data-cat="Puzzle">Puzzle</button>
+                    <button class="cat-btn" data-cat="Simulation">Simulation</button>
+                    <button class="cat-btn" data-cat="Sports">Sports</button>
+                    <button class="cat-btn" data-cat="Racing">Racing</button>
+                    <button class="cat-btn" data-cat="Horror">Horror</button>
+                    <button class="cat-btn" data-cat="Survival">Survival</button>
+                    <button class="cat-btn" data-cat="Casual">Casual</button>
+                    <button class="cat-btn" data-cat="Card">Card & Board</button>
+                    <button class="cat-btn" data-cat="Music">Music / Rhythm</button>
+                    <button class="cat-btn" data-cat="Educational">Educational</button>
+                    <button class="cat-btn" data-cat="Sandbox">Sandbox / Creative</button>
+                </div>
+
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search for games...">
+                </div>
             </div>
+
         </div>
     </div>
 
@@ -981,35 +1122,68 @@
 
         function renderGames(filterText = '', filterCat = 'All') {
             grid.innerHTML = '';
-            const filtered = gamesDB.filter(game => {
-                const matchesText = game.title.toLowerCase().includes(filterText.toLowerCase());
-                const matchesCat = filterCat === 'All' || (game.categories && game.categories.some(c => c.includes(filterCat)));
+            
+            // 1. Filter the games first
+            let filtered = gamesDB.filter(game => {
+                const matchesText = (game.title || "").toLowerCase().includes(filterText.toLowerCase());
+                const matchesCat = filterCat === 'All' || (game.categories && game.categories.some(c => c.toLowerCase().trim() === filterCat.toLowerCase().trim()));
                 return matchesText && matchesCat;
             });
+
+            // 2. Sort: Legendary first, then New/Hot, then normal
+            filtered.sort((a, b) => {
+                const getPriority = (game) => {
+                    const tags = (game.categories || []).map(c => c.toLowerCase().trim());
+                    if (tags.includes('legendary')) return 3;
+                    if (tags.includes('new')) return 2;
+                    if (tags.includes('hot')) return 1;
+                    return 0;
+                };
+                return getPriority(b) - getPriority(a);
+            });
+
+            // Populate Featured Scroll if it's the first load or "All"
+            if (filterText === '' && filterCat === 'All') {
+                renderFeatured(filtered);
+            }
 
             if (filtered.length === 0) {
                 grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); padding:40px;">No modules found matching your query.</div>';
                 return;
             }
 
+            // 3. Render
             filtered.forEach(game => {
-                const catDisplay = game.categories ? game.categories.join(' / ') : 'Game';
                 const card = document.createElement('div');
                 card.className = 'game-card';
-                // Handlers set directly on elements below
+
+                const lowerTags = (game.categories || []).map(c => c.toLowerCase().trim());
+                const isLegendary = lowerTags.includes('legendary');
+                const isNew = lowerTags.includes('new');
+                const isHot = lowerTags.includes('hot');
+
+                if (isLegendary) card.classList.add('legendary');
+                if (isNew) card.classList.add('new-tag');
+                if (isHot) card.classList.add('hot-tag');
+
+                const displayTags = (game.categories || []).filter(c => {
+                    const low = c.toLowerCase().trim();
+                    return low !== 'legendary' && low !== 'new' && low !== 'hot' && low !== '';
+                });
+                const catDisplay = displayTags.length > 0 ? displayTags.join(' / ') : 'Game';
                 
                 card.innerHTML = `
                     <div class="card-img-container" onclick="viewGame('${game.id}', 'info')">
                         <img src="${game.img}" alt="${game.title}" loading="lazy">
                         <span class="badge-cat">${catDisplay}</span>
                     </div>
-                    <div class="card-content">
-                        <h3 class="game-title" onclick="viewGame('${game.id}', 'info')">${game.title}</h3>
+                    <div class="card-content" onclick="viewGame('${game.id}', 'info')" style="cursor:pointer;">
+                        <h3 class="game-title">${game.title}</h3>
                         <div class="info-row">
                             <span><i class="fas fa-code-branch"></i> ${game.version}</span>
                             <span><i class="fas fa-hdd"></i> ${game.size}</span>
                         </div>
-                        <div class="play-btn" onclick="viewGame('${game.id}', 'locker')" style="pointer-events:auto; cursor:pointer;">
+                        <div class="play-btn" onclick="event.stopPropagation(); viewGame('${game.id}', 'locker')" style="pointer-events:auto; cursor:pointer;">
                             <i class="fas fa-bolt"></i> DIRECT INJECT
                         </div>
                     </div>
@@ -1253,6 +1427,60 @@
                 
                 if(activePoll) clearInterval(activePoll);
             }
+        }
+        
+        let carouselInterval;
+        let currentCarouselIndex = 0;
+
+        function renderFeatured(games) {
+            const container = document.getElementById('carousel3d');
+            if (!container || games.length === 0) return;
+            
+            // Clear existing if we are refreshing
+            container.innerHTML = '';
+            currentCarouselIndex = 0;
+
+            // Pick 3 RANDOM games from the entire database
+            const shuffled = [...games].sort(() => 0.5 - Math.random());
+            const featuredList = shuffled.slice(0, 3);
+
+            featuredList.forEach((game, index) => {
+                const div = document.createElement('div');
+                div.className = 'carousel-item';
+                if (index === 0) div.classList.add('active'); 
+                div.onclick = () => viewGame(game.id, 'info');
+                
+                div.innerHTML = `
+                    <img src="${game.img}" alt="${game.title}" loading="lazy">
+                    <div class="mini-title">${game.title}</div>
+                `;
+                container.appendChild(div);
+            });
+
+            // Start 3D Auto-Scroll
+            startCarousel();
+        }
+
+        function startCarousel() {
+            if (carouselInterval) clearInterval(carouselInterval);
+            const items = document.querySelectorAll('.carousel-item');
+            if (items.length <= 1) return;
+
+            carouselInterval = setInterval(() => {
+                const currentItems = document.querySelectorAll('.carousel-item');
+                const oldIndex = currentCarouselIndex;
+                currentCarouselIndex = (currentCarouselIndex + 1) % currentItems.length;
+
+                currentItems[oldIndex].classList.remove('active');
+                currentItems[oldIndex].classList.add('prev');
+
+                setTimeout(() => {
+                    currentItems[oldIndex].classList.remove('prev');
+                }, 800);
+
+                currentItems[currentCarouselIndex].classList.add('active');
+
+            }, 4000); // 4 seconds for a better feel
         }
         
         // Initialize App
