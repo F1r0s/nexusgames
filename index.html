@@ -19,7 +19,7 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NEXUS | Ultimate Game Library</title>
+    <title> Ultimate Game Mods Mobile </title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -184,26 +184,66 @@
         .hud-panel::before { content: ''; position: absolute; top: -1px; left: -1px; width: 20px; height: 20px; border-top: 3px solid var(--neon-cyan); border-left: 3px solid var(--neon-cyan); }
         .hud-panel::after { content: ''; position: absolute; bottom: -1px; right: -1px; width: 20px; height: 20px; border-bottom: 3px solid var(--neon-cyan); border-right: 3px solid var(--neon-cyan); }
 
-        /* Left Side: 3D Carousel (Enhanced PC Size) */
+        /* Left Side: Tags and Search */
         .hud-left {
-            flex: 0 0 250px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 15px;
+            min-width: 0;
+            border-right: 1px solid rgba(255,255,255,0.05);
+            padding-right: 15px;
+        }
+
+        /* Right Side: 3D Carousel */
+        .hud-right {
+            flex: 0 0 380px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            border-right: 1px solid rgba(255,255,255,0.05);
-            padding-right: 15px;
         }
-        
+
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .carousel-arrow {
+            width: 40px;
+            height: 40px;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: 0.3s;
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+            font-size: 1rem;
+        }
+        .carousel-arrow:hover {
+            background: var(--neon-cyan);
+            color: #000;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.6);
+        }
+
         .carousel-title {
-            font-size: 0.8rem; color: var(--neon-cyan); font-family: var(--font-head);
-            margin-bottom: 12px; letter-spacing: 2px; text-shadow: 0 0 10px var(--neon-cyan);
+            font-size: 0.9rem; color: var(--neon-cyan); font-family: var(--font-head);
+            margin-bottom: 15px; letter-spacing: 3px; text-shadow: 0 0 10px var(--neon-cyan);
             font-weight: bold;
         }
 
         .carousel-3d {
-            width: 100%;
-            height: 140px;
+            flex: 1;
+            height: 210px;
             perspective: 1200px;
             position: relative;
         }
@@ -211,10 +251,10 @@
         .carousel-item {
             width: 100%; height: 100%;
             position: absolute; top: 0; left: 0;
-            border-radius: 8px; overflow: hidden;
+            border-radius: 10px; overflow: hidden;
             border: 2px solid rgba(0, 243, 255, 0.3);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.6s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: transform 1.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.8s ease;
             opacity: 0;
             transform: rotateY(90deg) translateZ(100px) scale(0.8);
             cursor: pointer;
@@ -226,43 +266,33 @@
             z-index: 5;
             pointer-events: auto;
             border-color: var(--neon-cyan);
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.4);
+            box-shadow: 0 0 40px rgba(0, 243, 255, 0.4);
         }
         .carousel-item.prev {
             opacity: 0;
             transform: rotateY(-90deg) translateZ(100px) scale(0.8);
             z-index: 1;
         }
-        
+
         .carousel-item img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
         .carousel-item:hover img { transform: scale(1.1); }
 
         .carousel-item .mini-title {
             position: absolute; bottom: 0; width: 100%;
             background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
-            color: #fff; text-align: center; padding: 20px 5px 8px;
-            font-size: 0.75rem; font-family: var(--font-head);
+            color: #fff; text-align: center; padding: 25px 5px 10px;
+            font-size: 0.85rem; font-family: var(--font-head);
             font-weight: bold;
         }
 
-        /* Right Side: Tags and Search */
-        .hud-right {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 20px;
-            min-width: 0;
-        }
-
-        /* Categories on Top */
-        .categories { 
+        /* Categories on Left Side Now */
+        .categories {
             display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px;
             scrollbar-width: thin; scrollbar-color: var(--neon-cyan) rgba(0,0,0,0.3);
         }
         .categories::-webkit-scrollbar { height: 4px; }
         .categories::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 10px; }
-        
+
         .cat-btn {
             background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
             color: var(--text-muted); padding: 10px 20px; border-radius: 6px;
@@ -272,16 +302,16 @@
             letter-spacing: 1px;
         }
         .cat-btn:hover { background: rgba(0, 243, 255, 0.05); border-color: var(--neon-cyan); color: #fff; }
-        .cat-btn.active { 
+        .cat-btn.active {
             background: linear-gradient(90deg, rgba(0, 243, 255, 0.2), rgba(0, 136, 255, 0.2));
-            border-color: var(--neon-cyan); color: var(--neon-cyan); 
+            border-color: var(--neon-cyan); color: var(--neon-cyan);
             box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
         }
 
         /* Search Bar */
         .search-box { position: relative; width: 100%; }
-        .search-box i { 
-            position: absolute; left: 20px; top: 50%; transform: translateY(-50%); 
+        .search-box i {
+            position: absolute; left: 20px; top: 50%; transform: translateY(-50%);
             color: var(--neon-cyan); font-size: 1.2rem; pointer-events: none;
         }
         .search-input {
@@ -293,13 +323,12 @@
         .search-input:focus { border-color: var(--neon-cyan); background: rgba(0,0,0,0.7); box-shadow: 0 0 20px rgba(0, 243, 255, 0.15); }
 
         @media (max-width: 900px) {
-            .hud-panel { flex-direction: column; align-items: stretch; gap: 20px; padding: 20px; }
-            .hud-left { flex: none; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05); padding-right: 0; padding-bottom: 20px; }
-            .carousel-3d { max-width: 300px; height: 150px; }
-            .hud-right { gap: 15px; }
+            .hud-panel { flex-direction: column-reverse; align-items: stretch; gap: 20px; padding: 20px; }
+            .hud-left { flex: none; border-right: none; padding-right: 0; }
+            .hud-right { flex: none; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 25px; }
+            .carousel-3d { max-width: 500px; height: 220px; }
             .search-input { padding: 12px 12px 12px 45px; font-size: 1rem; }
         }
-
         /* --- 5. GAMES GRID --- */
         .main-container { padding: 40px 20px 80px; max-width: 1400px; margin: 0 auto; }
         .section-header { margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-end; }
@@ -732,7 +761,7 @@
 
     <header>
         <a href="#" class="logo" onclick="window.scrollTo({top: 0, behavior: 'smooth'}); return false;" style="text-decoration: none;">
-            <img src="https://i.postimg.cc/VNFQDf1c/best-mobile-games-photo.png" alt="NEXUS LOGO">
+            <img src="https://i.postimg.cc/VNFQDf1c/best-mobile-games-photo.png" alt="Best mobile games">
         </a>
     </header>
 
@@ -749,16 +778,13 @@
     <div class="controls-section">
         <div class="hud-panel">
             
-            <!-- Left Side: 3D Auto-Scrolling Carousel -->
+            <!-- Left Side: Tags and Search -->
             <div class="hud-left">
-                <div class="carousel-title"><i class="fas fa-fire" style="color:var(--neon-pink); margin-right:5px;"></i> TRENDING</div>
-                <div class="carousel-3d" id="carousel3d">
-                    <!-- Loaded via JS -->
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search for games...">
                 </div>
-            </div>
 
-            <!-- Right Side: Tags and Search -->
-            <div class="hud-right">
                 <div class="categories">
                     <button class="cat-btn active" data-cat="All">All</button>
                     <button class="cat-btn" data-cat="Action">Action</button>
@@ -779,10 +805,17 @@
                     <button class="cat-btn" data-cat="Educational">Educational</button>
                     <button class="cat-btn" data-cat="Sandbox">Sandbox / Creative</button>
                 </div>
+            </div>
 
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Search for games...">
+            <!-- Right Side: 3D Auto-Scrolling Carousel -->
+            <div class="hud-right">
+                <div class="carousel-title"><i class="fas fa-fire" style="color:var(--neon-pink); margin-right:5px;"></i> TRENDING</div>
+                <div class="carousel-container">
+                    <div class="carousel-arrow left" onclick="prevCarousel()"><i class="fas fa-chevron-left"></i></div>
+                    <div class="carousel-3d" id="carousel3d">
+                        <!-- Loaded via JS -->
+                    </div>
+                    <div class="carousel-arrow right" onclick="nextCarousel()"><i class="fas fa-chevron-right"></i></div>
                 </div>
             </div>
 
@@ -792,7 +825,7 @@
     <div class="main-container">
         <div class="section-header">
             <h2 class="section-title">Active <span>Modules</span></h2>
-            <div style="color:var(--text-muted); font-size:0.8rem;">LIVE DATABASE</div>
+            <div style="color:var(--text-muted); font-size:0.8rem;"> </div>
         </div>
         
         <div class="games-grid" id="gamesGrid">
@@ -828,15 +861,13 @@
             <div class="comm-card">
                 <i class="fas fa-users"></i>
                 <h3>Elite Squad</h3>
-                <p style="color:#888; font-size:0.9rem;">Join thousands of other players in the nexus.</p>
+                <p style="color:#888; font-size:0.9rem;">Join thousands of other players in the mod.</p>
             </div>
         </div>
     </section>
 
     <footer>
-        <p>NEXUS PROTOCOL v3.0 // SYSTEM SECURE</p>
-        <p id="db-status" style="font-size:0.7rem; color:#555; margin-top:5px;"> </p>
-        <p>&copy; 2026 Nexus Gaming</p>
+        
     </footer>
 
     <!-- MAIN MODAL -->
@@ -1440,9 +1471,9 @@
             container.innerHTML = '';
             currentCarouselIndex = 0;
 
-            // Pick 3 RANDOM games from the entire database
-            const shuffled = [...games].sort(() => 0.5 - Math.random());
-            const featuredList = shuffled.slice(0, 3);
+            // Use ALL games from the provided list
+            // (Note: They are already sorted by priority in renderGames)
+            const featuredList = games;
 
             featuredList.forEach((game, index) => {
                 const div = document.createElement('div');
@@ -1463,24 +1494,46 @@
 
         function startCarousel() {
             if (carouselInterval) clearInterval(carouselInterval);
+            carouselInterval = setInterval(nextCarousel, 6000); // Increased time to 6 seconds
+        }
+
+        window.nextCarousel = function() {
             const items = document.querySelectorAll('.carousel-item');
             if (items.length <= 1) return;
 
-            carouselInterval = setInterval(() => {
-                const currentItems = document.querySelectorAll('.carousel-item');
-                const oldIndex = currentCarouselIndex;
-                currentCarouselIndex = (currentCarouselIndex + 1) % currentItems.length;
+            const oldIndex = currentCarouselIndex;
+            currentCarouselIndex = (currentCarouselIndex + 1) % items.length;
+            updateCarousel(oldIndex, currentCarouselIndex);
+            
+            // Reset timer on manual interaction
+            startCarousel();
+        }
 
-                currentItems[oldIndex].classList.remove('active');
-                currentItems[oldIndex].classList.add('prev');
+        window.prevCarousel = function() {
+            const items = document.querySelectorAll('.carousel-item');
+            if (items.length <= 1) return;
 
-                setTimeout(() => {
-                    currentItems[oldIndex].classList.remove('prev');
-                }, 800);
+            const oldIndex = currentCarouselIndex;
+            currentCarouselIndex = (currentCarouselIndex - 1 + items.length) % items.length;
+            updateCarousel(oldIndex, currentCarouselIndex);
+            
+            // Reset timer on manual interaction
+            startCarousel();
+        }
 
-                currentItems[currentCarouselIndex].classList.add('active');
+        function updateCarousel(oldIdx, newIdx) {
+            const items = document.querySelectorAll('.carousel-item');
+            items.forEach(item => {
+                item.classList.remove('active');
+                item.classList.remove('prev');
+            });
 
-            }, 4000); // 4 seconds for a better feel
+            items[oldIdx].classList.add('prev');
+            items[newIdx].classList.add('active');
+
+            setTimeout(() => {
+                items[oldIdx].classList.remove('prev');
+            }, 1200); // Matches the new CSS transition time
         }
         
         // Initialize App
