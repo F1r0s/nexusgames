@@ -105,27 +105,35 @@ app.get('/api/offers', async (req, res) => {
         const dedupedOffers = Array.from(uniqueMap.values());
         console.log(`Offers after deduplication: ${dedupedOffers.length}`);
 
-        // --- LOGIC: SORTING (VIP IDs -> Boosted CPI -> Regular CPI -> Others) ---
+        // --- LOGIC: SORTING (VIP IDs -> 30s Instructions -> CPI Name -> Type -> Payout DESC -> EPC ASC) ---
         // 1. VIP IDs: 67939 (Underdog) & 70489 (WorldWinner)
-        // 2. Boosted CPI Offers (App Installs).
-        // 3. Regular CPI Offers.
-        // 4. All other types (CPA, CPE, PIN, etc.) - Payout descending.
+        // 2. Instructions: "Download and install... run for 30 seconds" (Easiest conversions)
+        // 3. Name: Contains "CPI" (Direct Installs)
+        // 4. Type: CPI Offers (ctype & 1)
+        // 5. Payout: Highest Descending.
+        // 6. EPC: Lowest Ascending (Requested "easiest" net EPC).
 
         const VIP_IDS = [67939, 70489];
 
         dedupedOffers.sort((a, b) => {
             const getRank = (o) => {
+                const name = (o.name || "").toLowerCase();
+                const adcopy = (o.adcopy || "").toLowerCase();
+
                 // Rank 0: VIP IDs (Highest Priority)
                 if (VIP_IDS.includes(parseInt(o.offerid))) return 0;
 
-                // Rank 1: Boosted CPI Offers (Must be CPI type AND Boosted)
-                if ((o.ctype & 1) && o.boosted) return 1;
+                // Rank 1: Specific "Easy" Instructions
+                if (adcopy.includes("download and install") && adcopy.includes("30 seconds")) return 1;
 
-                // Rank 2: Regular CPI Offers (Any CPI)
-                if (o.ctype & 1) return 2;
+                // Rank 2: "CPI" in Name
+                if (name.includes("cpi")) return 2;
+
+                // Rank 3: CPI Type (ctype bitmask)
+                if (o.ctype & 1) return 3;
                 
-                // Rank 3: All other types (CPA, CPE, PIN, etc.)
-                return 3;
+                // Rank 4: Others
+                return 4;
             };
 
             const rankA = getRank(a);
@@ -136,7 +144,12 @@ app.get('/api/offers', async (req, res) => {
             // Secondary: Payout DESC
             const payoutA = parseFloat(a.payout || 0);
             const payoutB = parseFloat(b.payout || 0);
-            return payoutB - payoutA;
+            if (payoutA !== payoutB) return payoutB - payoutA;
+
+            // Tertiary: EPC ASC (Lowest first as requested)
+            const epcA = parseFloat(a.epc || 0);
+            const epcB = parseFloat(b.epc || 0);
+            return epcA - epcB;
         });
 
         // 4. Apply the User's Requested Limit (Default to 5)
