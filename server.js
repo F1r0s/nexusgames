@@ -123,8 +123,10 @@ app.get('/api/offers', async (req, res) => {
                 // Rank 0: VIP IDs (Highest Priority)
                 if (VIP_IDS.includes(parseInt(o.offerid))) return 0;
 
-                // Rank 1: Specific "Easy" Instructions
-                if (adcopy.includes("download and install") && adcopy.includes("30 seconds")) return 1;
+                // Rank 1: Specific "Easy" Instructions or High-Converting Patterns
+                if ((adcopy.includes("download and install") && adcopy.includes("30 seconds")) ||
+                    adcopy.includes("play until level 5") ||
+                    adcopy.includes("register an account")) return 1;
 
                 // Rank 2: "CPI" in Name
                 if (name.includes("cpi")) return 2;
