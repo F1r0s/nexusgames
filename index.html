@@ -976,14 +976,9 @@
                         <span id="viewOS"></span>
                     </div>
                     <div class="view-desc" id="viewDesc"></div>
-                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                        <button onclick="initializeInjection()" class="init-btn" style="flex: 1; margin-bottom: 0;">
-                            <i class="fas fa-terminal"></i> INITIALIZE INJECTION
-                        </button>
-                        <button onclick="shareGame()" class="init-btn" style="flex: 0 0 60px; background: rgba(255,255,255,0.05); color: white; box-shadow: none; border: 1px solid rgba(255,255,255,0.1);">
-                            <i class="fas fa-share-alt"></i>
-                        </button>
-                    </div>
+                    <button onclick="initializeInjection()" class="init-btn">
+                        <i class="fas fa-terminal"></i> INITIALIZE INJECTION
+                    </button>
                 </div>
             </div>
 
@@ -1358,24 +1353,6 @@
                 initializeInjection();
             } else {
                 switchModalView('info');
-            }
-        }
-
-        window.shareGame = function() {
-            const title = document.getElementById('viewTitle').innerText;
-            const text = `Check out this premium mod for ${title}!`;
-            const url = window.location.origin + window.location.pathname;
-            
-            if (navigator.share) {
-                navigator.share({
-                    title: `Ultimate Game Mods - ${title}`,
-                    text: text,
-                    url: url
-                }).catch(err => console.error('Share failed:', err));
-            } else {
-                navigator.clipboard.writeText(`${text} ${url}`).then(() => {
-                    alert('Share link copied to clipboard!');
-                }).catch(err => console.error('Clipboard copy failed:', err));
             }
         }
 
