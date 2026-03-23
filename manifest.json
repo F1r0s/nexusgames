@@ -1,0 +1,21 @@
+{
+  "name": "Ultimate Game Mods",
+  "short_name": "GameMods",
+  "description": "Premium mobile game mods and unlocked features.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050507",
+  "theme_color": "#00f3ff",
+  "icons": [
+    {
+      "src": "https://i.postimg.cc/VNFQDf1c/best-mobile-games-photo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://i.postimg.cc/VNFQDf1c/best-mobile-games-photo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

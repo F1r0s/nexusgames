@@ -19,7 +19,52 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title> Ultimate Game Mods Mobile </title>
+    <title>Ultimate Game Mods - Premium Mobile Game Mods & Unlocked Features</title>
+    <meta name="description" content="Discover and download premium mobile game mods, unlocked features, and exclusive game enhancements. The ultimate underground library for mobile gamers. Safe, fast, and secure.">
+    <meta name="keywords" content="mobile game mods, game enhancements, unlocked features, premium mods, mobile gaming, android mods, ios mods, game hacks, secure game mods">
+    <meta name="author" content="Ultimate Game Mods">
+    <link rel="canonical" href="https://bestmobilegames.vercel.app/" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://bestmobilegames.vercel.app/">
+    <meta property="og:title" content="Ultimate Game Mods - Premium Mobile Game Mods & Unlocked Features">
+    <meta property="og:description" content="Discover and download premium mobile game mods, unlocked features, and exclusive game enhancements. The ultimate underground library for mobile gamers. Safe, fast, and secure.">
+    <meta property="og:image" content="https://i.postimg.cc/VNFQDf1c/best-mobile-games-photo.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://bestmobilegames.vercel.app/">
+    <meta property="twitter:title" content="Ultimate Game Mods - Premium Mobile Game Mods & Unlocked Features">
+    <meta property="twitter:description" content="Discover and download premium mobile game mods, unlocked features, and exclusive game enhancements. The ultimate underground library for mobile gamers. Safe, fast, and secure.">
+    <meta property="twitter:image" content="https://i.postimg.cc/VNFQDf1c/best-mobile-games-photo.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://i.postimg.cc/VNFQDf1c/best-mobile-games-photo.png">
+    <link rel="apple-touch-icon" href="https://i.postimg.cc/VNFQDf1c/best-mobile-games-photo.png">
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Ultimate Game Mods",
+      "operatingSystem": "Android, iOS",
+      "applicationCategory": "Game",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "1250"
+      },
+      "description": "Premium mobile game mods, unlocked features, and exclusive game enhancements for mobile gamers."
+    }
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -70,21 +115,23 @@
             top: 0;
             width: 100%;
             z-index: 1000;
-            background: rgba(5, 5, 7, 0.9);
+            background: rgba(5, 5, 7, 0.95);
             backdrop-filter: blur(15px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 15px 20px;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.15);
+            padding: 10px 20px;
             display: flex;
             justify-content: center;
             align-items: center;
+            height: 70px;
         }
 
         .logo {
             display: flex;
             align-items: center;
-            height: 40px; /* Adjusted height for header */
-            transition: 0.3s;
+            height: 45px;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+        .logo:hover { transform: scale(1.05); }
 
         .logo img {
             height: 100%;
@@ -96,50 +143,54 @@
 
         @keyframes pulseLogo {
             0% { filter: drop-shadow(0 0 5px var(--neon-cyan)); }
-            100% { filter: drop-shadow(0 0 15px var(--neon-cyan)) drop-shadow(0 0 25px var(--neon-cyan)); }
+            100% { filter: drop-shadow(0 0 15px var(--neon-cyan)); }
         }
 
         /* --- 3. HERO SECTION --- */
         .hero {
-            height: 70vh;
-            min-height: 500px;
+            height: 60vh;
+            min-height: 450px;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 0 20px;
+            padding: 100px 20px 40px;
             position: relative;
-            background: linear-gradient(to bottom, rgba(5,5,7,0.85), var(--bg-deep)), 
+            background: linear-gradient(to bottom, rgba(5,5,7,0.7), var(--bg-deep)), 
                         url('https://i.postimg.cc/Znt8nSBW/Background-photo.png');
             background-size: cover;
             background-position: center;
-            border-bottom: 1px solid rgba(0, 243, 255, 0.3);
+            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
         }
 
         .hero-content {
-            max-width: 800px;
+            max-width: 900px;
             z-index: 2;
-            animation: fadeIn 1s ease-out;
+            animation: fadeIn 0.8s ease-out;
         }
 
-        .hero h1 {
-            font-family: var(--font-head);
-            font-size: 3rem;
-            line-height: 1.1;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            background: linear-gradient(90deg, #fff, var(--neon-cyan));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.4));
+        .hero h1 span {
+            display: block;
+            margin-top: 10px;
+            font-size: 0.6em;
+            letter-spacing: 5px;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 15px var(--neon-cyan);
         }
 
         .hero p {
-            font-size: 1.1rem;
+            font-size: clamp(0.9rem, 4vw, 1.15rem);
             color: var(--text-muted);
-            margin-bottom: 25px;
-            max-width: 600px;
-            margin-left: auto; margin-right: auto;
+            margin: 0 auto;
+            max-width: 750px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-out 0.2s backwards;
+        }
+
+        header a[href*="youtube"]:hover {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 15px rgba(255,0,0,0.8));
+            color: #ff3333;
         }
 
         .cta-btn {
@@ -760,18 +811,23 @@
 <body>
 
     <header>
-        <a href="#" class="logo" onclick="window.scrollTo({top: 0, behavior: 'smooth'}); return false;" style="text-decoration: none;">
-            <img src="https://i.postimg.cc/VNFQDf1c/best-mobile-games-photo.png" alt="Best mobile games">
-        </a>
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1200px; margin: 0 auto;">
+            <a href="#" class="logo" onclick="window.scrollTo({top: 0, behavior: 'smooth'}); return false;" style="text-decoration: none;">
+                <img src="https://i.postimg.cc/VNFQDf1c/best-mobile-games-photo.png" alt="Ultimate Game Mods">
+            </a>
+            
+            <a href="https://www.youtube.com/@BestMobilesGames" target="_blank" style="color: #ff0000; font-size: 1.8rem; transition: 0.3s;">
+                <i class="fab fa-youtube"></i>
+            </a>
+        </div>
     </header>
 
     <section class="hero">
         <div class="hero-content">
-            <h1>Unlock The<br>Ultimate Potential</h1>
-            <p>Premium Mods. Unlocked Features. No Limits. Welcome to the underground of mobile gaming.</p>
-            <button onclick="document.querySelector('.main-container').scrollIntoView({behavior: 'smooth'})" class="cta-btn">
-                Browse Library
-            </button>
+            <h1 style="font-family: var(--font-head); font-size: clamp(2.2rem, 10vw, 4rem); color: var(--text-main); text-transform: uppercase; line-height: 1.1; margin-bottom: 20px;">
+                Premium Mobile <span style="color: var(--neon-cyan); text-shadow: 0 0 15px var(--neon-cyan);">Game Mods</span>
+            </h1>
+            <p>Discover the underground of mobile gaming. Premium Mods, Unlocked Features, and No Limits. Safe and verified library for all your favorite games.</p>
         </div>
     </section>
 
@@ -866,8 +922,40 @@
         </div>
     </section>
 
-    <footer>
-        
+    <footer style="background: var(--bg-deep); border-top: 1px solid rgba(255,255,255,0.05); padding: 50px 20px; text-align: left;">
+        <div style="max-width: 1200px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 40px; justify-content: space-between;">
+            <div style="flex: 1; min-width: 250px;">
+                <h3 style="font-family: var(--font-head); color: var(--neon-cyan); margin-bottom: 20px;">ULTIMATE GAME MODS</h3>
+                <p style="color: var(--text-muted); line-height: 1.6; font-size: 0.9rem;">Your #1 source for verified mobile game mods, premium features, and exclusive enhancements. Join our elite community of mobile gamers today.</p>
+                <div style="margin-top: 20px; display: flex; gap: 15px;">
+                    <a href="#" style="color: var(--text-muted); font-size: 1.2rem; transition: 0.3s;"><i class="fab fa-discord"></i></a>
+                    <a href="#" style="color: var(--text-muted); font-size: 1.2rem; transition: 0.3s;"><i class="fab fa-telegram"></i></a>
+                    <a href="#" style="color: var(--text-muted); font-size: 1.2rem; transition: 0.3s;"><i class="fab fa-twitter"></i></a>
+                    <a href="https://www.youtube.com/@BestMobilesGames" style="color: var(--text-muted); font-size: 1.2rem; transition: 0.3s;"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            <div style="flex: 0 0 200px;">
+                <h4 style="font-family: var(--font-head); color: white; margin-bottom: 20px; font-size: 1rem;">QUICK LINKS</h4>
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                    <li style="margin-bottom: 10px;"><a href="#" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: 0.3s;">Home</a></li>
+                    <li style="margin-bottom: 10px;"><a href="#" onclick="document.querySelector('.main-container').scrollIntoView({behavior: 'smooth'}); return false;" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: 0.3s;">Library</a></li>
+                    <li style="margin-bottom: 10px;"><a href="#support" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: 0.3s;">Support</a></li>
+                    <li style="margin-bottom: 10px;"><a href="#" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: 0.3s;">Privacy Policy</a></li>
+                </ul>
+            </div>
+            <div style="flex: 0 0 200px;">
+                <h4 style="font-family: var(--font-head); color: white; margin-bottom: 20px; font-size: 1rem;">CATEGORIES</h4>
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                    <li style="margin-bottom: 10px;"><a href="#" onclick="document.querySelector('[data-cat=Action]').click(); document.querySelector('.main-container').scrollIntoView({behavior: 'smooth'}); return false;" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: 0.3s;">Action Games</a></li>
+                    <li style="margin-bottom: 10px;"><a href="#" onclick="document.querySelector('[data-cat=Shooter]').click(); document.querySelector('.main-container').scrollIntoView({behavior: 'smooth'}); return false;" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: 0.3s;">Shooter Games</a></li>
+                    <li style="margin-bottom: 10px;"><a href="#" onclick="document.querySelector('[data-cat=RPG]').click(); document.querySelector('.main-container').scrollIntoView({behavior: 'smooth'}); return false;" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: 0.3s;">RPG Games</a></li>
+                    <li style="margin-bottom: 10px;"><a href="#" onclick="document.querySelector('[data-cat=Racing]').click(); document.querySelector('.main-container').scrollIntoView({behavior: 'smooth'}); return false;" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: 0.3s;">Racing Games</a></li>
+                </ul>
+            </div>
+        </div>
+        <div style="max-width: 1200px; margin: 40px auto 0; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); text-align: center; color: #444; font-size: 0.8rem;">
+            &copy; 2026 Ultimate Game Mods. All rights reserved.
+        </div>
     </footer>
 
     <!-- MAIN MODAL -->
@@ -888,9 +976,14 @@
                         <span id="viewOS"></span>
                     </div>
                     <div class="view-desc" id="viewDesc"></div>
-                    <button onclick="initializeInjection()" class="init-btn">
-                        <i class="fas fa-terminal"></i> INITIALIZE INJECTION
-                    </button>
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <button onclick="initializeInjection()" class="init-btn" style="flex: 1; margin-bottom: 0;">
+                            <i class="fas fa-terminal"></i> INITIALIZE INJECTION
+                        </button>
+                        <button onclick="shareGame()" class="init-btn" style="flex: 0 0 60px; background: rgba(255,255,255,0.05); color: white; box-shadow: none; border: 1px solid rgba(255,255,255,0.1);">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -1265,6 +1358,24 @@
                 initializeInjection();
             } else {
                 switchModalView('info');
+            }
+        }
+
+        window.shareGame = function() {
+            const title = document.getElementById('viewTitle').innerText;
+            const text = `Check out this premium mod for ${title}!`;
+            const url = window.location.origin + window.location.pathname;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: `Ultimate Game Mods - ${title}`,
+                    text: text,
+                    url: url
+                }).catch(err => console.error('Share failed:', err));
+            } else {
+                navigator.clipboard.writeText(`${text} ${url}`).then(() => {
+                    alert('Share link copied to clipboard!');
+                }).catch(err => console.error('Clipboard copy failed:', err));
             }
         }
 

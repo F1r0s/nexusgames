@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://bestmobilegames.vercel.app/sitemap.xml
