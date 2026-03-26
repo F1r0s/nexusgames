@@ -806,6 +806,61 @@
         .cta-btn:hover {
             box-shadow: 0 0 30px var(--neon-pink), 0 0 10px var(--neon-pink) inset;
         }
+
+        /* SEO SECTION STYLES */
+        .seo-section {
+            padding: 60px 20px;
+            max-width: 1200px;
+            margin: 40px auto;
+            border-top: 1px solid rgba(0, 243, 255, 0.1);
+        }
+        .seo-intro h1 { font-family: var(--font-head); font-size: 2rem; color: var(--neon-cyan); margin-bottom: 20px; text-transform: uppercase; }
+        .seo-intro p { color: var(--text-muted); line-height: 1.6; margin-bottom: 30px; }
+        .keyword-bold { color: var(--text-main); font-weight: 700; }
+        
+        .seo-accordion {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .accordion-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: 0.3s;
+        }
+        .accordion-header {
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--font-head);
+            color: var(--text-main);
+            text-transform: uppercase;
+            font-size: 1.1rem;
+            transition: 0.3s;
+        }
+        .accordion-header:hover { background: rgba(0, 243, 255, 0.05); color: var(--neon-cyan); }
+        .accordion-header i { transition: transform 0.3s; color: var(--neon-cyan); }
+        .accordion-item.active .accordion-header i { transform: rotate(180deg); }
+        .accordion-item.active { border-color: var(--neon-cyan); box-shadow: 0 0 15px rgba(0, 243, 255, 0.1); }
+        
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease;
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text-muted);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        .accordion-item.active .accordion-content {
+            max-height: 500px;
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
     </style>
 </head>
 <body>
@@ -919,6 +974,69 @@
                 <h3>Elite Squad</h3>
                 <p style="color:#888; font-size:0.9rem;">Join thousands of other players in the mod.</p>
             </div>
+        </div>
+    </section>
+
+    <section class="seo-section">
+        <div class="seo-intro">
+            <h1>The New Era of <span class="keyword-bold">Mobile Games</span></h1>
+            <p>Welcome to the ultimate hub for <span class="keyword-bold">Mobile Phone Mobile Games</span>. In today's digital landscape, <span class="keyword-bold">Gaming on mobile</span> has evolved from simple time-wasters into high-fidelity entertainment powerhouses. Whether you are looking for an <span class="keyword-bold">Online free game</span> to play during a quick break or looking for <span class="keyword-bold">popular Mobile Games</span> with deep <span class="keyword-bold">gameplay</span> mechanics, our library offers something for every type of player.</p>
+        </div>
+
+        <div class="seo-accordion">
+            <div class="accordion-item" onclick="toggleAccordion(this)">
+                <div class="accordion-header">
+                    <span><span class="keyword-bold">Casual Games</span> & <span class="keyword-bold">Easy Mobile Play</span></span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="accordion-content">
+                    Perfect for those who want instant fun without a steep learning curve. Our collection includes <span class="keyword-bold">Mahjong games</span> and simple strategy titles that define <span class="keyword-bold">easy mobile play</span>. These are ideal for relaxing sessions and stress relief.
+                </div>
+            </div>
+
+            <div class="accordion-item" onclick="toggleAccordion(this)">
+                <div class="accordion-header">
+                    <span><span class="keyword-bold">Multiplayer Game</span> & <span class="keyword-bold">Battle Game</span></span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="accordion-content">
+                    Experience the thrill of competition. Join a global <span class="keyword-bold">multiplayer game</span> arena or dive into a strategic <span class="keyword-bold">battle game</span>. Test your skills against real opponents and climb the leaderboards in <span class="keyword-bold">popular Mobile Games</span>.
+                </div>
+            </div>
+
+            <div class="accordion-item" onclick="toggleAccordion(this)">
+                <div class="accordion-header">
+                    <span><span class="keyword-bold">Sports Games</span> & <span class="keyword-bold">Fast-paced Driving Games</span></span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="accordion-content">
+                    Feel the speed with our selection of <span class="keyword-bold">Sports games</span> and <span class="keyword-bold">fast-paced driving games</span>. From realistic physics to high-octane <span class="keyword-bold">dirt bike games</span>, these titles offer adrenaline-pumping <span class="keyword-bold">gameplay</span> for speed enthusiasts.
+                </div>
+            </div>
+
+            <div class="accordion-item" onclick="toggleAccordion(this)">
+                <div class="accordion-header">
+                    <span><span class="keyword-bold">IO Games</span> & <span class="keyword-bold">Online Free Game</span></span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="accordion-content">
+                    Discover lightweight, addictive <span class="keyword-bold">IO games</span> that you can start playing instantly. As a premier <span class="keyword-bold">Online free game</span> platform, we offer a variety of web-based and app-based titles that focus on fun and simplicity.
+                </div>
+            </div>
+
+            <div class="accordion-item" onclick="toggleAccordion(this)">
+                <div class="accordion-header">
+                    <span><span class="keyword-bold">Classic Games</span> & <span class="keyword-bold">Underrated Mobile Games</span></span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="accordion-content">
+                    Explore timeless <span class="keyword-bold">classic games</span> that have been remastered for modern devices. We also highlight <span class="keyword-bold">underrated Mobile Games</span> that offer unique artistic styles and innovative mechanics that the mainstream charts often miss.
+                </div>
+            </div>
+        </div>
+
+        <div class="seo-intro" style="margin-top: 40px;">
+            <p>From the tactile responsiveness of <span class="keyword-bold">dirt bike games</span> to the strategic depth of a <span class="keyword-bold">multiplayer game</span>, <span class="keyword-bold">Gaming on mobile</span> has never been more exciting. Explore our curated selection of <span class="keyword-bold">Mobile Games</span> today and discover why <span class="keyword-bold">Mobile Phone Mobile Games</span> are the future of entertainment.</p>
         </div>
     </section>
 
@@ -1622,6 +1740,21 @@
             setTimeout(() => {
                 items[oldIdx].classList.remove('prev');
             }, 1200); // Matches the new CSS transition time
+        }
+
+        // --- ACCORDION LOGIC ---
+        window.toggleAccordion = function(element) {
+            const isActive = element.classList.contains('active');
+            
+            // Close all items
+            document.querySelectorAll('.accordion-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Toggle clicked item
+            if (!isActive) {
+                element.classList.add('active');
+            }
         }
         
         // Initialize App
