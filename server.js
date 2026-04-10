@@ -47,7 +47,14 @@ async function refreshGamesCache() {
 
     try {
         const fetchUrl = `${SHEET_URL}&t=${Date.now()}`;
-        const response = await axios.get(fetchUrl);
+        console.log(`[CACHE] External Fetch: ${fetchUrl}`);
+        
+        const response = await axios.get(fetchUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            },
+            timeout: 10000 // 10 second timeout
+        });
         
         let csvText = response.data;
         if (typeof csvText !== 'string') {

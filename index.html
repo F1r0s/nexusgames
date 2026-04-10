@@ -1225,18 +1225,21 @@
             }
 
             try {
-                const response = await fetch('/api/games');
+                console.log("[DEBUG] Fetching fresh games from /api/games...");
+                const response = await fetch('/api/games?t=' + Date.now());
                 if (!response.ok) throw new Error("Server responded with " + response.status);
                 
                 const data = await response.json();
+                console.log("[DEBUG] Received data:", data);
                 
-                if (data && Array.isArray(data)) {
+                if (data && Array.isArray(data) && data.length > 0) {
                     gamesDB = data;
                     localStorage.setItem('gamesDB_cache', JSON.stringify(data));
                     localStorage.setItem('gamesDB_ts', Date.now().toString());
                     renderGames();
                 } else {
-                    throw new Error("Invalid database format received");
+                    console.warn("[DEBUG] Received empty or invalid data:", data);
+                    throw new Error("No items in database");
                 }
             } catch (err) {
                 console.error("Database Fetch failed:", err);
