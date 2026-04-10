@@ -39,12 +39,23 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Endpoint to get games (Cached + Manual Sync support)
+// Endpoint to get games (Cached + Protected Manual Sync)
 app.get('/api/games', async (req, res) => {
     const now = Date.now();
-    const forceSync = req.query.sync === 'true' || req.query.refresh === 'true';
+    const queryKey = req.query.key;
+    const isManualSync = req.query.sync === 'true' || req.query.refresh === 'true';
     
-    // If cache is expired OR user forced a sync, update it
+    // Validate secret if manual sync is requested
+    const SYNC_SECRET = process.env.SYNC_SECRET || "default_safe_key_123";
+    const isAuthorized = queryKey === SYNC_SECRET;
+
+    const forceSync = isManualSync && isAuthorized;
+    
+    if (isManualSync && !isAuthorized) {
+        console.warn(`[AUTH] Unauthorized sync attempt with key: ${queryKey}`);
+    }
+
+    // If cache is expired OR authorized user forced a sync, update it
     if (forceSync || (now - gamesCache.lastUpdated > CACHE_DURATION)) {
         if (!gamesCache.isFetching) {
             console.log(forceSync ? "[API] Manual sync requested." : "[API] Cache expired, refreshing...");
