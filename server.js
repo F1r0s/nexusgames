@@ -3,6 +3,15 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 
+// --- GOOGLE SHEETS CONFIG ---
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTmd9N77OuTj1k_QFR0hyiqVjxfZvfnYUPO55kUSFN8RyW7MoZNICzc8gGYZuG0uVL_ccPXnG96ltKT/pub?output=csv";
+let gamesCache = {
+    data: [],
+    lastUpdated: 0,
+    isFetching: false
+};
+const CACHE_DURATION = 15 * 60 * 1000; // 15 Minutes
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -13,6 +22,133 @@ app.use(cors());
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
+
+// Endpoint to get games (Cached)
+app.get('/api/games', async (req, res) => {
+    const now = Date.now();
+    
+    // If cache is expired and we aren't already fetching, update it in background
+    if ((now - gamesCache.lastUpdated > CACHE_DURATION) && !gamesCache.isFetching) {
+        refreshGamesCache();
+    }
+
+    // If we have no data at all (first load), wait for the first fetch
+    if (gamesCache.data.length === 0) {
+        await refreshGamesCache();
+    }
+
+    res.json(gamesCache.data);
+});
+
+async function refreshGamesCache() {
+    if (gamesCache.isFetching) return;
+    gamesCache.isFetching = true;
+    console.log("[CACHE] Fetching fresh data from Google Sheets...");
+
+    try {
+        const response = await axios.get(`${SHEET_URL}&t=${Date.now()}`);
+        const csvText = response.data;
+        const parsed = parseCSV(csvText);
+        
+        if (parsed && parsed.length > 0) {
+            gamesCache.data = parsed;
+            gamesCache.lastUpdated = Date.now();
+            console.log(`[CACHE] Successfully cached ${parsed.length} games.`);
+        }
+    } catch (error) {
+        console.error("[CACHE] Error fetching Google Sheets:", error.message);
+    } finally {
+        gamesCache.isFetching = false;
+    }
+}
+
+// Helper: CSV Parser (Replicated from frontend logic for consistency)
+function parseCSV(csvText) {
+    const result = [];
+    const rows = [];
+    let currentRow = [];
+    let currentField = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < csvText.length; i++) {
+        const char = csvText[i];
+        const nextChar = csvText[i + 1];
+
+        if (char === '"' && inQuotes && nextChar === '"') {
+            currentField += '"';
+            i++;
+        } else if (char === '"') {
+            inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+            currentRow.push(currentField);
+            currentField = '';
+        } else if ((char === '\r' || char === '\n') && !inQuotes) {
+            if (char === '\r' && nextChar === '\n') i++;
+            currentRow.push(currentField);
+            rows.push(currentRow);
+            currentRow = [];
+            currentField = '';
+        } else {
+            currentField += char;
+        }
+    }
+    if (currentRow.length > 0 || currentField !== '') {
+        currentRow.push(currentField);
+        rows.push(currentRow);
+    }
+
+    let headerRowIndex = -1;
+    let colMap = { name: -1, ver: -1, size: -1, os: -1, tags: -1, img: -1, link: -1, desc: -1 };
+
+    for(let i=0; i<Math.min(rows.length, 10); i++) {
+        const headers = rows[i].map(h => (h||"").trim().toUpperCase());
+        const headerStr = headers.join('|');
+        if(headerStr.includes("MODULE") || headerStr.includes("NAME") || headerStr.includes("VISUAL")) {
+            headerRowIndex = i;
+            headers.forEach((h, index) => {
+                if(h.includes("MODULE") || h.includes("NAME")) colMap.name = index;
+                else if(h.includes("VERSION") || h.includes("BUILD")) colMap.ver = index;
+                else if(h.includes("SIZE")) colMap.size = index;
+                else if(h.includes("OS") || h.includes("ARCH")) colMap.os = index;
+                else if(h.includes("TAGS")) colMap.tags = index;
+                else if(h.includes("VISUAL") || h.includes("ASSET") || h.includes("IMAGE")) colMap.img = index;
+                else if(h.includes("ACCESS") || h.includes("LINK")) colMap.link = index;
+                else if(h.includes("LOG") || h.includes("DESC")) colMap.desc = index;
+            });
+            break;
+        }
+    }
+
+    if(headerRowIndex === -1) {
+        colMap = { name: 0, ver: 1, size: 2, os: 3, tags: 4, img: 5, link: 6, desc: 7 };
+        headerRowIndex = -1; 
+    }
+
+    for (let i = headerRowIndex + 1; i < rows.length; i++) {
+        const cleanValues = rows[i].map(val => (val||"").trim());
+        const title = colMap.name > -1 ? (cleanValues[colMap.name] || "") : "";
+        if (!title || title.toUpperCase() === "MODULE NAME" || title.toUpperCase() === "NAME" || title.startsWith("Ex: ")) { 
+            continue; 
+        }
+
+        const img = (colMap.img > -1 && cleanValues[colMap.img]) ? cleanValues[colMap.img] : "https://placehold.co/400x300?text=No+Image";
+        const rawOS = (colMap.os > -1 ? cleanValues[colMap.os] : "") || "android";
+        const rawTags = (colMap.tags > -1 ? cleanValues[colMap.tags] : "") || "General";
+
+        result.push({
+            id: Date.now() + Math.random(),
+            title: title,
+            version: (colMap.ver > -1 ? cleanValues[colMap.ver] : "v1.0"),
+            size: (colMap.size > -1 ? cleanValues[colMap.size] : "N/A"),
+            os: rawOS.toLowerCase().split(',').map(s=>s.trim()),
+            categories: rawTags.split(',').map(s=>s.trim()),
+            img: img,
+            link: (colMap.link > -1 ? cleanValues[colMap.link] : "#"),
+            desc: (colMap.desc > -1 ? cleanValues[colMap.desc] : "No description.")
+        });
+    }
+    return result;
+}
 
 // The Secure Endpoint
 app.get('/api/offers', async (req, res) => {
