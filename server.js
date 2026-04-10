@@ -14,7 +14,7 @@ let gamesCache = {
     lastUpdated: 0,
     isFetching: false
 };
-const CACHE_DURATION = 15 * 60 * 1000; // 15 Minutes
+const CACHE_DURATION = 2 * 60 * 1000; // Shorter 2-minute cache for better responsiveness
 
 // Initialize with Fallback on boot
 try {
@@ -31,26 +31,32 @@ try {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Enable CORS so your frontend (index.html) can talk to this server
+// Enable CORS
 app.use(cors());
 
 // Serve the frontend
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Endpoint to get games (Cached)
+// Endpoint to get games (Cached + Manual Sync support)
 app.get('/api/games', async (req, res) => {
     const now = Date.now();
+    const forceSync = req.query.sync === 'true' || req.query.refresh === 'true';
     
-    // If cache is expired and we aren't already fetching, update it in background
-    if ((now - gamesCache.lastUpdated > CACHE_DURATION) && !gamesCache.isFetching) {
-        refreshGamesCache();
-    }
-
-    // If we have no data at all (first load), wait for the first fetch
-    if (gamesCache.data.length === 0) {
-        await refreshGamesCache();
+    // If cache is expired OR user forced a sync, update it
+    if (forceSync || (now - gamesCache.lastUpdated > CACHE_DURATION)) {
+        if (!gamesCache.isFetching) {
+            console.log(forceSync ? "[API] Manual sync requested." : "[API] Cache expired, refreshing...");
+            await refreshGamesCache();
+        } else if (forceSync) {
+            // If already fetching, wait briefly for it to finish
+            let waitTime = 0;
+            while (gamesCache.isFetching && waitTime < 5) { 
+                await new Promise(r => setTimeout(r, 1000));
+                waitTime++;
+            }
+        }
     }
 
     res.json(gamesCache.data);
