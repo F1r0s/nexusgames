@@ -46,107 +46,133 @@ async function refreshGamesCache() {
     console.log("[CACHE] Fetching fresh data from Google Sheets...");
 
     try {
-        const response = await axios.get(`${SHEET_URL}&t=${Date.now()}`);
-        const csvText = response.data;
+        const fetchUrl = `${SHEET_URL}&t=${Date.now()}`;
+        const response = await axios.get(fetchUrl);
+        
+        let csvText = response.data;
+        if (typeof csvText !== 'string') {
+            console.warn("[CACHE] Axios returned non-string data, attempting to stringify...");
+            csvText = JSON.stringify(csvText);
+        }
+
         const parsed = parseCSV(csvText);
         
         if (parsed && parsed.length > 0) {
             gamesCache.data = parsed;
             gamesCache.lastUpdated = Date.now();
             console.log(`[CACHE] Successfully cached ${parsed.length} games.`);
+        } else {
+            console.warn("[CACHE] Parsed data is empty. Check CSV structure.");
         }
     } catch (error) {
         console.error("[CACHE] Error fetching Google Sheets:", error.message);
+        if (error.response) {
+            console.error("[CACHE] Response status:", error.response.status);
+        }
     } finally {
         gamesCache.isFetching = false;
     }
 }
 
-// Helper: CSV Parser (Replicated from frontend logic for consistency)
+// Helper: Improved CSV Parser (Resilient to multi-line fields and various header names)
 function parseCSV(csvText) {
+    if (!csvText) return [];
+    
     const result = [];
     const rows = [];
     let currentRow = [];
     let currentField = '';
     let inQuotes = false;
 
+    // Handle string cleaned from BOM or whitespace
+    csvText = csvText.trim();
+
     for (let i = 0; i < csvText.length; i++) {
         const char = csvText[i];
         const nextChar = csvText[i + 1];
 
-        if (char === '"' && inQuotes && nextChar === '"') {
-            currentField += '"';
-            i++;
-        } else if (char === '"') {
-            inQuotes = !inQuotes;
+        if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+                currentField += '"';
+                i++;
+            } else {
+                inQuotes = !inQuotes;
+            }
         } else if (char === ',' && !inQuotes) {
             currentRow.push(currentField);
             currentField = '';
         } else if ((char === '\r' || char === '\n') && !inQuotes) {
             if (char === '\r' && nextChar === '\n') i++;
-            currentRow.push(currentField);
-            rows.push(currentRow);
+            if (currentRow.length > 0 || currentField !== '') {
+                currentRow.push(currentField);
+                rows.push(currentRow);
+            }
             currentRow = [];
             currentField = '';
         } else {
             currentField += char;
         }
     }
+    // Final field/row
     if (currentRow.length > 0 || currentField !== '') {
         currentRow.push(currentField);
         rows.push(currentRow);
     }
 
+    if (rows.length === 0) return [];
+
     let headerRowIndex = -1;
     let colMap = { name: -1, ver: -1, size: -1, os: -1, tags: -1, img: -1, link: -1, desc: -1 };
 
+    // Find Header Row (More flexible match)
     for(let i=0; i<Math.min(rows.length, 10); i++) {
-        const headers = rows[i].map(h => (h||"").trim().toUpperCase());
-        const headerStr = headers.join('|');
-        if(headerStr.includes("MODULE") || headerStr.includes("NAME") || headerStr.includes("VISUAL")) {
+        const row = rows[i].map(h => (h||"").trim().toUpperCase());
+        const rowStr = row.join('|');
+        
+        // Priority headers to look for
+        if(rowStr.includes("NAME") || rowStr.includes("MODULE") || rowStr.includes("VISUAL")) {
             headerRowIndex = i;
-            headers.forEach((h, index) => {
-                if(h.includes("MODULE") || h.includes("NAME")) colMap.name = index;
-                else if(h.includes("VERSION") || h.includes("BUILD")) colMap.ver = index;
-                else if(h.includes("SIZE")) colMap.size = index;
-                else if(h.includes("OS") || h.includes("ARCH")) colMap.os = index;
-                else if(h.includes("TAGS")) colMap.tags = index;
-                else if(h.includes("VISUAL") || h.includes("ASSET") || h.includes("IMAGE")) colMap.img = index;
-                else if(h.includes("ACCESS") || h.includes("LINK")) colMap.link = index;
-                else if(h.includes("LOG") || h.includes("DESC")) colMap.desc = index;
+            row.forEach((h, index) => {
+                if(h.includes("NAME") || h.includes("MODULE")) colMap.name = index;
+                else if(h.includes("VER") || h.includes("BUILD")) colMap.ver = index;
+                else if(h.includes("SIZE") || h.includes("MB") || h.includes("GB")) colMap.size = index;
+                else if(h.includes("OS") || h.includes("ARCH") || h.includes("SYSTEM")) colMap.os = index;
+                else if(h.includes("TAG") || h.includes("CAT")) colMap.tags = index;
+                else if(h.includes("VISUAL") || h.includes("IMAGE") || h.includes("ASSET")) colMap.img = index;
+                else if(h.includes("LINK") || h.includes("ACCESS") || h.includes("DOWNLOAD")) colMap.link = index;
+                else if(h.includes("LOG") || h.includes("DESC") || h.includes("INFO")) colMap.desc = index;
             });
             break;
         }
     }
 
+    // Default fallback if no header found
     if(headerRowIndex === -1) {
+        console.warn("[CSV] No header row detected, using index-based fallback.");
         colMap = { name: 0, ver: 1, size: 2, os: 3, tags: 4, img: 5, link: 6, desc: 7 };
-        headerRowIndex = -1; 
     }
 
+    // Start parsing from next row
     for (let i = headerRowIndex + 1; i < rows.length; i++) {
-        const cleanValues = rows[i].map(val => (val||"").trim());
-        const title = colMap.name > -1 ? (cleanValues[colMap.name] || "") : "";
-        if (!title || title.toUpperCase() === "MODULE NAME" || title.toUpperCase() === "NAME" || title.startsWith("Ex: ")) { 
-            continue; 
-        }
-
-        const img = (colMap.img > -1 && cleanValues[colMap.img]) ? cleanValues[colMap.img] : "https://placehold.co/400x300?text=No+Image";
-        const rawOS = (colMap.os > -1 ? cleanValues[colMap.os] : "") || "android";
-        const rawTags = (colMap.tags > -1 ? cleanValues[colMap.tags] : "") || "General";
+        const cells = rows[i].map(val => (val||"").trim());
+        const title = colMap.name > -1 ? cells[colMap.name] : "";
+        
+        // Skip empty or header-copy rows
+        if (!title || title.toUpperCase() === "MODULE NAME" || title.toUpperCase() === "NAME") continue;
 
         result.push({
-            id: Date.now() + Math.random(),
+            id: 'g' + i + '_' + Date.now().toString(36),
             title: title,
-            version: (colMap.ver > -1 ? cleanValues[colMap.ver] : "v1.0"),
-            size: (colMap.size > -1 ? cleanValues[colMap.size] : "N/A"),
-            os: rawOS.toLowerCase().split(',').map(s=>s.trim()),
-            categories: rawTags.split(',').map(s=>s.trim()),
-            img: img,
-            link: (colMap.link > -1 ? cleanValues[colMap.link] : "#"),
-            desc: (colMap.desc > -1 ? cleanValues[colMap.desc] : "No description.")
+            version: colMap.ver > -1 ? (cells[colMap.ver] || "v1.0") : "v1.0",
+            size: colMap.size > -1 ? (cells[colMap.size] || "N/A") : "N/A",
+            os: (colMap.os > -1 ? (cells[colMap.os] || "android") : "android").toLowerCase().split(',').map(s=>s.trim()),
+            categories: (colMap.tags > -1 ? (cells[colMap.tags] || "General") : "General").split(',').map(s=>s.trim()),
+            img: (colMap.img > -1 && cells[colMap.img]) ? cells[colMap.img] : "https://placehold.co/400x300?text=No+Image",
+            link: colMap.link > -1 ? (cells[colMap.link] || "#") : "#",
+            desc: colMap.desc > -1 ? (cells[colMap.desc] || "No description provided.") : "No description provided."
         });
     }
+
     return result;
 }
 

@@ -1198,40 +1198,58 @@
 
             if (cachedData && cachedTs && (now - parseInt(cachedTs) < CACHE_DURATION)) {
                 try {
-                    gamesDB = JSON.parse(cachedData);
-                    renderGames();
-                    // We still fetch fresh in background to keep it updated
-                    fetchFreshGames();
-                    return;
-                } catch(e) { localStorage.removeItem(CACHE_KEY); }
+                    const parsed = JSON.parse(cachedData);
+                    // Basic validation: must be an array and have items or we fetch fresh
+                    if (Array.isArray(parsed)) {
+                        gamesDB = parsed;
+                        renderGames();
+                        // Still fetch fresh in background
+                        fetchFreshGames(true); 
+                        return;
+                    }
+                } catch(e) { 
+                    console.warn("Invalid cache data, clearing.");
+                    localStorage.removeItem(CACHE_KEY); 
+                }
             }
 
             await fetchFreshGames();
         }
 
-        async function fetchFreshGames() {
+        async function fetchFreshGames(isBackground = false) {
             const container = document.getElementById('gamesGrid');
+            
+            // Show loading spinner only if we have NO data yet and not a background fetch
+            if (!isBackground && gamesDB.length === 0) {
+                container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px;"><div class="spinner"></div><p style="color:var(--text-muted); margin-top:10px;">ESTABLISHING UPLINK TO GAME DATABASE...</p></div>';
+            }
+
             try {
-                // Fetch from our new secure server endpoint
                 const response = await fetch('/api/games');
-                if (!response.ok) throw new Error("Server communication failed");
+                if (!response.ok) throw new Error("Server responded with " + response.status);
                 
                 const data = await response.json();
                 
-                if (data && data.length > 0) {
+                if (data && Array.isArray(data)) {
                     gamesDB = data;
-                    // Save to local cache for next time
                     localStorage.setItem('gamesDB_cache', JSON.stringify(data));
                     localStorage.setItem('gamesDB_ts', Date.now().toString());
                     renderGames();
+                } else {
+                    throw new Error("Invalid database format received");
                 }
             } catch (err) {
-                console.error("DB Error:", err);
+                console.error("Database Fetch failed:", err);
                 if (gamesDB.length === 0) {
-                    container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#ff4d4d; border:1px solid #ff4d4d; border-radius:8px;">
-                        <strong>SYSTEM OFFLINE</strong><br>
-                        Unable to connect to Game Database.<br>
-                        <small>${err.message}</small>
+                    container.innerHTML = `
+                    <div style="grid-column:1/-1; text-align:center; padding:40px; color:#ff4d4d; border:1px solid rgba(255, 77, 77, 0.3); border-radius:8px; background: rgba(0,0,0,0.3);">
+                        <i class="fas fa-wifi-slash" style="font-size:2rem; margin-bottom:15px;"></i><br>
+                        <strong style="font-size:1.2rem;">SYSTEM OFFLINE</strong><br>
+                        <p style="color:#ccc; margin:10px 0;">We couldn't connect to the game servers. Please try again in 5 minutes.</p>
+                        <small style="color:rgba(255,255,255,0.3);">Error: ${err.message}</small><br>
+                        <button onclick="location.reload()" style="margin-top:20px; padding:10px 20px; background:var(--neon-cyan); color:black; border:none; border-radius:4px; font-family:var(--font-head); cursor:pointer;">
+                            <i class="fas fa-sync"></i> RECONNECT NOW
+                        </button>
                     </div>`;
                 }
             }
@@ -1243,16 +1261,17 @@
         const categoryBtns = document.querySelectorAll('.cat-btn');
 
         function renderGames(filterText = '', filterCat = 'All') {
+            if (!grid) return;
             grid.innerHTML = '';
             
-            // 1. Filter the games first
+            // Allow searching from the current DB
             let filtered = gamesDB.filter(game => {
                 const matchesText = (game.title || "").toLowerCase().includes(filterText.toLowerCase());
                 const matchesCat = filterCat === 'All' || (game.categories && game.categories.some(c => c.toLowerCase().trim() === filterCat.toLowerCase().trim()));
                 return matchesText && matchesCat;
             });
 
-            // 2. Sort: Legendary first, then New/Hot, then normal
+            // Sort
             filtered.sort((a, b) => {
                 const getPriority = (game) => {
                     const tags = (game.categories || []).map(c => c.toLowerCase().trim());
@@ -1264,17 +1283,15 @@
                 return getPriority(b) - getPriority(a);
             });
 
-            // Populate Featured Scroll if it's the first load or "All"
             if (filterText === '' && filterCat === 'All') {
                 renderFeatured(filtered);
             }
 
             if (filtered.length === 0) {
-                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); padding:40px;">No modules found matching your query.</div>';
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); padding:60px;"><i class="fas fa-search" style="font-size:2rem; margin-bottom:15px; opacity:0.5;"></i><br>NO MODULES FOUND MATCHING YOUR QUERY.</div>';
                 return;
             }
 
-            // 3. Render
             filtered.forEach(game => {
                 const card = document.createElement('div');
                 card.className = 'game-card';
