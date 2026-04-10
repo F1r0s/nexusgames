@@ -896,25 +896,8 @@
                     <input type="text" id="searchInput" class="search-input" placeholder="Search for games...">
                 </div>
 
-                <div class="categories">
-                    <button class="cat-btn active" data-cat="All">All</button>
-                    <button class="cat-btn" data-cat="Action">Action</button>
-                    <button class="cat-btn" data-cat="Shooter">Shooter</button>
-                    <button class="cat-btn" data-cat="Adventure">Adventure</button>
-                    <button class="cat-btn" data-cat="RPG">RPG</button>
-                    <button class="cat-btn" data-cat="Strategy">Strategy</button>
-                    <button class="cat-btn" data-cat="Fighting">Fighting</button>
-                    <button class="cat-btn" data-cat="Puzzle">Puzzle</button>
-                    <button class="cat-btn" data-cat="Simulation">Simulation</button>
-                    <button class="cat-btn" data-cat="Sports">Sports</button>
-                    <button class="cat-btn" data-cat="Racing">Racing</button>
-                    <button class="cat-btn" data-cat="Horror">Horror</button>
-                    <button class="cat-btn" data-cat="Survival">Survival</button>
-                    <button class="cat-btn" data-cat="Casual">Casual</button>
-                    <button class="cat-btn" data-cat="Card">Card & Board</button>
-                    <button class="cat-btn" data-cat="Music">Music / Rhythm</button>
-                    <button class="cat-btn" data-cat="Educational">Educational</button>
-                    <button class="cat-btn" data-cat="Sandbox">Sandbox / Creative</button>
+                <div class="categories" id="categoryContainer">
+                    <div class="spinner" style="border-width:2px; width:15px; height:15px; margin:0 10px;"></div>
                 </div>
             </div>
 
@@ -1063,11 +1046,8 @@
             </div>
             <div style="flex: 0 0 200px;">
                 <h4 style="font-family: var(--font-head); color: white; margin-bottom: 20px; font-size: 1rem;">CATEGORIES</h4>
-                <ul style="list-style: none; padding: 0; margin: 0;">
-                    <li style="margin-bottom: 10px;"><a href="#" onclick="document.querySelector('[data-cat=Action]').click(); document.querySelector('.main-container').scrollIntoView({behavior: 'smooth'}); return false;" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: 0.3s;">Action Games</a></li>
-                    <li style="margin-bottom: 10px;"><a href="#" onclick="document.querySelector('[data-cat=Shooter]').click(); document.querySelector('.main-container').scrollIntoView({behavior: 'smooth'}); return false;" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: 0.3s;">Shooter Games</a></li>
-                    <li style="margin-bottom: 10px;"><a href="#" onclick="document.querySelector('[data-cat=RPG]').click(); document.querySelector('.main-container').scrollIntoView({behavior: 'smooth'}); return false;" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: 0.3s;">RPG Games</a></li>
-                    <li style="margin-bottom: 10px;"><a href="#" onclick="document.querySelector('[data-cat=Racing]').click(); document.querySelector('.main-container').scrollIntoView({behavior: 'smooth'}); return false;" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: 0.3s;">Racing Games</a></li>
+                <ul style="list-style: none; padding: 0; margin: 0;" id="footerCategories">
+                    <li style="margin-bottom: 10px; color:#555">Loading tags...</li>
                 </ul>
             </div>
         </div>
@@ -1261,16 +1241,22 @@
         // --- 3. RENDER LOGIC ---
         const grid = document.getElementById('gamesGrid');
         const searchInput = document.getElementById('searchInput');
-        const categoryBtns = document.querySelectorAll('.cat-btn');
+        const catContainer = document.getElementById('categoryContainer');
+        const footerCatContainer = document.getElementById('footerCategories');
 
-        function renderGames(filterText = '', filterCat = 'All') {
+        let currentFilterText = '';
+        let currentFilterCat = 'All';
+
+        function renderGames() {
             if (!grid) return;
             grid.innerHTML = '';
             
+            updateCategoryButtons();
+
             // Allow searching from the current DB
             let filtered = gamesDB.filter(game => {
-                const matchesText = (game.title || "").toLowerCase().includes(filterText.toLowerCase());
-                const matchesCat = filterCat === 'All' || (game.categories && game.categories.some(c => c.toLowerCase().trim() === filterCat.toLowerCase().trim()));
+                const matchesText = (game.title || "").toLowerCase().includes(currentFilterText.toLowerCase());
+                const matchesCat = currentFilterCat === 'All' || (game.categories && game.categories.some(c => c.toLowerCase().trim() === currentFilterCat.toLowerCase().trim()));
                 return matchesText && matchesCat;
             });
 
@@ -1286,7 +1272,7 @@
                 return getPriority(b) - getPriority(a);
             });
 
-            if (filterText === '' && filterCat === 'All') {
+            if (currentFilterText === '' && currentFilterCat === 'All') {
                 renderFeatured(filtered);
             }
 
@@ -1298,15 +1284,11 @@
             filtered.forEach(game => {
                 const card = document.createElement('div');
                 card.className = 'game-card';
-
+                
                 const lowerTags = (game.categories || []).map(c => c.toLowerCase().trim());
-                const isLegendary = lowerTags.includes('legendary');
-                const isNew = lowerTags.includes('new');
-                const isHot = lowerTags.includes('hot');
-
-                if (isLegendary) card.classList.add('legendary');
-                if (isNew) card.classList.add('new-tag');
-                if (isHot) card.classList.add('hot-tag');
+                if (lowerTags.includes('legendary')) card.classList.add('legendary');
+                if (lowerTags.includes('new')) card.classList.add('new-tag');
+                if (lowerTags.includes('hot')) card.classList.add('hot-tag');
 
                 const displayTags = (game.categories || []).filter(c => {
                     const low = c.toLowerCase().trim();
@@ -1334,13 +1316,62 @@
             });
         }
 
-        searchInput.addEventListener('input', (e) => renderGames(e.target.value));
-        categoryBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                categoryBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                renderGames(searchInput.value, btn.dataset.cat);
+        function updateCategoryButtons() {
+            if (!catContainer) return;
+
+            const categories = new Set(['All']);
+            gamesDB.forEach(game => {
+                if (game.categories) {
+                    game.categories.forEach(cat => {
+                        const clean = cat.trim();
+                        if (clean && !['New', 'Hot', 'Legendary'].includes(clean)) {
+                            // Capitalize first letter for display
+                            categories.add(clean.charAt(0).toUpperCase() + clean.slice(1).toLowerCase());
+                        }
+                    });
+                }
             });
+
+            const newCategories = Array.from(categories);
+            const existingCategories = Array.from(catContainer.querySelectorAll('.cat-btn')).map(b => b.dataset.cat);
+            if (JSON.stringify(existingCategories) === JSON.stringify(newCategories)) return;
+
+            catContainer.innerHTML = '';
+            if (footerCatContainer) footerCatContainer.innerHTML = '';
+
+            newCategories.forEach(cat => {
+                // HUD Button
+                const btn = document.createElement('button');
+                btn.className = `cat-btn ${cat === currentFilterCat ? 'active' : ''}`;
+                btn.dataset.cat = cat;
+                btn.textContent = cat;
+                btn.onclick = () => {
+                    currentFilterCat = cat;
+                    renderGames();
+                    document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+                };
+                catContainer.appendChild(btn);
+
+                // Footer Link
+                if (footerCatContainer && cat !== 'All') {
+                    const li = document.createElement('li');
+                    li.style.marginBottom = '10px';
+                    li.innerHTML = `<a href="#" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: 0.3s;">${cat} Games</a>`;
+                    li.onclick = (e) => {
+                        e.preventDefault();
+                        currentFilterCat = cat;
+                        renderGames();
+                        document.querySelector('.main-container').scrollIntoView({behavior: 'smooth'});
+                    };
+                    footerCatContainer.appendChild(li);
+                }
+            });
+        }
+
+        // Setup Event Listeners
+        searchInput.addEventListener('input', (e) => {
+            currentFilterText = e.target.value;
+            renderGames();
         });
         
         // --- 4. MODAL LOGIC & LOCKER ---
