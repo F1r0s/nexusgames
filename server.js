@@ -2,15 +2,31 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
 
 // --- GOOGLE SHEETS CONFIG ---
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTmd9N77OuTj1k_QFR0hyiqVjxfZvfnYUPO55kUSFN8RyW7MoZNICzc8gGYZuG0uVL_ccPXnG96ltKT/pub?output=csv";
+const FALLBACK_FILE = path.join(__dirname, 'fallback_games.csv');
+
 let gamesCache = {
     data: [],
     lastUpdated: 0,
     isFetching: false
 };
 const CACHE_DURATION = 15 * 60 * 1000; // 15 Minutes
+
+// Initialize with Fallback on boot
+try {
+    if (fs.existsSync(FALLBACK_FILE)) {
+        console.log("[INIT] Loading fallback_games.csv...");
+        const fallbackText = fs.readFileSync(FALLBACK_FILE, 'utf8');
+        gamesCache.data = parseCSV(fallbackText);
+        console.log(`[INIT] Loaded ${gamesCache.data.length} games from fallback.`);
+    }
+} catch (e) {
+    console.error("[INIT] Fallback load failed:", e.message);
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -51,16 +67,19 @@ async function refreshGamesCache() {
         
         const response = await axios.get(fetchUrl, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept': 'text/csv'
             },
-            timeout: 10000 // 10 second timeout
+            timeout: 8000
         });
         
         let csvText = response.data;
-        if (typeof csvText !== 'string') {
-            console.warn("[CACHE] Axios returned non-string data, attempting to stringify...");
-            csvText = JSON.stringify(csvText);
+        if (!csvText || typeof csvText !== 'string' || csvText.length < 100) {
+            console.warn(`[CACHE] Invalid response from Google (length: ${csvText ? csvText.length : 0}). Skipping update.`);
+            return;
         }
+
+        console.log(`[CACHE] Received ${csvText.length} bytes from Google.`);
 
         const parsed = parseCSV(csvText);
         
