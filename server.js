@@ -34,9 +34,20 @@ const PORT = process.env.PORT || 3000;
 // Enable CORS
 app.use(cors());
 
-// Serve the frontend
+// Serve static files (CSS, images, JS, etc.)
+app.use(express.static(path.join(__dirname)));
+
+// Serve the frontend pages
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/support.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'support.html'));
+});
+
+app.get('/privacy.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'privacy.html'));
 });
 
 // Endpoint to get games (Cached + Protected Manual Sync)
