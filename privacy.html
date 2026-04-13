@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy — Mod Vault</title>
+    <meta name="description" content="Mod Vault privacy policy. Learn how we handle your data, cookies, and third-party CPA offers.">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg-deep:#0a0a0a; --bg-panel:#111111; --text-main:#ffffff; --text-muted:#888888; --font-head:'Orbitron',sans-serif; --font-body:'Rajdhani',sans-serif; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-track { background:var(--bg-deep); } ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.18); border-radius:4px; }
+        body { font-family:var(--font-body); background-color:var(--bg-deep); color:var(--text-main); min-height:100vh; background-image:radial-gradient(circle at 85% 15%, rgba(255,255,255,0.04) 0%, transparent 35%); font-size:1.05rem; line-height:1.7; }
+        body::before { content:''; position:fixed; inset:0; pointer-events:none; background:repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.013) 2px, rgba(255,255,255,0.013) 4px); z-index:9999; }
+
+        header { background:rgba(8,8,8,0.97); backdrop-filter:blur(20px); border-bottom:1px solid rgba(255,255,255,0.07); padding:15px 30px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
+        .logo-link { display:flex; align-items:center; gap:10px; text-decoration:none; color:#fff; font-family:var(--font-head); font-weight:900; font-size:1rem; letter-spacing:4px; transition:0.3s; }
+        .logo-link:hover { filter:drop-shadow(0 0 10px rgba(255,255,255,0.3)); }
+        .back-btn { color:var(--text-muted); text-decoration:none; font-family:var(--font-head); font-size:0.75rem; letter-spacing:2px; transition:0.3s; display:flex; align-items:center; gap:8px; }
+        .back-btn:hover { color:#fff; }
+
+        .page-hero { padding:80px 20px 50px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.06); }
+        .page-hero h1 { font-family:var(--font-head); font-size:clamp(1.6rem,5vw,2.6rem); text-transform:uppercase; margin-bottom:12px; text-shadow:0 0 30px rgba(255,255,255,0.25); }
+        .page-hero .meta { color:var(--text-muted); font-size:0.85rem; font-family:var(--font-head); letter-spacing:2px; }
+
+        .container { max-width:800px; margin:0 auto; padding:60px 20px 80px; }
+
+        /* Table of Contents */
+        .toc { background:var(--bg-panel); border:1px solid rgba(255,255,255,0.09); border-radius:12px; padding:28px 32px; margin-bottom:50px; }
+        .toc h3 { font-family:var(--font-head); font-size:0.8rem; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,0.6); margin-bottom:16px; }
+        .toc ol { padding-left:20px; }
+        .toc li { margin-bottom:8px; }
+        .toc a { color:rgba(255,255,255,0.75); text-decoration:none; font-size:0.95rem; transition:0.2s; }
+        .toc a:hover { color:#fff; }
+
+        .section { margin-bottom:50px; scroll-margin-top:100px; }
+        .section h2 { font-family:var(--font-head); font-size:1.1rem; text-transform:uppercase; letter-spacing:2px; color:#ffffff; margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; gap:12px; }
+        .section h2 i { color:rgba(255,255,255,0.5); font-size:1rem; }
+        .section p { color:var(--text-muted); margin-bottom:14px; }
+        .section ul { color:var(--text-muted); padding-left:22px; margin-bottom:14px; }
+        .section ul li { margin-bottom:8px; }
+        .section strong { color:#fff; font-weight:600; }
+
+        /* CPA Disclaimer box */
+        .disclaimer-box {
+            background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.18);
+            border-radius:10px; padding:24px 28px; margin:20px 0;
+            position:relative; overflow:hidden;
+        }
+        .disclaimer-box::before { content:'⚠ IMPORTANT NOTICE'; display:block; font-family:var(--font-head); font-size:0.7rem; letter-spacing:3px; color:#fff; margin-bottom:12px; opacity:0.8; }
+        .disclaimer-box p { color:rgba(255,255,255,0.75); margin-bottom:10px; font-size:0.98rem; }
+        .disclaimer-box p:last-child { margin-bottom:0; }
+
+        .highlight { background:rgba(255,255,255,0.06); border-left:3px solid rgba(255,255,255,0.4); padding:14px 18px; border-radius:0 6px 6px 0; margin:16px 0; color:rgba(255,255,255,0.8); font-size:0.95rem; }
+
+        footer { text-align:center; padding:40px 20px; color:#444; font-size:0.8rem; border-top:1px solid rgba(255,255,255,0.05); }
+        footer a { color:#555; text-decoration:none; }
+        footer a:hover { color:#888; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo-link">
+            <svg width="28" height="28" viewBox="0 0 48 48" fill="none">
+                <circle cx="24" cy="24" r="22" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
+                <circle cx="24" cy="24" r="14.5" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
+                <line x1="24" y1="9.5" x2="24" y2="14.5" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round"/>
+                <line x1="24" y1="33.5" x2="24" y2="38.5" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round"/>
+                <line x1="9.5" y1="24" x2="14.5" y2="24" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round"/>
+                <line x1="33.5" y1="24" x2="38.5" y2="24" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="24" cy="24" r="3.5" fill="white" opacity="0.88"/>
+            </svg>
+            MOD VAULT
+        </a>
+        <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Library</a>
+    </header>
+
+    <div class="page-hero">
+        <h1>Privacy Policy</h1>
+        <p class="meta">Last Updated: April 2026</p>
+    </div>
+
+    <div class="container">
+
+        <nav class="toc">
+            <h3>Contents</h3>
+            <ol>
+                <li><a href="#sec1">Information We Collect</a></li>
+                <li><a href="#sec2">How We Use Your Information</a></li>
+                <li><a href="#sec3">CPA &amp; Third-Party Offers</a></li>
+                <li><a href="#sec4">Cookies &amp; Tracking</a></li>
+                <li><a href="#sec5">Data Sharing</a></li>
+                <li><a href="#sec6">Your Rights</a></li>
+                <li><a href="#sec7">Children's Privacy</a></li>
+                <li><a href="#sec8">Contact Us</a></li>
+            </ol>
+        </nav>
+
+        <div class="section" id="sec1">
+            <h2><i class="fas fa-database"></i> 1. Information We Collect</h2>
+            <p>When you use Mod Vault, we may collect the following categories of information:</p>
+            <ul>
+                <li><strong>Usage Data:</strong> Pages visited, time spent, clicks, search queries, and game cards accessed.</li>
+                <li><strong>Device Information:</strong> Browser type, operating system, screen resolution, and IP address for regional offer matching.</li>
+                <li><strong>Support Data:</strong> Name and email address submitted via our support contact form.</li>
+                <li><strong>Local Storage:</strong> We store a local game database cache on your device to speed up page loads. This expires every 5 minutes.</li>
+            </ul>
+            <p>We do <strong>not</strong> require account registration and do not collect passwords or payment information.</p>
+        </div>
+
+        <div class="section" id="sec2">
+            <h2><i class="fas fa-cogs"></i> 2. How We Use Your Information</h2>
+            <p>Information collected is used solely to:</p>
+            <ul>
+                <li>Deliver the correct regional offers and content via the locker system.</li>
+                <li>Improve site performance and fix technical issues.</li>
+                <li>Respond to support requests submitted by you.</li>
+                <li>Generate aggregate, anonymised analytics to understand user behavior.</li>
+            </ul>
+            <div class="highlight">We do not sell your personal data to any third party for marketing purposes.</div>
+        </div>
+
+        <div class="section" id="sec3">
+            <h2><i class="fas fa-lock"></i> 3. CPA &amp; Third-Party Offers</h2>
+            <div class="disclaimer-box">
+                <p>Mod Vault uses a <strong>Cost Per Action (CPA)</strong> monetisation model. Before downloading certain mod files, users are asked to complete one verification task — such as installing a partner application or signing up for a free trial — provided by third-party advertisers.</p>
+                <p>These offers are served by external advertising networks. By clicking on an offer, you are redirected to a <strong>third-party website</strong> which has its own independent privacy policy and terms of service.</p>
+                <p>Mod Vault is <strong>not responsible</strong> for the privacy practices, content, or accuracy of third-party offer pages. We strongly encourage you to review the privacy policy of any third-party site you visit through our offer wall.</p>
+                <p>Completion of offers is tracked automatically by our server to unlock your requested content. Only one offer completion is required per download session.</p>
+            </div>
+            <p>If you encounter any misleading or harmful offer, please <a href="support.html" style="color:#fff;">contact our support team</a> immediately so we can escalate to the advertising network.</p>
+        </div>
+
+        <div class="section" id="sec4">
+            <h2><i class="fas fa-cookie-bite"></i> 4. Cookies &amp; Tracking</h2>
+            <p>We use the following tracking technologies:</p>
+            <ul>
+                <li><strong>Google Analytics (gtag.js):</strong> Collects anonymised usage data including page views, session duration, and device type. You can opt out via the <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" style="color:#fff;">Google Analytics Opt-out Browser Add-on</a>.</li>
+                <li><strong>Microsoft Clarity:</strong> Records anonymised session replays and heatmaps to help us improve the user interface. No personally identifiable data is captured.</li>
+                <li><strong>localStorage:</strong> Used to cache the game database locally for performance. No personal data is stored here.</li>
+            </ul>
+            <p>Third-party advertisers served through the offer wall may set their own cookies when you click on an offer. Mod Vault has no control over these cookies.</p>
+        </div>
+
+        <div class="section" id="sec5">
+            <h2><i class="fas fa-share-alt"></i> 5. Data Sharing</h2>
+            <p>We share data only in the following limited circumstances:</p>
+            <ul>
+                <li><strong>CPA Networks:</strong> Your IP address and user agent string are transmitted to our CPA partner API to identify which offers are available in your region.</li>
+                <li><strong>Analytics Providers:</strong> Anonymised usage data is shared with Google Analytics and Microsoft Clarity.</li>
+                <li><strong>Legal Requirements:</strong> We may disclose data if required by law, court order, or governmental authority.</li>
+            </ul>
+        </div>
+
+        <div class="section" id="sec6">
+            <h2><i class="fas fa-user-shield"></i> 6. Your Rights</h2>
+            <p>Depending on your jurisdiction, you may have the following rights:</p>
+            <ul>
+                <li><strong>Access:</strong> Request a copy of the personal data we hold about you.</li>
+                <li><strong>Deletion:</strong> Request deletion of any personal data tied to your support submissions.</li>
+                <li><strong>Opt-Out:</strong> Opt out of analytics tracking via your browser settings or the Google Analytics opt-out tool.</li>
+                <li><strong>Correction:</strong> Request correction of inaccurate personal information.</li>
+            </ul>
+            <p>To exercise these rights, contact us via the <a href="support.html" style="color:#fff;">Support page</a>.</p>
+        </div>
+
+        <div class="section" id="sec7">
+            <h2><i class="fas fa-child"></i> 7. Children's Privacy</h2>
+            <p>Mod Vault is intended for users aged <strong>13 and above</strong>. We do not knowingly collect personal data from children under 13. If you believe a child has submitted personal information to us, please contact our support team and we will delete it promptly.</p>
+        </div>
+
+        <div class="section" id="sec8">
+            <h2><i class="fas fa-envelope"></i> 8. Contact Us</h2>
+            <p>If you have any questions about this Privacy Policy or how we handle your data, you can reach us at:</p>
+            <div class="highlight">
+                <strong>Email:</strong> multinexusgames@gmail.com<br>
+                <strong>Support Page:</strong> <a href="support.html" style="color:#fff;">modvault.games/support.html</a>
+            </div>
+            <p>We will respond to all privacy-related inquiries within <strong>5 business days</strong>.</p>
+        </div>
+
+    </div>
+
+    <footer>
+        &copy; 2026 Mod Vault. All rights reserved. &nbsp;|&nbsp;
+        <a href="index.html">Home</a> &nbsp;|&nbsp;
+        <a href="support.html">Support</a>
+    </footer>
+</body>
+</html>
