@@ -1,21 +1,23 @@
 {
-  "name": "Ultimate Game Mods",
-  "short_name": "GameMods",
-  "description": "Premium mobile game mods and unlocked features.",
+  "name": "Mod Vault",
+  "short_name": "Mod Vault",
+  "description": "Premium mobile game mods, unlocked features, and exclusive game enhancements.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#050507",
-  "theme_color": "#00f3ff",
+  "background_color": "#0a0a0a",
+  "theme_color": "#FF6B00",
   "icons": [
     {
-      "src": "https://i.postimg.cc/VNFQDf1c/best-mobile-games-photo.png",
-      "sizes": "192x192",
-      "type": "image/png"
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     },
     {
-      "src": "https://i.postimg.cc/VNFQDf1c/best-mobile-games-photo.png",
+      "src": "/image.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
