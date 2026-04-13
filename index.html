@@ -131,7 +131,7 @@
 
     /* ---- LOGO ---- */
     .logo {
-        display:flex; align-items:center; gap:14px;
+        display:flex; align-items:center; gap:2px;
         text-decoration:none; color:#fff;
         transition:transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275), filter 0.4s;
     }
@@ -556,6 +556,29 @@
     .pack-hint { color:var(--text-muted); font-size:0.72rem; letter-spacing:2px; margin-top:14px; font-family:var(--font-head); opacity:0; transition:opacity 0.5s; }
     .pack-hint.visible { opacity:1; }
 
+    /* ---- MOBILE HEADER ---- */
+    @media (max-width:600px) {
+        /* Switch to simple flex: logo left, nav right */
+        header > div {
+            display:flex !important;
+            justify-content:space-between !important;
+            grid-template-columns:unset !important;
+        }
+        /* Hide the invisible left spacer that's only for desktop centering */
+        header > div > div:first-child:empty {
+            display:none !important;
+        }
+        /* Reset logo positioning */
+        header .logo {
+            justify-self:unset !important;
+            margin:0 !important;
+        }
+        /* Nav links: no need for justify-self in flex context */
+        header > div > div:last-child {
+            justify-self:unset !important;
+        }
+    }
+
     /* ---- MOBILE ---- */
     @media (max-width:600px) {
         .main-container { padding:20px 10px 60px; }
@@ -694,8 +717,10 @@
 <body>
 
     <header>
-        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; max-width:1200px; margin:0 auto; position:relative;">
-            <a href="#" class="logo" id="vaultLogo" onclick="triggerVaultBurst(); openVaultPicker(); return false;" style="text-decoration:none; margin:0 auto;">
+        <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; width:100%; max-width:1200px; margin:0 auto;">
+            <!-- Left spacer (mirrors nav width to keep logo centred) -->
+            <div></div>
+            <a href="#" class="logo" id="vaultLogo" onclick="triggerVaultBurst(); openVaultPicker(); return false;" style="text-decoration:none; justify-self:center;">
                 <span class="brand-word">Mod</span>
                 <span class="vault-svg-wrap" id="vaultSvgWrap" aria-hidden="true">
                     <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -755,7 +780,7 @@
                     </svg>
                 </span>
             </a>
-            <div style="position:absolute; right:0; display:flex; gap:18px; align-items:center;">
+            <div style="justify-self:end; display:flex; gap:18px; align-items:center;">
                 <a href="/support.html" style="color:var(--amber); text-decoration:none; font-family:var(--font-head); font-size:0.85rem; font-weight:bold; letter-spacing:1px; text-transform:uppercase; transition:0.3s; border-bottom:1px solid transparent;" onmouseover="this.style.textShadow='0 0 12px rgba(255,107,0,0.8)'; this.style.borderBottom='1px solid var(--amber)';" onmouseout="this.style.textShadow='none'; this.style.borderBottom='1px solid transparent';">Support</a>
                 <a href="/privacy.html" style="color:var(--amber); text-decoration:none; font-family:var(--font-head); font-size:0.85rem; font-weight:bold; letter-spacing:1px; text-transform:uppercase; transition:0.3s; border-bottom:1px solid transparent;" onmouseover="this.style.textShadow='0 0 12px rgba(255,107,0,0.8)'; this.style.borderBottom='1px solid var(--amber)';" onmouseout="this.style.textShadow='none'; this.style.borderBottom='1px solid transparent';">Privacy</a>
             </div>
@@ -825,16 +850,7 @@
         <div class="games-grid" id="gamesGrid"></div>
     </div>
 
-    <section class="community-section reveal" id="support">
-        <h2 class="section-title">CONTACT <span>SUPPORT</span></h2>
-        <p style="color:var(--text-muted); margin-bottom:20px;">Encountering a bug? Let us know.</p>
-        <form action="https://formsubmit.co/multinexusgames@gmail.com" method="POST" class="support-form" style="max-width:500px; margin:0 auto;">
-            <input type="hidden" name="_subject" value="New Support Ticket from Nexus Site">
-            <input type="email" name="email" placeholder="Your Email Address" required>
-            <textarea name="message" rows="5" placeholder="Describe your issue here..." required></textarea>
-            <button type="submit" class="cta-btn" style="width:100%;">SEND TICKET</button>
-        </form>
-    </section>
+
 
     <section class="community-section reveal" style="border-top:none; padding-top:0;">
         <h2 class="section-title">SYSTEM <span>FEATURES</span></h2>
