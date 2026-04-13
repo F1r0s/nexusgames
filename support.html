@@ -3,80 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Support — Mod Vault</title>
+    <title>Support — Mod Vault | Premium Mobile Game Mods</title>
     <meta name="description" content="Contact Mod Vault support. Report issues, ask questions, and get help with your game mods.">
+    <link rel="canonical" href="https://www.modvault.games/support.html">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/png" href="/image.png" sizes="512x512">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --bg-deep:#0a0a0a; --bg-panel:#111111; --text-main:#ffffff; --text-muted:#888888; --font-head:'Orbitron',sans-serif; --font-body:'Rajdhani',sans-serif; }
+        :root {
+            --bg-deep:#0a0a0a; --bg-panel:#111111;
+            --text-main:#ffffff; --text-muted:#888888;
+            --amber:#FF6B00; --amber-dim:rgba(255,107,0,0.15);
+            --font-head:'Orbitron',sans-serif; --font-body:'Rajdhani',sans-serif;
+        }
         * { margin:0; padding:0; box-sizing:border-box; }
-        ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-track { background:var(--bg-deep); } ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.18); border-radius:4px; }
-        body { font-family:var(--font-body); background-color:var(--bg-deep); color:var(--text-main); min-height:100vh; background-image:radial-gradient(circle at 15% 20%, rgba(255,255,255,0.04) 0%, transparent 35%); }
-        body::before { content:''; position:fixed; inset:0; pointer-events:none; background:repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.013) 2px, rgba(255,255,255,0.013) 4px); z-index:9999; }
+        ::-webkit-scrollbar { width:6px; }
+        ::-webkit-scrollbar-track { background:var(--bg-deep); }
+        ::-webkit-scrollbar-thumb { background:rgba(255,107,0,0.35); border-radius:4px; }
+        body { font-family:var(--font-body); background-color:var(--bg-deep); color:var(--text-main); min-height:100vh;
+            background-image:radial-gradient(circle at 15% 20%, rgba(255,107,0,0.06) 0%, transparent 40%),
+                             radial-gradient(circle at 85% 80%, rgba(255,107,0,0.03) 0%, transparent 35%);
+        }
+        body::before { content:''; position:fixed; inset:0; pointer-events:none; background:repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.01) 2px, rgba(255,255,255,0.01) 4px); z-index:9999; }
 
-        header { background:rgba(8,8,8,0.97); backdrop-filter:blur(20px); border-bottom:1px solid rgba(255,255,255,0.07); padding:15px 30px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
+        /* HEADER */
+        header { background:rgba(8,8,8,0.97); backdrop-filter:blur(20px); border-bottom:1px solid rgba(255,107,0,0.15); padding:15px 30px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
         .logo-link { display:flex; align-items:center; gap:10px; text-decoration:none; color:#fff; font-family:var(--font-head); font-weight:900; font-size:1rem; letter-spacing:4px; transition:0.3s; }
-        .logo-link:hover { filter:drop-shadow(0 0 10px rgba(255,255,255,0.3)); }
-        .back-btn { color:var(--text-muted); text-decoration:none; font-family:var(--font-head); font-size:0.75rem; letter-spacing:2px; transition:0.3s; display:flex; align-items:center; gap:8px; }
-        .back-btn:hover { color:#fff; }
+        .logo-link:hover { color:var(--amber); }
+        .logo-link svg circle[r="22"] { stroke:var(--amber) !important; }
+        .back-btn { color:var(--text-muted); text-decoration:none; font-family:var(--font-head); font-size:0.75rem; letter-spacing:2px; transition:0.3s; display:flex; align-items:center; gap:8px; border:1px solid rgba(255,107,0,0.2); padding:8px 16px; border-radius:20px; }
+        .back-btn:hover { color:var(--amber); border-color:var(--amber); box-shadow:0 0 15px rgba(255,107,0,0.2); }
 
-        .hero { padding:80px 20px 40px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.06); }
-        .hero h1 { font-family:var(--font-head); font-size:clamp(1.8rem,6vw,3rem); text-transform:uppercase; margin-bottom:12px; text-shadow:0 0 30px rgba(255,255,255,0.25); }
+        /* HERO */
+        .hero { padding:80px 20px 50px; text-align:center; border-bottom:1px solid rgba(255,107,0,0.12); position:relative; overflow:hidden; }
+        .hero::after { content:''; position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:200px; height:2px; background:linear-gradient(90deg, transparent, var(--amber), transparent); }
+        .hero h1 { font-family:var(--font-head); font-size:clamp(1.8rem,6vw,3rem); text-transform:uppercase; margin-bottom:12px; }
+        .hero h1 span { color:var(--amber); text-shadow:0 0 30px rgba(255,107,0,0.5); }
         .hero p { color:var(--text-muted); font-size:1.05rem; max-width:500px; margin:0 auto; line-height:1.6; }
 
         .container { max-width:700px; margin:60px auto; padding:0 20px; }
 
-        .form-card { background:var(--bg-panel); border:1px solid rgba(255,255,255,0.09); border-radius:14px; padding:40px; box-shadow:0 0 60px rgba(255,255,255,0.04), 0 20px 60px rgba(0,0,0,0.7); position:relative; overflow:hidden; }
-        .form-card::before { content:''; position:absolute; top:-1px; left:-1px; width:24px; height:24px; border-top:2px solid rgba(255,255,255,0.4); border-left:2px solid rgba(255,255,255,0.4); }
-        .form-card::after { content:''; position:absolute; bottom:-1px; right:-1px; width:24px; height:24px; border-bottom:2px solid rgba(255,255,255,0.4); border-right:2px solid rgba(255,255,255,0.4); }
-
-        .form-group { margin-bottom:22px; }
-        label { display:block; color:rgba(255,255,255,0.7); font-family:var(--font-head); font-size:0.72rem; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; }
-        input, textarea, select {
-            width:100%; padding:15px 18px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);
-            color:#fff; font-family:var(--font-body); font-size:1rem; border-radius:8px; transition:0.3s;
-        }
-        input::placeholder, textarea::placeholder { color:rgba(255,255,255,0.25); }
-        input:focus, textarea:focus, select:focus { outline:none; border-color:rgba(255,255,255,0.45); background:rgba(255,255,255,0.07); box-shadow:0 0 20px rgba(255,255,255,0.08); }
-        select option { background:#111; color:#fff; }
-        textarea { resize:vertical; min-height:150px; }
-
-        .submit-btn { width:100%; padding:18px; background:#ffffff; color:#000000; font-family:var(--font-head); font-weight:900; font-size:1rem; text-transform:uppercase; letter-spacing:2px; border:none; border-radius:8px; cursor:pointer; transition:0.3s; box-shadow:0 0 25px rgba(255,255,255,0.3); position:relative; overflow:hidden; }
-        .submit-btn::before { content:''; position:absolute; top:0; left:-100%; width:100%; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.35),transparent); transition:0.5s; }
-        .submit-btn:hover { box-shadow:0 0 45px rgba(255,255,255,0.6); transform:translateY(-2px); }
-        .submit-btn:hover::before { left:100%; }
-
+        /* INFO CARDS */
         .info-row { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:40px; }
-        .info-card { background:var(--bg-panel); border:1px solid rgba(255,255,255,0.07); border-radius:10px; padding:24px 18px; text-align:center; }
-        .info-card i { font-size:1.6rem; color:#fff; margin-bottom:12px; opacity:0.75; display:block; }
-        .info-card h4 { font-family:var(--font-head); font-size:0.72rem; letter-spacing:2px; margin-bottom:6px; }
+        .info-card { background:var(--bg-panel); border:1px solid rgba(255,107,0,0.15); border-radius:10px; padding:24px 18px; text-align:center; transition:0.3s; position:relative; overflow:hidden; }
+        .info-card::before { content:''; position:absolute; top:-1px; left:-1px; width:14px; height:14px; border-top:2px solid var(--amber); border-left:2px solid var(--amber); border-radius:2px 0 0 0; }
+        .info-card:hover { border-color:var(--amber); box-shadow:0 0 25px rgba(255,107,0,0.15); transform:translateY(-4px); }
+        .info-card i { font-size:1.6rem; color:var(--amber); margin-bottom:12px; display:block; text-shadow:0 0 15px rgba(255,107,0,0.5); }
+        .info-card h4 { font-family:var(--font-head); font-size:0.72rem; letter-spacing:2px; margin-bottom:6px; color:#fff; }
         .info-card p { color:var(--text-muted); font-size:0.82rem; line-height:1.4; }
         @media(max-width:600px){ .info-row{ grid-template-columns:1fr; } }
 
-        footer { text-align:center; padding:40px 20px; color:#444; font-size:0.8rem; border-top:1px solid rgba(255,255,255,0.05); margin-top:40px; }
-        footer a { color:#555; text-decoration:none; }
+        /* FORM CARD */
+        .form-card { background:var(--bg-panel); border:1px solid rgba(255,107,0,0.2); border-radius:14px; padding:40px; box-shadow:0 0 60px rgba(255,107,0,0.07), 0 20px 60px rgba(0,0,0,0.7); position:relative; overflow:hidden; }
+        .form-card::before { content:''; position:absolute; top:-1px; left:-1px; width:24px; height:24px; border-top:2px solid var(--amber); border-left:2px solid var(--amber); }
+        .form-card::after  { content:''; position:absolute; bottom:-1px; right:-1px; width:24px; height:24px; border-bottom:2px solid var(--amber); border-right:2px solid var(--amber); }
+
+        .form-group { margin-bottom:22px; }
+        label { display:block; color:var(--amber); font-family:var(--font-head); font-size:0.72rem; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; opacity:0.85; }
+        input, textarea, select {
+            width:100%; padding:15px 18px; background:rgba(255,107,0,0.04); border:1px solid rgba(255,107,0,0.18);
+            color:#fff; font-family:var(--font-body); font-size:1rem; border-radius:8px; transition:0.3s;
+        }
+        input::placeholder, textarea::placeholder { color:rgba(255,255,255,0.25); }
+        input:focus, textarea:focus, select:focus { outline:none; border-color:var(--amber); background:rgba(255,107,0,0.07); box-shadow:0 0 20px rgba(255,107,0,0.15); }
+        select option { background:#111; color:#fff; }
+        textarea { resize:vertical; min-height:150px; }
+
+        .submit-btn { width:100%; padding:18px; background:var(--amber); color:#000; font-family:var(--font-head); font-weight:900; font-size:1rem; text-transform:uppercase; letter-spacing:2px; border:none; border-radius:8px; cursor:pointer; transition:0.3s; box-shadow:0 0 25px rgba(255,107,0,0.4); position:relative; overflow:hidden; }
+        .submit-btn::before { content:''; position:absolute; top:0; left:-100%; width:100%; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.25),transparent); transition:0.5s; }
+        .submit-btn:hover { box-shadow:0 0 45px rgba(255,107,0,0.75); transform:translateY(-2px); }
+        .submit-btn:hover::before { left:100%; }
+
+        footer { text-align:center; padding:40px 20px; color:#555; font-size:0.8rem; border-top:1px solid rgba(255,107,0,0.08); margin-top:40px; }
+        footer a { color:var(--amber); text-decoration:none; opacity:0.7; transition:0.2s; }
+        footer a:hover { opacity:1; }
     </style>
 </head>
 <body>
     <header>
-        <a href="index.html" class="logo-link">
+        <a href="/" class="logo-link">
             <svg width="28" height="28" viewBox="0 0 48 48" fill="none">
-                <circle cx="24" cy="24" r="22" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
-                <circle cx="24" cy="24" r="14.5" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
-                <line x1="24" y1="9.5" x2="24" y2="14.5" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round"/>
-                <line x1="24" y1="33.5" x2="24" y2="38.5" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round"/>
-                <line x1="9.5" y1="24" x2="14.5" y2="24" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round"/>
-                <line x1="33.5" y1="24" x2="38.5" y2="24" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round"/>
-                <circle cx="24" cy="24" r="3.5" fill="white" opacity="0.88"/>
+                <circle cx="24" cy="24" r="22" stroke="rgba(255,107,0,0.8)" stroke-width="1.5"/>
+                <circle cx="24" cy="24" r="14.5" stroke="rgba(255,107,0,0.3)" stroke-width="1"/>
+                <line x1="24" y1="9.5"  x2="24" y2="14.5" stroke="#FF6B00" stroke-width="2" stroke-linecap="round"/>
+                <line x1="24" y1="33.5" x2="24" y2="38.5" stroke="#FF6B00" stroke-width="2" stroke-linecap="round"/>
+                <line x1="9.5"  y1="24" x2="14.5" y2="24" stroke="#FF6B00" stroke-width="2" stroke-linecap="round"/>
+                <line x1="33.5" y1="24" x2="38.5" y2="24" stroke="#FF6B00" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="24" cy="24" r="3.5" fill="#FF6B00" opacity="0.9"/>
             </svg>
             MOD VAULT
         </a>
-        <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Library</a>
+        <a href="/" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Library</a>
     </header>
 
     <div class="hero">
-        <h1>Support Center</h1>
-        <p>Having trouble? Our team reviews every ticket. Fill out the form below and we'll get back to you.</p>
+        <h1>Support <span>Center</span></h1>
+        <p>Having trouble? Our team reviews every ticket. Fill out the form below and we'll get back to you within 24 hours.</p>
     </div>
 
     <div class="container">
@@ -89,7 +112,7 @@
         <div class="form-card">
             <form action="https://formsubmit.co/multinexusgames@gmail.com" method="POST">
                 <input type="hidden" name="_subject" value="New Support Ticket from Mod Vault">
-                <input type="hidden" name="_next" value="https://modvault.games">
+                <input type="hidden" name="_next" value="https://www.modvault.games">
                 <input type="hidden" name="_captcha" value="false">
 
                 <div class="form-group">
@@ -121,7 +144,7 @@
     </div>
 
     <footer>
-        &copy; 2026 Mod Vault &nbsp;|&nbsp; <a href="index.html">Home</a> &nbsp;|&nbsp; <a href="privacy.html">Privacy Policy</a>
+        &copy; 2026 Mod Vault &nbsp;|&nbsp; <a href="/">Home</a> &nbsp;|&nbsp; <a href="/privacy.html">Privacy Policy</a>
     </footer>
 </body>
 </html>

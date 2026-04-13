@@ -566,6 +566,96 @@
         .steps-container { gap:8px; }
         .step-card { padding:12px 6px; }
     }
+    /* ---- VAULT SHOOT OVERLAY ---- */
+    #vaultShootOverlay {
+        display:none; position:fixed; inset:0; z-index:3000;
+        background:rgba(0,0,0,0);
+        align-items:center; justify-content:center;
+        transition:background 0.4s;
+    }
+    #vaultShootOverlay.active { display:flex; background:rgba(0,0,0,0.88); }
+    #vaultShootOverlay.active.bg-ready { background:rgba(0,0,0,0.92); backdrop-filter:blur(12px); }
+    
+    #shootCard {
+        width:clamp(200px,38vw,320px); height:clamp(280px,52vw,450px);
+        position:relative; transform-style:preserve-3d;
+        cursor:pointer; border-radius:18px;
+        /* Start tiny at vault position, animate to center */
+        transform:scale(0) rotateY(0deg) rotateZ(-20deg);
+        transition:none;
+    }
+    #shootCard.shooting {
+        animation:cardShoot 0.7s cubic-bezier(0.175,0.885,0.32,1.275) forwards;
+    }
+    @keyframes cardShoot {
+        0%   { transform:scale(0.1) rotateY(0deg) rotateZ(-20deg); opacity:0; }
+        60%  { transform:scale(1.08) rotateY(0deg) rotateZ(3deg); opacity:1; }
+        100% { transform:scale(1) rotateY(0deg) rotateZ(0deg); opacity:1; }
+    }
+    #shootCard.flipping {
+        animation:cardFlip 0.9s cubic-bezier(0.4,0,0.2,1) forwards;
+    }
+    @keyframes cardFlip {
+        0%   { transform:scale(1) rotateY(0deg); }
+        50%  { transform:scale(1.06) rotateY(90deg); }
+        100% { transform:scale(1) rotateY(180deg); }
+    }
+    #shootCard.flipped { transform:rotateY(180deg); }
+    #shootCard.pulse {
+        animation:cardPulse 0.6s ease-in-out 2;
+    }
+    @keyframes cardPulse {
+        0%,100% { box-shadow:0 0 0 rgba(255,107,0,0); }
+        50%      { box-shadow:0 0 50px rgba(255,107,0,0.6); }
+    }
+
+    .shoot-face, .shoot-back {
+        position:absolute; inset:0; border-radius:18px;
+        backface-visibility:hidden; -webkit-backface-visibility:hidden;
+        overflow:hidden;
+    }
+    .shoot-face {
+        background:linear-gradient(145deg,#1e1a12,#110e00);
+        border:2px solid var(--amber);
+        box-shadow:0 0 40px rgba(255,107,0,0.5), inset 0 0 40px rgba(255,107,0,0.06);
+        display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+    }
+    .shoot-face-label {
+        font-family:var(--font-head); font-size:0.62rem; letter-spacing:4px;
+        color:var(--amber); text-transform:uppercase; opacity:0.85;
+    }
+    .shoot-back {
+        transform:rotateY(180deg);
+        border:2px solid var(--amber);
+        box-shadow:0 0 50px rgba(255,107,0,0.6);
+        display:flex; flex-direction:column;
+        background:#0a0600;
+    }
+    .shoot-back img {
+        width:100%; flex:1; object-fit:cover;
+    }
+    .shoot-game-name {
+        padding:14px 12px 4px;
+        font-family:var(--font-head); font-size:0.75rem; letter-spacing:1px;
+        color:#C8CEE0; text-align:center; line-height:1.3;
+    }
+    .shoot-game-sub {
+        padding:4px 12px 14px;
+        font-family:var(--font-head); font-size:0.55rem; letter-spacing:3px;
+        color:var(--amber); text-align:center;
+        animation:shootSubBlink 1s ease-in-out infinite;
+    }
+    @keyframes shootSubBlink { 0%,100%{opacity:0.5;} 50%{opacity:1;} }
+
+    .shoot-overlay-close {
+        position:fixed; top:20px; right:24px;
+        color:rgba(255,255,255,0.4); font-size:1.6rem;
+        cursor:pointer; transition:0.2s; z-index:3001; font-weight:300;
+        width:40px; height:40px; display:flex; align-items:center; justify-content:center;
+        border-radius:50%; border:1px solid rgba(255,255,255,0.12);
+    }
+    .shoot-overlay-close:hover { color:#fff; border-color:rgba(255,255,255,0.4); }
+
     @media (min-width:768px) {
         .hud-panel { flex-direction:row; align-items:center; }
         .search-box { flex:1; }
@@ -662,18 +752,26 @@
 
     <div class="vault-burst-layer" id="vaultBurstLayer"></div>
 
-    <!-- FIFA PACK OVERLAY -->
-    <div id="packOverlay">
-        <div class="pack-header">
-            <h2 id="packTitle">🔐 Vault Opening...</h2>
-            <p id="packSubtitle">CLICK A CARD TO REVEAL</p>
+    <!-- VAULT SHOOT OVERLAY -->
+    <div id="vaultShootOverlay">
+        <div id="shootCard">
+            <div class="shoot-face">
+                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:54px;height:54px;">
+                    <circle cx="24" cy="24" r="22" fill="#1a1400" stroke="rgba(255,107,0,0.7)" stroke-width="1.5"/>
+                    <circle cx="24" cy="24" r="14" fill="none" stroke="rgba(255,107,0,0.3)" stroke-width="1"/>
+                    <line x1="24" y1="10" x2="24" y2="38" stroke="#FF6B00" stroke-width="1.8" stroke-linecap="round"/>
+                    <line x1="10" y1="24" x2="38" y2="24" stroke="#FF6B00" stroke-width="1.8" stroke-linecap="round"/>
+                    <circle cx="24" cy="24" r="4" fill="rgba(255,107,0,0.7)"/>
+                </svg>
+                <span class="shoot-face-label">MOD VAULT</span>
+            </div>
+            <div class="shoot-back">
+                <img id="shootGameImg" src="" alt="">
+                <div class="shoot-game-name" id="shootGameName"></div>
+                <div class="shoot-game-sub">TAP TO UNLOCK</div>
+            </div>
         </div>
-        <div class="pack-cards-row" id="packCardsRow"></div>
-        <div class="pack-hint" id="packHint">TAP ANY CARD TO OPEN IT</div>
-        <div class="pack-actions">
-            <button class="pack-skip-btn" onclick="closePackOverlay()">✕ Close</button>
-            <button class="pack-reveal-all-btn" id="packRevealAllBtn" onclick="revealAllPack()">Reveal All</button>
-        </div>
+        <div class="shoot-overlay-close" onclick="closeShootOverlay()">✕</div>
     </div>
 
     <section class="hero">
@@ -1134,115 +1232,77 @@
         }
 
         /* ============================================================
-           FIFA PACK OPENING SYSTEM
+           VAULT SHOOT — SINGLE CARD → REVEAL → CPA LOCKER
         ============================================================ */
-        let packGames = [];
-        let packRevealedCount = 0;
+        let shootGame = null;
 
         window.openVaultPicker = function() {
-            if(gamesDB.length === 0) return;
+            if (gamesDB.length === 0) return;
 
-            // Pick 5 random games
-            packGames = [...gamesDB].sort(()=>Math.random()-0.5).slice(0,5);
-            packRevealedCount = 0;
+            // Pick 1 random game
+            shootGame = gamesDB[Math.floor(Math.random() * gamesDB.length)];
 
-            const row  = document.getElementById('packCardsRow');
-            const hint = document.getElementById('packHint');
-            const title = document.getElementById('packTitle');
-            const subtitle = document.getElementById('packSubtitle');
-            const revealBtn = document.getElementById('packRevealAllBtn');
+            // Load game data into the card back
+            document.getElementById('shootGameImg').src  = shootGame.img;
+            document.getElementById('shootGameName').textContent = shootGame.title;
 
-            title.textContent = '🔐 Vault Opening...';
-            subtitle.textContent = 'CLICK A CARD TO REVEAL';
-            hint.classList.remove('visible');
-            revealBtn.style.display = 'inline-block';
-            row.innerHTML = '';
+            const overlay = document.getElementById('vaultShootOverlay');
+            const card    = document.getElementById('shootCard');
 
-            // Build 5 face-down cards
-            packGames.forEach((game, i) => {
-                const card = document.createElement('div');
-                card.className = 'pack-card';
-                card.style.animationDelay = (i * 0.1) + 's';
-                card.dataset.gameId = game.id;
-                card.innerHTML = `
-                    <div class="pack-card-face">
-                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="24" cy="24" r="22" fill="#1a1400" stroke="rgba(255,107,0,0.6)" stroke-width="1.5"/>
-                            <circle cx="24" cy="24" r="14" fill="none" stroke="rgba(255,107,0,0.3)" stroke-width="1"/>
-                            <line x1="24" y1="10" x2="24" y2="38" stroke="rgba(255,107,0,0.5)" stroke-width="1.5"/>
-                            <line x1="10" y1="24" x2="38" y2="24" stroke="rgba(255,107,0,0.5)" stroke-width="1.5"/>
-                            <circle cx="24" cy="24" r="4" fill="rgba(255,107,0,0.6)"/>
-                        </svg>
-                        <span class="face-label">Mod Vault</span>
-                    </div>
-                    <div class="pack-card-back">
-                        <img src="${game.img}" alt="${game.title}" loading="lazy">
-                        <div class="pack-game-name">${game.title}</div>
-                    </div>
-                `;
-
-                // Click to reveal one card at a time
-                card.addEventListener('click', () => {
-                    if (card.classList.contains('revealed')) {
-                        // Already revealed → open game
-                        closePackOverlay();
-                        viewGame(game.id, 'info');
-                        return;
-                    }
-                    revealCard(card, i);
-                });
-
-                row.appendChild(card);
-            });
+            // Reset card state
+            card.className = '';
+            card.style.transform = '';
 
             // Show overlay
-            document.getElementById('packOverlay').classList.add('active');
+            overlay.classList.add('active');
 
-            // Auto-reveal first card after 1.2s for drama
-            setTimeout(() => {
-                const firstCard = row.querySelector('.pack-card');
-                if (firstCard && !firstCard.classList.contains('revealed')) {
-                    revealCard(firstCard, 0);
-                }
-            }, 1200);
-        }
-
-        function revealCard(card, index) {
-            if (card.classList.contains('revealed')) return;
-            card.classList.add('revealed');
-            packRevealedCount++;
-
-            // Update title text
-            const title    = document.getElementById('packTitle');
-            const subtitle = document.getElementById('packSubtitle');
-            const hint     = document.getElementById('packHint');
-
-            title.textContent = `🎮 ${packRevealedCount} / ${packGames.length} Revealed!`;
-
-            if (packRevealedCount === packGames.length) {
-                subtitle.textContent = 'ALL CARDS REVEALED — TAP TO PLAY';
-                hint.textContent = 'TAP ANY CARD TO OPEN IT DIRECTLY';
-                hint.classList.add('visible');
-                document.getElementById('packRevealAllBtn').style.display = 'none';
-            } else {
-                subtitle.textContent = 'KEEP REVEALING OR CLICK A CARD';
-            }
-        }
-
-        window.revealAllPack = function() {
-            const cards = document.querySelectorAll('.pack-card');
-            cards.forEach((card, i) => {
-                setTimeout(() => revealCard(card, i), i * 200);
+            // 1. Shoot the card to center
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    card.classList.add('shooting');
+                });
             });
+
+            // 2. After card lands, flip it to reveal the game (800ms)
+            setTimeout(() => {
+                card.classList.remove('shooting');
+                card.classList.add('flipping');
+            }, 750);
+
+            // 3. After flip completes, mark as flipped + pulse (1650ms)
+            setTimeout(() => {
+                card.classList.remove('flipping');
+                card.classList.add('flipped');
+                card.classList.add('pulse');
+                overlay.classList.add('bg-ready');
+            }, 1650);
+
+            // 4. After pulse, open CPA locker directly (2500ms)
+            setTimeout(() => {
+                closeShootOverlay();
+                viewGame(shootGame.id, 'locker');
+            }, 2800);
+
+            // Clicking the revealed card immediately opens the locker
+            card.onclick = () => {
+                if (card.classList.contains('flipped')) {
+                    closeShootOverlay();
+                    viewGame(shootGame.id, 'locker');
+                }
+            };
         }
 
-        window.closePackOverlay = function() {
-            document.getElementById('packOverlay').classList.remove('active');
+        window.closeShootOverlay = function() {
+            const overlay = document.getElementById('vaultShootOverlay');
+            const card    = document.getElementById('shootCard');
+            overlay.classList.remove('active', 'bg-ready');
+            card.className = '';
+            card.onclick = null;
         }
 
-        // Close on backdrop click
-        document.getElementById('packOverlay').addEventListener('click', function(e) {
-            if (e.target === this) closePackOverlay();
+        // Close on backdrop
+        document.getElementById('vaultShootOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeShootOverlay();
         });
 
         /* Auto light-eject every 5s */

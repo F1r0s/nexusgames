@@ -3,86 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Policy — Mod Vault</title>
+    <title>Privacy Policy — Mod Vault | Premium Mobile Game Mods</title>
     <meta name="description" content="Mod Vault privacy policy. Learn how we handle your data, cookies, and third-party CPA offers.">
+    <link rel="canonical" href="https://www.modvault.games/privacy.html">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/png" href="/image.png" sizes="512x512">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --bg-deep:#0a0a0a; --bg-panel:#111111; --text-main:#ffffff; --text-muted:#888888; --font-head:'Orbitron',sans-serif; --font-body:'Rajdhani',sans-serif; }
+        :root {
+            --bg-deep:#0a0a0a; --bg-panel:#111111;
+            --text-main:#ffffff; --text-muted:#888888;
+            --amber:#FF6B00;
+            --font-head:'Orbitron',sans-serif; --font-body:'Rajdhani',sans-serif;
+        }
         * { margin:0; padding:0; box-sizing:border-box; }
-        ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-track { background:var(--bg-deep); } ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.18); border-radius:4px; }
-        body { font-family:var(--font-body); background-color:var(--bg-deep); color:var(--text-main); min-height:100vh; background-image:radial-gradient(circle at 85% 15%, rgba(255,255,255,0.04) 0%, transparent 35%); font-size:1.05rem; line-height:1.7; }
-        body::before { content:''; position:fixed; inset:0; pointer-events:none; background:repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.013) 2px, rgba(255,255,255,0.013) 4px); z-index:9999; }
+        ::-webkit-scrollbar { width:6px; }
+        ::-webkit-scrollbar-track { background:var(--bg-deep); }
+        ::-webkit-scrollbar-thumb { background:rgba(255,107,0,0.4); border-radius:4px; }
+        body { font-family:var(--font-body); background-color:var(--bg-deep); color:var(--text-main); min-height:100vh; font-size:1.05rem; line-height:1.7;
+            background-image:radial-gradient(circle at 85% 15%, rgba(255,107,0,0.05) 0%, transparent 40%);
+        }
+        body::before { content:''; position:fixed; inset:0; pointer-events:none; background:repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.01) 2px, rgba(255,255,255,0.01) 4px); z-index:9999; }
 
-        header { background:rgba(8,8,8,0.97); backdrop-filter:blur(20px); border-bottom:1px solid rgba(255,255,255,0.07); padding:15px 30px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
+        /* HEADER */
+        header { background:rgba(8,8,8,0.97); backdrop-filter:blur(20px); border-bottom:1px solid rgba(255,107,0,0.15); padding:15px 30px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
         .logo-link { display:flex; align-items:center; gap:10px; text-decoration:none; color:#fff; font-family:var(--font-head); font-weight:900; font-size:1rem; letter-spacing:4px; transition:0.3s; }
-        .logo-link:hover { filter:drop-shadow(0 0 10px rgba(255,255,255,0.3)); }
-        .back-btn { color:var(--text-muted); text-decoration:none; font-family:var(--font-head); font-size:0.75rem; letter-spacing:2px; transition:0.3s; display:flex; align-items:center; gap:8px; }
-        .back-btn:hover { color:#fff; }
+        .logo-link:hover { color:var(--amber); }
+        .back-btn { color:var(--text-muted); text-decoration:none; font-family:var(--font-head); font-size:0.75rem; letter-spacing:2px; transition:0.3s; display:flex; align-items:center; gap:8px; border:1px solid rgba(255,107,0,0.2); padding:8px 16px; border-radius:20px; }
+        .back-btn:hover { color:var(--amber); border-color:var(--amber); box-shadow:0 0 15px rgba(255,107,0,0.2); }
 
-        .page-hero { padding:80px 20px 50px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.06); }
-        .page-hero h1 { font-family:var(--font-head); font-size:clamp(1.6rem,5vw,2.6rem); text-transform:uppercase; margin-bottom:12px; text-shadow:0 0 30px rgba(255,255,255,0.25); }
+        /* HERO */
+        .page-hero { padding:80px 20px 50px; text-align:center; border-bottom:1px solid rgba(255,107,0,0.12); position:relative; }
+        .page-hero::after { content:''; position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:200px; height:2px; background:linear-gradient(90deg, transparent, var(--amber), transparent); }
+        .page-hero h1 { font-family:var(--font-head); font-size:clamp(1.6rem,5vw,2.6rem); text-transform:uppercase; margin-bottom:12px; }
+        .page-hero h1 span { color:var(--amber); text-shadow:0 0 30px rgba(255,107,0,0.5); }
         .page-hero .meta { color:var(--text-muted); font-size:0.85rem; font-family:var(--font-head); letter-spacing:2px; }
 
         .container { max-width:800px; margin:0 auto; padding:60px 20px 80px; }
 
-        /* Table of Contents */
-        .toc { background:var(--bg-panel); border:1px solid rgba(255,255,255,0.09); border-radius:12px; padding:28px 32px; margin-bottom:50px; }
-        .toc h3 { font-family:var(--font-head); font-size:0.8rem; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,0.6); margin-bottom:16px; }
+        /* TOC */
+        .toc { background:var(--bg-panel); border:1px solid rgba(255,107,0,0.2); border-radius:12px; padding:28px 32px; margin-bottom:50px; position:relative; overflow:hidden; }
+        .toc::before { content:''; position:absolute; top:-1px; left:-1px; width:18px; height:18px; border-top:2px solid var(--amber); border-left:2px solid var(--amber); }
+        .toc::after  { content:''; position:absolute; bottom:-1px; right:-1px; width:18px; height:18px; border-bottom:2px solid var(--amber); border-right:2px solid var(--amber); }
+        .toc h3 { font-family:var(--font-head); font-size:0.8rem; letter-spacing:3px; text-transform:uppercase; color:var(--amber); margin-bottom:16px; opacity:0.85; }
         .toc ol { padding-left:20px; }
         .toc li { margin-bottom:8px; }
-        .toc a { color:rgba(255,255,255,0.75); text-decoration:none; font-size:0.95rem; transition:0.2s; }
-        .toc a:hover { color:#fff; }
+        .toc a { color:rgba(255,255,255,0.7); text-decoration:none; font-size:0.95rem; transition:0.2s; }
+        .toc a:hover { color:var(--amber); }
 
+        /* SECTIONS */
         .section { margin-bottom:50px; scroll-margin-top:100px; }
-        .section h2 { font-family:var(--font-head); font-size:1.1rem; text-transform:uppercase; letter-spacing:2px; color:#ffffff; margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; gap:12px; }
-        .section h2 i { color:rgba(255,255,255,0.5); font-size:1rem; }
+        .section h2 { font-family:var(--font-head); font-size:1.05rem; text-transform:uppercase; letter-spacing:2px; color:#ffffff; margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid rgba(255,107,0,0.2); display:flex; align-items:center; gap:12px; }
+        .section h2 i { color:var(--amber); font-size:1rem; text-shadow:0 0 12px rgba(255,107,0,0.5); }
         .section p { color:var(--text-muted); margin-bottom:14px; }
         .section ul { color:var(--text-muted); padding-left:22px; margin-bottom:14px; }
         .section ul li { margin-bottom:8px; }
         .section strong { color:#fff; font-weight:600; }
+        .section a { color:var(--amber); text-decoration:none; }
+        .section a:hover { text-decoration:underline; }
 
         /* CPA Disclaimer box */
         .disclaimer-box {
-            background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.18);
+            background:rgba(255,107,0,0.05); border:1px solid rgba(255,107,0,0.3);
             border-radius:10px; padding:24px 28px; margin:20px 0;
             position:relative; overflow:hidden;
         }
-        .disclaimer-box::before { content:'⚠ IMPORTANT NOTICE'; display:block; font-family:var(--font-head); font-size:0.7rem; letter-spacing:3px; color:#fff; margin-bottom:12px; opacity:0.8; }
+        .disclaimer-box::before { content:'⚠ IMPORTANT NOTICE'; display:block; font-family:var(--font-head); font-size:0.7rem; letter-spacing:3px; color:var(--amber); margin-bottom:12px; }
         .disclaimer-box p { color:rgba(255,255,255,0.75); margin-bottom:10px; font-size:0.98rem; }
         .disclaimer-box p:last-child { margin-bottom:0; }
 
-        .highlight { background:rgba(255,255,255,0.06); border-left:3px solid rgba(255,255,255,0.4); padding:14px 18px; border-radius:0 6px 6px 0; margin:16px 0; color:rgba(255,255,255,0.8); font-size:0.95rem; }
+        .highlight { background:rgba(255,107,0,0.07); border-left:3px solid var(--amber); padding:14px 18px; border-radius:0 6px 6px 0; margin:16px 0; color:rgba(255,255,255,0.85); font-size:0.95rem; }
 
-        footer { text-align:center; padding:40px 20px; color:#444; font-size:0.8rem; border-top:1px solid rgba(255,255,255,0.05); }
-        footer a { color:#555; text-decoration:none; }
-        footer a:hover { color:#888; }
+        footer { text-align:center; padding:40px 20px; color:#555; font-size:0.8rem; border-top:1px solid rgba(255,107,0,0.08); }
+        footer a { color:var(--amber); text-decoration:none; opacity:0.7; transition:0.2s; }
+        footer a:hover { opacity:1; }
     </style>
 </head>
 <body>
     <header>
-        <a href="index.html" class="logo-link">
+        <a href="/" class="logo-link">
             <svg width="28" height="28" viewBox="0 0 48 48" fill="none">
-                <circle cx="24" cy="24" r="22" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
-                <circle cx="24" cy="24" r="14.5" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
-                <line x1="24" y1="9.5" x2="24" y2="14.5" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round"/>
-                <line x1="24" y1="33.5" x2="24" y2="38.5" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round"/>
-                <line x1="9.5" y1="24" x2="14.5" y2="24" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round"/>
-                <line x1="33.5" y1="24" x2="38.5" y2="24" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round"/>
-                <circle cx="24" cy="24" r="3.5" fill="white" opacity="0.88"/>
+                <circle cx="24" cy="24" r="22" stroke="rgba(255,107,0,0.8)" stroke-width="1.5"/>
+                <circle cx="24" cy="24" r="14.5" stroke="rgba(255,107,0,0.3)" stroke-width="1"/>
+                <line x1="24" y1="9.5"  x2="24" y2="14.5" stroke="#FF6B00" stroke-width="2" stroke-linecap="round"/>
+                <line x1="24" y1="33.5" x2="24" y2="38.5" stroke="#FF6B00" stroke-width="2" stroke-linecap="round"/>
+                <line x1="9.5"  y1="24" x2="14.5" y2="24" stroke="#FF6B00" stroke-width="2" stroke-linecap="round"/>
+                <line x1="33.5" y1="24" x2="38.5" y2="24" stroke="#FF6B00" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="24" cy="24" r="3.5" fill="#FF6B00" opacity="0.9"/>
             </svg>
             MOD VAULT
         </a>
-        <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Library</a>
+        <a href="/" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Library</a>
     </header>
 
     <div class="page-hero">
-        <h1>Privacy Policy</h1>
+        <h1>Privacy <span>Policy</span></h1>
         <p class="meta">Last Updated: April 2026</p>
     </div>
 
     <div class="container">
-
         <nav class="toc">
             <h3>Contents</h3>
             <ol>
@@ -129,14 +149,14 @@
                 <p>Mod Vault is <strong>not responsible</strong> for the privacy practices, content, or accuracy of third-party offer pages. We strongly encourage you to review the privacy policy of any third-party site you visit through our offer wall.</p>
                 <p>Completion of offers is tracked automatically by our server to unlock your requested content. Only one offer completion is required per download session.</p>
             </div>
-            <p>If you encounter any misleading or harmful offer, please <a href="support.html" style="color:#fff;">contact our support team</a> immediately so we can escalate to the advertising network.</p>
+            <p>If you encounter any misleading or harmful offer, please <a href="/support.html">contact our support team</a> immediately so we can escalate to the advertising network.</p>
         </div>
 
         <div class="section" id="sec4">
             <h2><i class="fas fa-cookie-bite"></i> 4. Cookies &amp; Tracking</h2>
             <p>We use the following tracking technologies:</p>
             <ul>
-                <li><strong>Google Analytics (gtag.js):</strong> Collects anonymised usage data including page views, session duration, and device type. You can opt out via the <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" style="color:#fff;">Google Analytics Opt-out Browser Add-on</a>.</li>
+                <li><strong>Google Analytics (gtag.js):</strong> Collects anonymised usage data including page views, session duration, and device type. You can opt out via the <a href="https://tools.google.com/dlpage/gaoptout" target="_blank">Google Analytics Opt-out Browser Add-on</a>.</li>
                 <li><strong>Microsoft Clarity:</strong> Records anonymised session replays and heatmaps to help us improve the user interface. No personally identifiable data is captured.</li>
                 <li><strong>localStorage:</strong> Used to cache the game database locally for performance. No personal data is stored here.</li>
             </ul>
@@ -162,7 +182,7 @@
                 <li><strong>Opt-Out:</strong> Opt out of analytics tracking via your browser settings or the Google Analytics opt-out tool.</li>
                 <li><strong>Correction:</strong> Request correction of inaccurate personal information.</li>
             </ul>
-            <p>To exercise these rights, contact us via the <a href="support.html" style="color:#fff;">Support page</a>.</p>
+            <p>To exercise these rights, contact us via the <a href="/support.html">Support page</a>.</p>
         </div>
 
         <div class="section" id="sec7">
@@ -175,7 +195,7 @@
             <p>If you have any questions about this Privacy Policy or how we handle your data, you can reach us at:</p>
             <div class="highlight">
                 <strong>Email:</strong> multinexusgames@gmail.com<br>
-                <strong>Support Page:</strong> <a href="support.html" style="color:#fff;">modvault.games/support.html</a>
+                <strong>Support Page:</strong> <a href="/support.html">modvault.games/support.html</a>
             </div>
             <p>We will respond to all privacy-related inquiries within <strong>5 business days</strong>.</p>
         </div>
@@ -184,8 +204,8 @@
 
     <footer>
         &copy; 2026 Mod Vault. All rights reserved. &nbsp;|&nbsp;
-        <a href="index.html">Home</a> &nbsp;|&nbsp;
-        <a href="support.html">Support</a>
+        <a href="/">Home</a> &nbsp;|&nbsp;
+        <a href="/support.html">Support</a>
     </footer>
 </body>
 </html>
