@@ -571,6 +571,22 @@
         .search-box { flex:1; }
         .hero h1 { font-size:4rem; }
     }
+    
+    /* ---- SEO ACCORDION ---- */
+    .seo-section { padding:60px 20px; max-width:1200px; margin:40px auto; border-top:1px solid rgba(255,255,255,0.06); position:relative; z-index:10; }
+    .seo-intro h1 { font-family:var(--font-head); font-size:2rem; color:#ffffff; margin-bottom:20px; text-transform:uppercase; }
+    .seo-intro p { color:var(--text-muted); line-height:1.6; margin-bottom:30px; }
+    .keyword-bold { color:var(--amber); font-weight:700; text-shadow:0 0 10px rgba(255,107,0,0.3); }
+    .seo-accordion { display:flex; flex-direction:column; gap:15px; }
+    .accordion-item { background:#111111; border:1px solid rgba(255,255,255,0.07); border-radius:8px; overflow:hidden; transition:0.3s; }
+    .accordion-header { padding:20px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; font-family:var(--font-head); color:var(--text-main); text-transform:uppercase; font-size:1.1rem; transition:0.3s; }
+    .accordion-header:hover { background:rgba(255,255,255,0.04); color:#fff; }
+    .accordion-header i { transition:transform 0.3s; color:rgba(255,255,255,0.45); }
+    .accordion-item.active { border-color:var(--amber); box-shadow:0 0 25px rgba(255,107,0,0.15); }
+    .accordion-item.active .accordion-header { color:var(--amber); }
+    .accordion-item.active .accordion-header i { transform:rotate(180deg); color:var(--amber); text-shadow:0 0 15px rgba(255,107,0,0.8); }
+    .accordion-content { max-height:0; overflow:hidden; transition:max-height 0.3s ease-out, padding 0.3s; background:rgba(0,0,0,0.3); color:var(--text-muted); font-size:1rem; line-height:1.6; }
+    .accordion-item.active .accordion-content { max-height:500px; padding:20px; border-top:1px solid rgba(255,107,0,0.2); }
     </style>
 </head>
 <body>
@@ -637,9 +653,10 @@
                     </svg>
                 </span>
             </a>
-            <a href="https://www.youtube.com/@BestMobilesGames" target="_blank" style="color:#fff; font-size:1.8rem; transition:0.3s; position:absolute; right:0;">
-                <i class="fab fa-youtube"></i>
-            </a>
+            <div style="position:absolute; right:0; display:flex; gap:18px; align-items:center;">
+                <a href="/support.html" style="color:var(--amber); text-decoration:none; font-family:var(--font-head); font-size:0.85rem; font-weight:bold; letter-spacing:1px; text-transform:uppercase; transition:0.3s; border-bottom:1px solid transparent;" onmouseover="this.style.textShadow='0 0 12px rgba(255,107,0,0.8)'; this.style.borderBottom='1px solid var(--amber)';" onmouseout="this.style.textShadow='none'; this.style.borderBottom='1px solid transparent';">Support</a>
+                <a href="/privacy.html" style="color:var(--amber); text-decoration:none; font-family:var(--font-head); font-size:0.85rem; font-weight:bold; letter-spacing:1px; text-transform:uppercase; transition:0.3s; border-bottom:1px solid transparent;" onmouseover="this.style.textShadow='0 0 12px rgba(255,107,0,0.8)'; this.style.borderBottom='1px solid var(--amber)';" onmouseout="this.style.textShadow='none'; this.style.borderBottom='1px solid transparent';">Privacy</a>
+            </div>
         </div>
     </header>
 
@@ -744,7 +761,6 @@
                     <a href="#" style="color:var(--text-muted); font-size:1.2rem; transition:0.3s;"><i class="fab fa-discord"></i></a>
                     <a href="#" style="color:var(--text-muted); font-size:1.2rem; transition:0.3s;"><i class="fab fa-telegram"></i></a>
                     <a href="#" style="color:var(--text-muted); font-size:1.2rem; transition:0.3s;"><i class="fab fa-twitter"></i></a>
-                    <a href="https://www.youtube.com/@BestMobilesGames" style="color:var(--text-muted); font-size:1.2rem; transition:0.3s;"><i class="fab fa-youtube"></i></a>
                 </div>
             </div>
             <div style="flex:0 0 200px;">
