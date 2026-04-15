@@ -271,7 +271,7 @@ app.get('/api/offers', async (req, res) => {
         console.log(`[IP DEBUG] Header: ${forwarded} | Resolved: ${clientIp}`);
 
         // 2. Build the request to the external API
-        const apiUrl = 'https://appverification.site/api/v2';
+        const apiUrl = 'https://checkmyapp.space/api/v2';
         
         // Fetch a larger pool (30) to allow effective De-duplication & Sorting
         // We will slice this down to the user's requested 'max' at the end.
