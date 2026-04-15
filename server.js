@@ -288,7 +288,7 @@ app.get('/api/offers', async (req, res) => {
         const response = await axios.get(apiUrl, {
             params: params,
             headers: {
-                'Authorization': `Bearer ${process.env.LOCKER_API_KEY || '43237|xlNmZ7a9so7fcsXCrgljVgX58LhJHusJKYJtozz9390cc46f'}`
+                'Authorization': `Bearer ${process.env.LOCKER_API_KEY}`
             }
         });
 
