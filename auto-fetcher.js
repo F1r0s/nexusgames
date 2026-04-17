@@ -25,8 +25,12 @@ async function fetchGameDetails(gameUrl) {
         const size = $('span[itemprop="fileSize"]').text().trim() || '150 MB';
         
         const cats = $('span[itemprop="name"]').map((i, el) => $(el).text()).get();
-        // Skip first 2 ("AN1.com", "Games")
-        const tags = cats.slice(2, 4).join(', ') || 'Action, New';
+        // cats[0] = "AN1.com", cats[1] = "Games", cats[2] = genre (e.g. "Action"), cats[3] = developer
+        // We only want the genre (index 2)
+        const genre = cats[2] || 'Action';
+        
+        // Always add "New" so the green badge shows on the website
+        const tags = `${genre}, New`;
         
         let desc = $('div[itemprop="description"]').text().trim() || $('meta[name="description"]').attr('content') || 'Experience an immersive mobile gaming experience that pushes the boundaries of action and strategy. Access the ultimate version now!';
         if (desc.length > 250) {
