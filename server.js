@@ -37,6 +37,12 @@ app.use(cors());
 // Serve static files (CSS, images, JS, etc.)
 app.use(express.static(path.join(__dirname)));
 
+// Explicit route for style.css to guarantee correct serving on Vercel
+app.get('/style.css', (req, res) => {
+    res.setHeader('Content-Type', 'text/css');
+    res.sendFile(path.join(__dirname, 'style.css'));
+});
+
 // Serve the frontend pages
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
