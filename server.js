@@ -50,6 +50,20 @@ app.get('/privacy.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'privacy.html'));
 });
 
+app.get('/game-mode-guide.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'game-mode-guide.html'));
+});
+
+app.get('/sitemap.xml', (req, res) => {
+    res.type('application/xml');
+    res.sendFile(path.join(__dirname, 'sitemap.xml'));
+});
+
+app.get('/robots.txt', (req, res) => {
+    res.type('text/plain');
+    res.sendFile(path.join(__dirname, 'robots.txt'));
+});
+
 // Endpoint to get games (Cached + Protected Manual Sync)
 app.get('/api/games', async (req, res) => {
     const now = Date.now();

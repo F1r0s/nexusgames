@@ -128,6 +128,43 @@
         border-bottom:1px solid rgba(255,107,0,0.25);
         padding:10px 20px; display:flex; justify-content:center; align-items:center; height:70px;
     }
+    /* ---- NAV BUTTONS ---- */
+    .nav-btn {
+        display:inline-flex; align-items:center; gap:6px;
+        padding:7px 14px;
+        border:1px solid rgba(255,107,0,0.5);
+        border-radius:6px;
+        color:var(--amber);
+        background:rgba(255,107,0,0.07);
+        font-family:var(--font-head);
+        font-size:0.72rem;
+        font-weight:bold;
+        letter-spacing:1.2px;
+        text-transform:uppercase;
+        text-decoration:none;
+        transition:background 0.25s, box-shadow 0.25s, transform 0.2s;
+        white-space:nowrap;
+        -webkit-tap-highlight-color:transparent;
+    }
+    /* Kill browser purple on all link states */
+    .nav-btn:link, .nav-btn:visited { color: var(--amber); }
+    .nav-btn:hover {
+        background:rgba(255,107,0,0.18);
+        box-shadow:0 0 18px rgba(255,107,0,0.4);
+        transform:translateY(-1px);
+    }
+    .nav-btn.active-nav {
+        background:var(--amber);
+        color:#000;
+        border-color:var(--amber);
+        box-shadow:0 0 18px rgba(255,107,0,0.5);
+    }
+    .nav-btn.active-nav:link, .nav-btn.active-nav:visited { color: #000; }
+    /* Hide labels on small screens, keep icons */
+    @media (max-width:600px) {
+        .nav-btn .nav-label { display:none; }
+        .nav-btn { padding:8px 10px; }
+    }
 
     /* ---- LOGO ---- */
     .logo {
@@ -780,9 +817,10 @@
                     </svg>
                 </span>
             </a>
-            <div style="justify-self:end; display:flex; gap:18px; align-items:center;">
-                <a href="/support.html" style="color:var(--amber); text-decoration:none; font-family:var(--font-head); font-size:0.85rem; font-weight:bold; letter-spacing:1px; text-transform:uppercase; transition:0.3s; border-bottom:1px solid transparent;" onmouseover="this.style.textShadow='0 0 12px rgba(255,107,0,0.8)'; this.style.borderBottom='1px solid var(--amber)';" onmouseout="this.style.textShadow='none'; this.style.borderBottom='1px solid transparent';">Support</a>
-                <a href="/privacy.html" style="color:var(--amber); text-decoration:none; font-family:var(--font-head); font-size:0.85rem; font-weight:bold; letter-spacing:1px; text-transform:uppercase; transition:0.3s; border-bottom:1px solid transparent;" onmouseover="this.style.textShadow='0 0 12px rgba(255,107,0,0.8)'; this.style.borderBottom='1px solid var(--amber)';" onmouseout="this.style.textShadow='none'; this.style.borderBottom='1px solid transparent';">Privacy</a>
+            <div style="justify-self:end; display:flex; gap:8px; align-items:center; flex-wrap:nowrap;">
+                <a href="/game-mode-guide.html" class="nav-btn"><i class="fas fa-question-circle"></i><span class="nav-label">Guide</span></a>
+                <a href="/support.html" class="nav-btn"><i class="fas fa-headset"></i><span class="nav-label">Support</span></a>
+                <a href="/privacy.html" class="nav-btn"><i class="fas fa-shield-alt"></i><span class="nav-label">Privacy</span></a>
             </div>
         </div>
     </header>
@@ -1068,7 +1106,7 @@
                 if (lowerTags.includes('hot')) card.classList.add('hot-tag');
                 const displayTags = (game.categories || []).filter(c => { const l=c.toLowerCase().trim(); return l!=='legendary'&&l!=='new'&&l!=='hot'&&l!==''; });
                 const catDisplay = displayTags.length > 0 ? displayTags.join(' / ') : 'Game';
-                card.innerHTML = `<div class="card-img-container" onclick="viewGame('${game.id}', 'info')"><img src="${game.img}" alt="${game.title}" loading="lazy"><span class="badge-cat">${catDisplay}</span></div><div class="card-content" onclick="viewGame('${game.id}', 'info')" style="cursor:pointer;"><h3 class="game-title">${game.title}</h3><div class="info-row"><span><i class="fas fa-code-branch"></i> ${game.version}</span><span><i class="fas fa-hdd"></i> ${game.size}</span></div><div class="play-btn" onclick="event.stopPropagation(); viewGame('${game.id}', 'locker')" style="pointer-events:auto; cursor:pointer;"><i class="fas fa-bolt"></i> DIRECT INJECT</div></div>`;
+                card.innerHTML = `<div class="card-img-container" onclick="viewGame('${game.id}', 'info')"><img src="${game.img}" alt="${game.title}" loading="lazy"><span class="badge-cat">${catDisplay}</span></div><div class="card-content" onclick="viewGame('${game.id}', 'info')" style="cursor:pointer;"><h3 class="game-title">${game.title}</h3><div class="info-row"><span><i class="fas fa-code-branch"></i> ${game.version}</span><span><i class="fas fa-hdd"></i> ${game.size}</span></div><div class="play-btn" onclick="event.stopPropagation(); viewGame('${game.id}', 'locker')" style="pointer-events:auto; cursor:pointer;"><i class="fas fa-download"></i> DOWNLOAD</div></div>`;
                 grid.appendChild(card);
             });
         }

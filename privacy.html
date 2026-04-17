@@ -28,10 +28,37 @@
 
         /* HEADER */
         header { background:rgba(8,8,8,0.97); backdrop-filter:blur(20px); border-bottom:1px solid rgba(255,107,0,0.15); padding:15px 30px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
-        .logo-link { display:flex; align-items:center; gap:10px; text-decoration:none; color:#fff; font-family:var(--font-head); font-weight:900; font-size:1rem; letter-spacing:4px; transition:0.3s; }
-        .logo-link:hover { color:var(--amber); }
-        .back-btn { color:var(--text-muted); text-decoration:none; font-family:var(--font-head); font-size:0.75rem; letter-spacing:2px; transition:0.3s; display:flex; align-items:center; gap:8px; border:1px solid rgba(255,107,0,0.2); padding:8px 16px; border-radius:20px; }
-        .back-btn:hover { color:var(--amber); border-color:var(--amber); box-shadow:0 0 15px rgba(255,107,0,0.2); }
+        /* ---- ANIMATED LOGO ---- */
+        .logo { display:flex; align-items:center; gap:2px; text-decoration:none; color:#fff; transition:transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275), filter 0.4s; }
+        .logo:hover { transform:translateY(-1px) scale(1.04); filter:drop-shadow(0 0 14px rgba(255,255,255,0.28)); }
+        .brand-word { font-family:var(--font-head); font-weight:900; font-size:1.15rem; letter-spacing:5px; text-transform:uppercase; color:#ffffff; text-shadow:0 0 20px rgba(255,107,0,0.5); }
+        .vault-svg-wrap { display:inline-flex; align-items:center; justify-content:center; width:50px; height:50px; animation:vaultBreath 3.8s ease-in-out infinite; flex-shrink:0; }
+        .vault-svg-wrap svg { width:100%; height:100%; overflow:visible; }
+        .vault-wheel { animation:vaultSpin 9s linear infinite; transform-box:fill-box; transform-origin:center; }
+        .vault-svg-wrap:hover .vault-wheel { animation:vaultSpin 1.3s linear infinite; }
+        @keyframes vaultBreath { 0%,100%{ filter:drop-shadow(0 0 7px rgba(255,107,0,0.4)); transform:scale(1); } 50%{ filter:drop-shadow(0 0 22px rgba(255,107,0,0.75)); transform:scale(1.05); } }
+        @keyframes vaultSpin { 0%{ transform:rotate(0deg); } 100%{ transform:rotate(360deg); } }
+        .nav-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border:1px solid rgba(255,107,0,0.5); border-radius:6px; color:var(--amber); background:rgba(255,107,0,0.07); font-family:var(--font-head); font-size:0.72rem; font-weight:bold; letter-spacing:1.2px; text-transform:uppercase; text-decoration:none; transition:background 0.25s, box-shadow 0.25s, transform 0.2s; white-space:nowrap; }
+        .nav-btn:hover { background:rgba(255,107,0,0.18); box-shadow:0 0 18px rgba(255,107,0,0.4); transform:translateY(-1px); }
+        .nav-btn.active-nav { background:var(--amber); color:#000; border-color:var(--amber); box-shadow:0 0 18px rgba(255,107,0,0.5); }
+        .nav-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border:1px solid rgba(255,107,0,0.5); border-radius:6px; color:var(--amber); background:rgba(255,107,0,0.07); font-family:var(--font-head); font-size:0.72rem; font-weight:bold; letter-spacing:1.2px; text-transform:uppercase; text-decoration:none; transition:background 0.25s, box-shadow 0.25s, transform 0.2s; white-space:nowrap; -webkit-tap-highlight-color:transparent; }
+        .nav-btn:link, .nav-btn:visited { color: var(--amber); }
+        .nav-btn:hover { background:rgba(255,107,0,0.18); box-shadow:0 0 18px rgba(255,107,0,0.4); transform:translateY(-1px); }
+        .nav-btn.active-nav { background:var(--amber); color:#000; border-color:var(--amber); box-shadow:0 0 18px rgba(255,107,0,0.5); }
+        .nav-btn.active-nav:link, .nav-btn.active-nav:visited { color: #000; }
+        /* Mobile header */
+        @media (max-width:600px) {
+            header { padding:10px 12px; }
+            header > div { display:flex !important; justify-content:space-between !important; grid-template-columns:unset !important; gap:8px; }
+            header > div > div:first-child:empty { display:none !important; }
+            header .logo { justify-self:unset !important; margin:0 !important; flex-shrink:1; min-width:0; }
+            header > div > div:last-child { justify-self:unset !important; flex-shrink:0; }
+            .vault-svg-wrap { width:36px; height:36px; }
+            .brand-word { font-size:0.9rem; letter-spacing:3px; }
+            .logo .brand-word:last-child { display:none; }
+            .nav-btn .nav-label { display:none; }
+            .nav-btn { padding:8px 10px; }
+        }
 
         /* HERO */
         .page-hero { padding:80px 20px 50px; text-align:center; border-bottom:1px solid rgba(255,107,0,0.12); position:relative; }
@@ -82,19 +109,65 @@
 </head>
 <body>
     <header>
-        <a href="/" class="logo-link">
-            <svg width="28" height="28" viewBox="0 0 48 48" fill="none">
-                <circle cx="24" cy="24" r="22" stroke="rgba(255,107,0,0.8)" stroke-width="1.5"/>
-                <circle cx="24" cy="24" r="14.5" stroke="rgba(255,107,0,0.3)" stroke-width="1"/>
-                <line x1="24" y1="9.5"  x2="24" y2="14.5" stroke="#FF6B00" stroke-width="2" stroke-linecap="round"/>
-                <line x1="24" y1="33.5" x2="24" y2="38.5" stroke="#FF6B00" stroke-width="2" stroke-linecap="round"/>
-                <line x1="9.5"  y1="24" x2="14.5" y2="24" stroke="#FF6B00" stroke-width="2" stroke-linecap="round"/>
-                <line x1="33.5" y1="24" x2="38.5" y2="24" stroke="#FF6B00" stroke-width="2" stroke-linecap="round"/>
-                <circle cx="24" cy="24" r="3.5" fill="#FF6B00" opacity="0.9"/>
-            </svg>
-            MOD VAULT
-        </a>
-        <a href="/" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Library</a>
+        <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; width:100%; max-width:1200px; margin:0 auto;">
+            <div></div>
+            <a href="/" class="logo" style="text-decoration:none; justify-self:center;">
+                <span class="brand-word">Mod</span>
+                <span class="vault-svg-wrap" aria-hidden="true">
+                    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <radialGradient id="vbp" cx="38%" cy="28%" r="72%">
+                                <stop offset="0%" stop-color="#3d3d3d"/>
+                                <stop offset="55%" stop-color="#1c1c1c"/>
+                                <stop offset="100%" stop-color="#060606"/>
+                            </radialGradient>
+                            <radialGradient id="vrp" cx="28%" cy="22%" r="65%">
+                                <stop offset="0%" stop-color="rgba(255,255,255,0.14)"/>
+                                <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+                            </radialGradient>
+                            <radialGradient id="vhp" cx="32%" cy="28%" r="70%">
+                                <stop offset="0%" stop-color="#ffffff"/>
+                                <stop offset="45%" stop-color="#d4d4d4"/>
+                                <stop offset="100%" stop-color="#888"/>
+                            </radialGradient>
+                            <radialGradient id="vabp" cx="30%" cy="25%" r="75%">
+                                <stop offset="0%" stop-color="rgba(255,107,0,0.35)"/>
+                                <stop offset="100%" stop-color="rgba(255,107,0,0)"/>
+                            </radialGradient>
+                        </defs>
+                        <circle cx="24" cy="24" r="22" fill="url(#vbp)"/>
+                        <circle cx="24" cy="24" r="22" fill="url(#vabp)"/>
+                        <circle cx="24" cy="24" r="22" fill="url(#vrp)"/>
+                        <circle cx="24" cy="24" r="22" stroke="rgba(255,255,255,0.5)" stroke-width="1.2"/>
+                        <circle cx="24" cy="24" r="17.5" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+                        <circle cx="24" cy="24" r="14" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+                        <g class="vault-wheel">
+                            <line x1="24" y1="10" x2="24" y2="14.5" stroke="rgba(255,107,0,0.9)" stroke-width="2.2" stroke-linecap="round"/>
+                            <line x1="24" y1="33.5" x2="24" y2="38" stroke="rgba(255,107,0,0.9)" stroke-width="2.2" stroke-linecap="round"/>
+                            <line x1="10" y1="24" x2="14.5" y2="24" stroke="rgba(255,107,0,0.9)" stroke-width="2.2" stroke-linecap="round"/>
+                            <line x1="33.5" y1="24" x2="38" y2="24" stroke="rgba(255,107,0,0.9)" stroke-width="2.2" stroke-linecap="round"/>
+                            <line x1="14.5" y1="14.5" x2="17.8" y2="17.8" stroke="rgba(255,200,100,0.5)" stroke-width="1.4" stroke-linecap="round"/>
+                            <line x1="30.2" y1="30.2" x2="33.5" y2="33.5" stroke="rgba(255,200,100,0.5)" stroke-width="1.4" stroke-linecap="round"/>
+                            <line x1="33.5" y1="14.5" x2="30.2" y2="17.8" stroke="rgba(255,200,100,0.5)" stroke-width="1.4" stroke-linecap="round"/>
+                            <line x1="17.8" y1="30.2" x2="14.5" y2="33.5" stroke="rgba(255,200,100,0.5)" stroke-width="1.4" stroke-linecap="round"/>
+                        </g>
+                        <circle cx="24" cy="24" r="4.2" fill="url(#vhp)"/>
+                        <circle cx="24" cy="24" r="1.8" fill="rgba(0,0,0,0.7)"/>
+                        <ellipse cx="17" cy="15.5" rx="4.5" ry="3" fill="rgba(255,255,255,0.07)" transform="rotate(-30 17 15.5)"/>
+                        <circle cx="24" cy="2.5" r="1.6" fill="rgba(255,107,0,0.5)"/>
+                        <circle cx="24" cy="45.5" r="1.6" fill="rgba(255,107,0,0.5)"/>
+                        <circle cx="2.5" cy="24" r="1.6" fill="rgba(255,107,0,0.5)"/>
+                        <circle cx="45.5" cy="24" r="1.6" fill="rgba(255,107,0,0.5)"/>
+                    </svg>
+                </span>
+                <span class="brand-word">Vault</span>
+            </a>
+            <div style="justify-self:end; display:flex; gap:8px; align-items:center; flex-wrap:nowrap;">
+                <a href="/game-mode-guide.html" class="nav-btn"><i class="fas fa-question-circle"></i><span class="nav-label">Guide</span></a>
+                <a href="/support.html" class="nav-btn"><i class="fas fa-headset"></i><span class="nav-label">Support</span></a>
+                <a href="/privacy.html" class="nav-btn active-nav"><i class="fas fa-shield-alt"></i><span class="nav-label">Privacy</span></a>
+            </div>
+        </div>
     </header>
 
     <div class="page-hero">
