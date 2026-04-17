@@ -6,6 +6,14 @@
       "use": "@vercel/node"
     }
   ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.modvault.games" }],
+      "destination": "https://modvault.games/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",
