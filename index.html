@@ -359,6 +359,12 @@
 
     <script>
         let gamesDB = [];
+        // ── Virtual scroll state ──────────────────────────────────
+        let _filteredGames = [];   // current filtered+sorted list
+        let _renderedCount = 0;    // how many cards are in the DOM
+        const PAGE_SIZE = 20;      // cards per batch
+        let _scrollSentinel = null;
+        let _scrollObserver = null;
 
         async function loadDatabase() {
             const CACHE_KEY = 'gamesDB_cache', CACHE_TS_KEY = 'gamesDB_ts', CACHE_DURATION = 5*60*1000;
@@ -382,10 +388,14 @@
                 if (!response.ok) throw new Error("Server responded with " + response.status);
                 const data = await response.json();
                 if (data && Array.isArray(data) && data.length > 0) {
+                    const prevTags = getAllTags(gamesDB);
                     gamesDB = data;
                     localStorage.setItem('gamesDB_cache', JSON.stringify(data));
                     localStorage.setItem('gamesDB_ts', Date.now().toString());
-                    renderGames();
+                    // Only re-render tag bar if new tags appeared
+                    const newTags = getAllTags(gamesDB);
+                    const tagsChanged = [...newTags].some(t => !prevTags.has(t));
+                    renderGames(tagsChanged || !isBackground);
                 } else { throw new Error("No items in database"); }
             } catch (err) {
                 console.error("Database Fetch failed:", err);
@@ -395,60 +405,126 @@
             }
         }
 
+        // Return a Set of all unique tag names from a games array
+        function getAllTags(games) {
+            const s = new Set();
+            games.forEach(g => (g.categories||[]).forEach(c => { const v=c.trim(); if(v) s.add(v.toLowerCase()); }));
+            return s;
+        }
+
         const grid = document.getElementById('gamesGrid');
         const searchInput = document.getElementById('searchInput');
         const catContainer = document.getElementById('categoryContainer');
         const footerCatContainer = document.getElementById('footerCategories');
         let currentFilterText = '', currentFilterCat = 'All';
 
-        function renderGames() {
+        // Build one game card element (no DOM append yet)
+        function buildCard(game) {
+            const card = document.createElement('div');
+            card.className = 'game-card';
+            const lowerTags = (game.categories || []).map(c => c.toLowerCase().trim());
+            if (lowerTags.includes('legendary')) card.classList.add('legendary');
+            if (lowerTags.includes('new')) card.classList.add('new-tag');
+            if (lowerTags.includes('hot')) card.classList.add('hot-tag');
+            const displayTags = (game.categories || []).filter(c => { const l=c.toLowerCase().trim(); return l!=='legendary'&&l!=='new'&&l!=='hot'&&l!==''; });
+            const catDisplay = displayTags.length > 0 ? displayTags.join(' / ') : 'Game';
+            card.innerHTML = `<div class="card-img-container" onclick="viewGame('${game.id}', 'info')"><img src="${game.img}" alt="${game.title}" loading="lazy"><span class="badge-cat">${catDisplay}</span></div><div class="card-content" onclick="viewGame('${game.id}', 'info')" style="cursor:pointer;"><h3 class="game-title">${game.title}</h3><div class="info-row"><span><i class="fas fa-code-branch"></i> ${game.version}</span><span><i class="fas fa-hdd"></i> ${game.size}</span></div><div class="play-btn" onclick="event.stopPropagation(); viewGame('${game.id}', 'info')" style="pointer-events:auto; cursor:pointer;"><i class="fas fa-download"></i> DOWNLOAD</div></div>`;
+            return card;
+        }
+
+        // Append the next PAGE_SIZE cards from _filteredGames into the grid
+        function appendNextBatch() {
+            if (_renderedCount >= _filteredGames.length) return;
+            const frag = document.createDocumentFragment();
+            const end = Math.min(_renderedCount + PAGE_SIZE, _filteredGames.length);
+            for (let i = _renderedCount; i < end; i++) {
+                frag.appendChild(buildCard(_filteredGames[i]));
+            }
+            _renderedCount = end;
+            // Remove old sentinel before appending
+            if (_scrollSentinel && _scrollSentinel.parentNode === grid) grid.removeChild(_scrollSentinel);
+            grid.appendChild(frag);
+            // If more cards remain, add a new sentinel for IntersectionObserver
+            if (_renderedCount < _filteredGames.length) {
+                if (!_scrollSentinel) {
+                    _scrollSentinel = document.createElement('div');
+                    _scrollSentinel.style.cssText = 'grid-column:1/-1; height:1px;';
+                }
+                grid.appendChild(_scrollSentinel);
+                if (_scrollObserver) _scrollObserver.observe(_scrollSentinel);
+            }
+        }
+
+        // Set up IntersectionObserver once
+        function initScrollObserver() {
+            if (_scrollObserver) return;
+            _scrollObserver = new IntersectionObserver(entries => {
+                if (entries[0].isIntersecting) appendNextBatch();
+            }, { rootMargin: '200px' });
+        }
+
+        function renderGames(fullRedraw = true) {
             if (!grid) return;
-            grid.innerHTML = '';
-            updateCategoryButtons();
-            let filtered = gamesDB.filter(game => {
+            if (fullRedraw) updateCategoryButtons();
+
+            _filteredGames = gamesDB.filter(game => {
                 const matchesText = (game.title || "").toLowerCase().includes(currentFilterText.toLowerCase());
                 const matchesCat = currentFilterCat === 'All' || (game.categories && game.categories.some(c => c.toLowerCase().trim() === currentFilterCat.toLowerCase().trim()));
                 return matchesText && matchesCat;
             });
-            filtered.sort((a, b) => {
-                const p = g => { const t = (g.categories||[]).map(c=>c.toLowerCase().trim()); return t.includes('legendary')?3:t.includes('new')?2:t.includes('hot')?1:0; };
+            _filteredGames.sort((a, b) => {
+                const p = g => { const t=(g.categories||[]).map(c=>c.toLowerCase().trim()); return t.includes('legendary')?3:t.includes('new')?2:t.includes('hot')?1:0; };
                 return p(b) - p(a);
             });
-            if (currentFilterText === '' && currentFilterCat === 'All') renderFeatured(filtered);
-            if (filtered.length === 0) { grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); padding:60px;"><i class="fas fa-search" style="font-size:2rem; margin-bottom:15px; opacity:0.5;"></i><br>NO MODULES FOUND MATCHING YOUR QUERY.</div>'; return; }
-            filtered.forEach(game => {
-                const card = document.createElement('div');
-                card.className = 'game-card';
-                const lowerTags = (game.categories || []).map(c => c.toLowerCase().trim());
-                if (lowerTags.includes('legendary')) card.classList.add('legendary');
-                if (lowerTags.includes('new')) card.classList.add('new-tag');
-                if (lowerTags.includes('hot')) card.classList.add('hot-tag');
-                const displayTags = (game.categories || []).filter(c => { const l=c.toLowerCase().trim(); return l!=='legendary'&&l!=='new'&&l!=='hot'&&l!==''; });
-                const catDisplay = displayTags.length > 0 ? displayTags.join(' / ') : 'Game';
-                card.innerHTML = `<div class="card-img-container" onclick="viewGame('${game.id}', 'info')"><img src="${game.img}" alt="${game.title}" loading="lazy"><span class="badge-cat">${catDisplay}</span></div><div class="card-content" onclick="viewGame('${game.id}', 'info')" style="cursor:pointer;"><h3 class="game-title">${game.title}</h3><div class="info-row"><span><i class="fas fa-code-branch"></i> ${game.version}</span><span><i class="fas fa-hdd"></i> ${game.size}</span></div><div class="play-btn" onclick="event.stopPropagation(); viewGame('${game.id}', 'info')" style="pointer-events:auto; cursor:pointer;"><i class="fas fa-download"></i> DOWNLOAD</div></div>`;
-                grid.appendChild(card);
-            });
+
+            // Clear grid
+            grid.innerHTML = '';
+            _renderedCount = 0;
+
+            if (currentFilterText === '' && currentFilterCat === 'All') renderFeatured(_filteredGames);
+
+            if (_filteredGames.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); padding:60px;"><i class="fas fa-search" style="font-size:2rem; margin-bottom:15px; opacity:0.5;"></i><br>NO MODULES FOUND MATCHING YOUR QUERY.</div>';
+                return;
+            }
+
+            initScrollObserver();
+            appendNextBatch();  // render first 20
         }
 
         function updateCategoryButtons() {
             if (!catContainer) return;
+            // Build sorted unique tag list from ALL games (auto-picks up new tags)
             const categories = new Set(['All']);
-            gamesDB.forEach(game => { if (game.categories) game.categories.forEach(cat => { const c=cat.trim(); if(c&&!['New','Hot','Legendary'].includes(c)) categories.add(c.charAt(0).toUpperCase()+c.slice(1).toLowerCase()); }); });
+            gamesDB.forEach(game => {
+                (game.categories || []).forEach(cat => {
+                    const c = cat.trim();
+                    if (c && !['New','Hot','Legendary'].includes(c))
+                        categories.add(c.charAt(0).toUpperCase() + c.slice(1).toLowerCase());
+                });
+            });
             const newCats = Array.from(categories);
-            const existingCats = Array.from(catContainer.querySelectorAll('.cat-btn')).map(b=>b.dataset.cat);
+            const existingCats = Array.from(catContainer.querySelectorAll('.cat-btn')).map(b => b.dataset.cat);
+            // Only redraw tag bar if the list actually changed (avoids layout flicker)
             if (JSON.stringify(existingCats) === JSON.stringify(newCats)) return;
             catContainer.innerHTML = '';
             if (footerCatContainer) footerCatContainer.innerHTML = '';
             newCats.forEach(cat => {
                 const btn = document.createElement('button');
-                btn.className = `cat-btn ${cat===currentFilterCat?'active':''}`;
-                btn.dataset.cat = cat; btn.textContent = cat;
-                btn.onclick = () => { currentFilterCat = cat; renderGames(); document.querySelectorAll('.cat-btn').forEach(b=>b.classList.toggle('active', b.dataset.cat===cat)); };
+                btn.className = `cat-btn ${cat === currentFilterCat ? 'active' : ''}`;
+                btn.dataset.cat = cat;
+                btn.textContent = cat;
+                btn.onclick = () => {
+                    currentFilterCat = cat;
+                    renderGames();
+                    document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+                };
                 catContainer.appendChild(btn);
                 if (footerCatContainer && cat !== 'All') {
-                    const li = document.createElement('li'); li.style.marginBottom='10px';
+                    const li = document.createElement('li');
+                    li.style.marginBottom = '10px';
                     li.innerHTML = `<a href="#" style="color:var(--text-muted); text-decoration:none; font-size:0.9rem; transition:0.3s;">${cat} Games</a>`;
-                    li.onclick = e => { e.preventDefault(); currentFilterCat=cat; renderGames(); document.querySelector('.main-container').scrollIntoView({behavior:'smooth'}); };
+                    li.onclick = e => { e.preventDefault(); currentFilterCat = cat; renderGames(); document.querySelector('.main-container').scrollIntoView({behavior:'smooth'}); };
                     footerCatContainer.appendChild(li);
                 }
             });
