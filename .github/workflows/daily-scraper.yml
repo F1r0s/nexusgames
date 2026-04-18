@@ -2,9 +2,9 @@ name: Daily Game Scraper
 
 on:
   schedule:
-    # Runs every hour
-    - cron: '0 * * * *'
-  # Allows you to run this workflow manually from the Actions tab
+    # Runs every day at 06:00 UTC
+    - cron: '0 6 * * *'
+  # Run manually from the GitHub Actions tab anytime
   workflow_dispatch:
 
 jobs:
@@ -12,20 +12,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Check out the repo code
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      # 2. Set up Python 3.11
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          node-version: '20'
+          python-version: '3.11'
 
+      # 3. Cache pip packages to speed up future runs
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      # 4. Install Python dependencies from requirements.txt
       - name: Install Dependencies
-        run: npm install axios cheerio google-spreadsheet@3.3.0 dotenv
+        run: pip install -r requirements.txt
 
-      - name: Run Auto-Fetcher
+      # 5. Write the Google credentials JSON from the GitHub Secret
+      - name: Write Google Credentials
+        run: echo '${{ secrets.GCP_CREDENTIALS_JSON }}' > google-credentials.json
+
+      # 6. Run the scraper
+      - name: Run Scraper
         env:
-          SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
-          GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
-          GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
-        run: node auto-fetcher.js
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+        run: python scraper.py

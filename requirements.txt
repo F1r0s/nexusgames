@@ -1,0 +1,18 @@
+# ──────────────────────────────────────────────
+# requirements.txt – AN1.com → Google Sheets
+# Install with:  pip install -r requirements.txt
+# ──────────────────────────────────────────────
+
+# HTTP requests
+requests==2.32.3
+
+# HTML parsing
+beautifulsoup4==4.12.3
+lxml==5.2.2          # faster BS4 parser (optional but recommended)
+
+# Google Sheets API client
+gspread==6.1.2
+
+# Google Auth (service-account credentials)
+google-auth==2.29.0
+google-auth-oauthlib==1.2.0
