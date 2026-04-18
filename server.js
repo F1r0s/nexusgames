@@ -43,6 +43,13 @@ app.get('/style.css', (req, res) => {
     res.sendFile(path.join(__dirname, 'style.css'));
 });
 
+// Minified CSS (used by index.html for better SEO score)
+app.get('/style.min.css', (req, res) => {
+    res.setHeader('Content-Type', 'text/css');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.sendFile(path.join(__dirname, 'style.min.css'));
+});
+
 // Serve the frontend pages
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
