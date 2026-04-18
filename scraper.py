@@ -104,8 +104,8 @@ def parse_detail(url: str) -> dict:
                 if m: size = m.group(1); break
     size = size or fallback["data_size"]
 
-    # OS
-    os_val = t('span[itemprop="operatingSystem"]') or "Android, iOS"
+    # OS – always Android, iOS regardless of what the page says
+    os_val = "Android, iOS"
 
     # Tags / Genre
     names = [el.get_text(strip=True) for el in soup.select('span[itemprop="name"]')]
@@ -168,6 +168,28 @@ def ensure_headers(ws):
     if not any(ws.row_values(1)):
         ws.insert_row(SHEET_HEADERS, index=1)
         log.info("Headers written.")
+    # Freeze the header row so it stays visible while scrolling
+    try:
+        ws.freeze(rows=1)
+    except Exception:
+        pass  # non-critical
+
+
+def clean_sheet(ws):
+    """Remove any completely empty trailing rows to keep the sheet tidy."""
+    try:
+        all_vals = ws.get_all_values()
+        # Find last non-empty row
+        last = len(all_vals)
+        while last > 1 and not any(cell.strip() for cell in all_vals[last - 1]):
+            last -= 1
+        total_rows = ws.row_count
+        rows_to_delete = total_rows - last
+        if rows_to_delete > 0:
+            ws.delete_rows(last + 1, total_rows)
+            log.info("Removed %d empty trailing row(s).", rows_to_delete)
+    except Exception as e:
+        log.warning("Sheet cleanup skipped: %s", e)
 
 def get_existing_keys(ws) -> set:
     rows = ws.get_all_values()
@@ -248,6 +270,9 @@ def main():
 
     ws.append_rows(new_rows, value_input_option="USER_ENTERED")
     log.info("✅ Added %d new game(s) to Google Sheets.", len(new_rows))
+
+    # Keep the sheet clean and organised
+    clean_sheet(ws)
     log.info("Done.")
 
 if __name__ == "__main__":
