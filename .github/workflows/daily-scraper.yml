@@ -4,7 +4,7 @@ on:
   schedule:
     # Runs every day at 06:00 UTC
     - cron: '0 6 * * *'
-  # Run manually from the GitHub Actions tab anytime
+  # Allows manual trigger from the Actions tab
   workflow_dispatch:
 
 jobs:
@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Check out the repo code
+      # 1. Check out the repo
       - name: Checkout Repository
         uses: actions/checkout@v4
 
@@ -22,25 +22,21 @@ jobs:
         with:
           python-version: '3.11'
 
-      # 3. Cache pip packages to speed up future runs
+      # 3. Cache pip to speed up future runs
       - name: Cache pip dependencies
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          restore-keys: ${{ runner.os }}-pip-
 
-      # 4. Install Python dependencies from requirements.txt
+      # 4. Install Python dependencies
       - name: Install Dependencies
         run: pip install -r requirements.txt
 
-      # 5. Write the Google credentials JSON from the GitHub Secret
-      - name: Write Google Credentials
-        run: echo '${{ secrets.GCP_CREDENTIALS_JSON }}' > google-credentials.json
-
-      # 6. Run the scraper
+      # 5. Run the scraper — credentials are passed as env vars (no file needed)
       - name: Run Scraper
         env:
+          GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
           GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
         run: python scraper.py

@@ -17,7 +17,7 @@ import json
 import re
 import os
 import logging
-from dataclasses import dataclass, fields, astuple
+import sys
 from typing import Optional
 
 import requests
@@ -26,21 +26,24 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 # ─────────────────────────────────────────────
-# CONFIGURATION  – edit these two values
+# CONFIGURATION
 # ─────────────────────────────────────────────
-CREDENTIALS_FILE = "google-credentials.json"   # path to your Service-Account JSON
-SHEET_ID         = os.getenv(
+CREDENTIALS_FILE = "google-credentials.json"   # local dev: place your JSON key here
+
+# Sheet ID – read from env var first, then hard-coded fallback
+SHEET_ID = os.getenv(
     "GOOGLE_SHEET_ID",
-    "1vTmd9N77OuTj1k_QFR0hyiqVjxfZvfnYUPO55kUSFN8RyW7MoZNICzc8gGYZuG0uVL_ccPXnG96ltKT"   # ← replace if different
+    "1vTmd9N77OuTj1k_QFR0hyiqVjxfZvfnYUPO55kUSFN8RyW7MoZNICzc8gGYZuG0uVL_ccPXnG96ltKT"
 )
-SHEET_TAB_INDEX  = 0          # 0 = first tab in the spreadsheet
+SHEET_TAB_INDEX = 0   # 0 = first tab
 
 # Scraping behaviour
-BASE_URL         = "https://an1.com/games/"
-REQUEST_DELAY    = 1.5        # polite pause between HTTP calls (seconds)
-REQUEST_TIMEOUT  = 20         # seconds before giving up on a single request
-MAX_PAGES        = 999        # safety cap – pagination stops when no next-page found anyway
-HEADERS          = {
+BASE_URL        = "https://an1.com/games/"
+REQUEST_DELAY   = 1.5   # seconds between requests (polite)
+REQUEST_TIMEOUT = 20    # seconds per request
+MAX_PAGES       = 999   # safety cap – stops when no next-page link found
+
+HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -48,9 +51,9 @@ HEADERS          = {
     )
 }
 
-# Google Sheets OAuth scopes required
+# Google API scopes
 SCOPES = [
-    "https://spreadsheets.google.com/feeds",
+    "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive",
 ]
 
@@ -61,45 +64,19 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s  %(levelname)-8s  %(message)s",
     datefmt="%H:%M:%S",
+    stream=sys.stdout,
 )
 log = logging.getLogger(__name__)
 
 
 # ─────────────────────────────────────────────
-# DATA MODEL
+# COLUMN HEADERS  (must match your Sheet's row 1)
 # ─────────────────────────────────────────────
-@dataclass
-class GameRecord:
-    """Represents one row in the Google Sheet."""
-    module_name:   str = ""   # Game title
-    version:       str = ""   # e.g. v1.4.2
-    build_data:    str = ""   # Build / APK build number (if available)
-    size:          str = ""   # e.g. 120 MB
-    os:            str = ""   # Android / iOS
-    architecture:  str = ""   # arm64-v8a, armeabi-v7a, x86, …
-    tags:          str = ""   # Comma-separated genre + "New"
-    visual_asset:  str = ""   # Icon image URL
-    access_link:   str = ""   # Direct URL to the game page
-    data_log:      str = ""   # Short description / changelog
-
-    # Spreadsheet column headers (must match the Sheet)
-    HEADERS = [
-        "Module Name", "Version", "Build Data", "Size",
-        "OS", "Architecture", "Tags", "Visual Asset",
-        "Access Link", "Data Log",
-    ]
-
-    def as_row(self) -> list:
-        return [
-            self.module_name, self.version, self.build_data,
-            self.size, self.os, self.architecture, self.tags,
-            self.visual_asset, self.access_link, self.data_log,
-        ]
-
-    @property
-    def dedup_key(self) -> str:
-        """Unique key used to detect duplicate rows."""
-        return f"{self.module_name.lower().strip()}|{self.version.lower().strip()}"
+SHEET_HEADERS = [
+    "Module Name", "Version", "Build Data", "Size",
+    "OS", "Architecture", "Tags", "Visual Asset",
+    "Access Link", "Data Log",
+]
 
 
 # ─────────────────────────────────────────────
@@ -109,8 +86,8 @@ _session = requests.Session()
 _session.headers.update(HEADERS)
 
 
-def get(url: str, retries: int = 3) -> Optional[BeautifulSoup]:
-    """Fetch a URL; return a BeautifulSoup object or None on repeated failure."""
+def fetch(url: str, retries: int = 3) -> Optional[BeautifulSoup]:
+    """Fetch a URL and return a BeautifulSoup object, or None on failure."""
     for attempt in range(1, retries + 1):
         try:
             resp = _session.get(url, timeout=REQUEST_TIMEOUT)
@@ -119,8 +96,8 @@ def get(url: str, retries: int = 3) -> Optional[BeautifulSoup]:
         except requests.RequestException as exc:
             log.warning("Attempt %d/%d failed for %s – %s", attempt, retries, url, exc)
             if attempt < retries:
-                time.sleep(REQUEST_DELAY * attempt)   # exponential-ish back-off
-    log.error("Giving up on %s after %d attempts.", url, retries)
+                time.sleep(REQUEST_DELAY * attempt)
+    log.error("Giving up on %s", url)
     return None
 
 
@@ -128,11 +105,7 @@ def get(url: str, retries: int = 3) -> Optional[BeautifulSoup]:
 # DETAIL PAGE PARSER
 # ─────────────────────────────────────────────
 def parse_detail_page(url: str) -> dict:
-    """
-    Visit the individual game page and extract:
-        version, build_data, size, os, architecture, tags, data_log
-    Returns a dict with sensible fallback values on failure.
-    """
+    """Visit a game's detail page and extract all required fields."""
     fallback = {
         "version":      "v1.0",
         "build_data":   "N/A",
@@ -143,45 +116,34 @@ def parse_detail_page(url: str) -> dict:
         "data_log":     "No description available.",
     }
 
-    soup = get(url)
+    soup = fetch(url)
     if not soup:
         return fallback
 
-    def _text(selector: str, attr: str = None) -> str:
+    def text(selector: str, attr: str = None) -> str:
         el = soup.select_one(selector)
         if not el:
             return ""
-        return el.get(attr, "").strip() if attr else el.get_text(strip=True)
+        return (el.get(attr) or "").strip() if attr else el.get_text(strip=True)
 
-    # ── Version ──────────────────────────────
-    version = (
-        _text('span[itemprop="softwareVersion"]')
-        or _text('.version')
-        or _text('ul.app_info li:has(span:-soup-contains("Version")) span:last-child')
-    )
+    # Version
+    version = text('span[itemprop="softwareVersion"]') or text('.version')
     if version and not version.startswith("v"):
         version = "v" + version
     version = version or fallback["version"]
 
-    # ── Build data ────────────────────────────
-    # Look for any spec item that contains "Build" or "APK"
-    build_data = ""
+    # Build data
+    build_data = fallback["build_data"]
     for li in soup.select("ul.app_info li, ul.spec li, .box_app_info li"):
-        label = li.get_text(" ", strip=True)
-        if re.search(r"\bbuild\b", label, re.I):
-            parts = label.split(":")
-            build_data = parts[-1].strip() if len(parts) > 1 else label
+        txt = li.get_text(" ", strip=True)
+        if re.search(r"\bbuild\b", txt, re.I):
+            parts = txt.split(":")
+            build_data = parts[-1].strip() if len(parts) > 1 else txt
             break
-    build_data = build_data or fallback["build_data"]
 
-    # ── Size ─────────────────────────────────
-    size = (
-        _text('span[itemprop="fileSize"]')
-        or _text('span.size')
-        or _text('li:-soup-contains("Size") span:last-child')
-    )
+    # Size
+    size = text('span[itemprop="fileSize"]') or text('span.size')
     if not size:
-        # Generic fallback: grep li items
         for li in soup.select("ul.app_info li, ul.spec li, .box_app_info li"):
             txt = li.get_text(" ", strip=True)
             if re.search(r"\bsize\b", txt, re.I):
@@ -191,40 +153,35 @@ def parse_detail_page(url: str) -> dict:
                     break
     size = size or fallback["size"]
 
-    # ── OS ───────────────────────────────────
-    os_val = _text('span[itemprop="operatingSystem"]') or "Android"
+    # OS
+    os_val = text('span[itemprop="operatingSystem"]') or "Android"
 
-    # ── Architecture ─────────────────────────
-    arch = ""
+    # Architecture
+    arch = fallback["architecture"]
     for li in soup.select("ul.app_info li, ul.spec li, .box_app_info li"):
         txt = li.get_text(" ", strip=True)
         if re.search(r"arch|abi|arm|x86", txt, re.I):
-            parts = re.split(r"[:]\s*", txt, 1)
+            parts = re.split(r":\s*", txt, 1)
             arch = parts[-1].strip()
             break
-    arch = arch or fallback["architecture"]
 
-    # ── Tags / Genre ──────────────────────────
-    # Breadcrumb path: AN1.com › Games › <Genre> › <Developer>
-    names = [el.get_text(strip=True)
-             for el in soup.select('span[itemprop="name"]')]
-    genre = names[2] if len(names) > 2 else ""
-    if not genre:
-        genre = _text('span[itemprop="applicationCategory"]') or "Game"
+    # Tags / Genre (from breadcrumb: AN1.com › Games › <Genre> › Developer)
+    names = [el.get_text(strip=True) for el in soup.select('span[itemprop="name"]')]
+    genre = names[2] if len(names) > 2 else (
+        text('span[itemprop="applicationCategory"]') or "Game"
+    )
     tags = f"{genre}, New"
 
-    # ── Description ───────────────────────────
+    # Description
     desc = (
-        _text('div[itemprop="description"]')
-        or _text('meta[name="description"]', attr="content")
-        or ""
+        text('div[itemprop="description"]')
+        or text('meta[name="description"]', attr="content")
+        or fallback["data_log"]
     )
-    # Trim to 280 chars max
     if len(desc) > 280:
         desc = desc[:280].rstrip() + "…"
-    data_log = desc or fallback["data_log"]
 
-    time.sleep(REQUEST_DELAY)   # be polite
+    time.sleep(REQUEST_DELAY)
 
     return {
         "version":      version,
@@ -233,203 +190,202 @@ def parse_detail_page(url: str) -> dict:
         "os":           os_val,
         "architecture": arch,
         "tags":         tags,
-        "data_log":     data_log,
+        "data_log":     desc,
     }
 
 
 # ─────────────────────────────────────────────
-# LISTING PAGE PARSER  (with pagination)
+# LISTING PAGES  (all paginated pages)
 # ─────────────────────────────────────────────
-def scrape_all_games() -> list[GameRecord]:
-    """
-    Walk every paginated listing page at BASE_URL and return a list
-    of GameRecord objects with all fields populated.
-    """
-    all_records: list[GameRecord] = []
-    page_url = BASE_URL
+def scrape_all_games() -> list[dict]:
+    """Walk every listing page and return a list of game dicts."""
+    all_games = []
+    page_url  = BASE_URL
 
     for page_num in range(1, MAX_PAGES + 1):
         log.info("── Page %d: %s", page_num, page_url)
-        soup = get(page_url)
+        soup = fetch(page_url)
         if not soup:
-            log.error("Failed to fetch listing page %d. Stopping.", page_num)
+            log.error("Failed to fetch page %d. Stopping.", page_num)
             break
 
-        # Each game card on the listing page
         items = soup.select(".item_app, .game-item, article.app")
         if not items:
-            log.warning("No game items found on page %d. Stopping pagination.", page_num)
+            log.info("No items found – pagination complete.")
             break
 
-        log.info("Found %d game items on page %d.", len(items), page_num)
+        log.info("Found %d items on page %d.", len(items), page_num)
 
         for item in items:
             # Title
-            title_el = (
-                item.select_one(".name a span")
-                or item.select_one(".name a")
-                or item.select_one("h2 a, h3 a, .title a")
+            title = (
+                item.select_one(".name a span") or
+                item.select_one(".name a") or
+                item.select_one("h2 a, h3 a, .title a")
             )
-            title = title_el.get_text(strip=True) if title_el else "Unknown"
+            title = title.get_text(strip=True) if title else "Unknown"
 
-            # Link to detail page
+            # Link
             link_el = item.select_one(".name a") or item.select_one("a[href]")
-            link = link_el["href"] if link_el and link_el.get("href") else ""
+            link = (link_el.get("href") or "") if link_el else ""
             if link and not link.startswith("http"):
                 link = "https://an1.com" + link
 
-            # Icon / thumbnail
+            # Icon
             img_el = item.select_one("img[src]")
-            img = img_el["src"] if img_el else ""
+            img = (img_el.get("src") or "") if img_el else ""
             if img and not img.startswith("http"):
                 img = "https://an1.com" + img
 
             if not title or not link:
-                log.debug("Skipping malformed item: title=%s link=%s", title, link)
                 continue
 
             log.info("  → %s", title)
 
-            # Fetch detail page for additional fields
             details = parse_detail_page(link)
 
-            record = GameRecord(
-                module_name=title,
-                version=details["version"],
-                build_data=details["build_data"],
-                size=details["size"],
-                os=details["os"],
-                architecture=details["architecture"],
-                tags=details["tags"],
-                visual_asset=img,
-                access_link=link,
-                data_log=details["data_log"],
-            )
-            all_records.append(record)
+            all_games.append({
+                "Module Name":  title,
+                "Version":      details["version"],
+                "Build Data":   details["build_data"],
+                "Size":         details["size"],
+                "OS":           details["os"],
+                "Architecture": details["architecture"],
+                "Tags":         details["tags"],
+                "Visual Asset": img,
+                "Access Link":  link,
+                "Data Log":     details["data_log"],
+            })
 
-        # ── Find next page link ───────────────────────────────────────
-        next_link = (
-            soup.select_one('a[rel="next"]')
-            or soup.select_one('.pagination a:-soup-contains("Next")')
-            or soup.select_one('.pagination a:-soup-contains("»")')
-            or soup.select_one('.next a, a.next')
+        # Next page
+        next_el = (
+            soup.select_one('a[rel="next"]') or
+            soup.select_one('.pagination a:-soup-contains("Next")') or
+            soup.select_one('.next a, a.next')
         )
-        if next_link and next_link.get("href"):
-            next_href = next_link["href"]
-            page_url = next_href if next_href.startswith("http") else "https://an1.com" + next_href
+        if next_el and next_el.get("href"):
+            href = next_el["href"]
+            page_url = href if href.startswith("http") else "https://an1.com" + href
             time.sleep(REQUEST_DELAY)
         else:
-            log.info("No next-page link found – pagination complete.")
+            log.info("No next-page link – done paginating.")
             break
 
-    log.info("Total records scraped: %d", len(all_records))
-    return all_records
+    log.info("Total scraped: %d games", len(all_games))
+    return all_games
 
 
 # ─────────────────────────────────────────────
-# GOOGLE SHEETS INTEGRATION
+# GOOGLE SHEETS  – connect, deduplicate, append
 # ─────────────────────────────────────────────
-def connect_sheet():
-    """Authenticate with Google Sheets and return the target worksheet."""
-    # Try JSON file first (local dev), then environment variable (CI)
-    creds_json_str = os.getenv("GCP_CREDENTIALS_JSON")
+def build_credentials() -> Credentials:
+    """
+    Load service account credentials.
+    Priority:
+      1. GCP_CREDENTIALS_JSON env var (GitHub Actions)
+      2. google-credentials.json file (local dev)
+    """
+    env_creds = os.getenv("GCP_CREDENTIALS_JSON")
+    if env_creds:
+        log.info("Using GCP_CREDENTIALS_JSON env var for auth.")
+        info = json.loads(env_creds)
+        return Credentials.from_service_account_info(info, scopes=SCOPES)
 
-    if creds_json_str:
-        log.info("Using GCP_CREDENTIALS_JSON environment variable.")
-        creds_info = json.loads(creds_json_str)
-        creds = Credentials.from_service_account_info(creds_info, scopes=SCOPES)
-    elif os.path.exists(CREDENTIALS_FILE):
+    if os.path.exists(CREDENTIALS_FILE):
         log.info("Using local credentials file: %s", CREDENTIALS_FILE)
-        creds = Credentials.from_service_account_file(CREDENTIALS_FILE, scopes=SCOPES)
-    else:
-        raise FileNotFoundError(
-            f"No credentials found. Either set the GCP_CREDENTIALS_JSON env var "
-            f"or place your service-account JSON at '{CREDENTIALS_FILE}'."
-        )
+        return Credentials.from_service_account_file(CREDENTIALS_FILE, scopes=SCOPES)
 
-    gc     = gspread.authorize(creds)
-    sheet  = gc.open_by_key(SHEET_ID)
-    ws     = sheet.get_worksheet(SHEET_TAB_INDEX)
-    log.info("Connected to sheet: '%s' (tab index %d)", sheet.title, SHEET_TAB_INDEX)
+    raise FileNotFoundError(
+        "No credentials found!\n"
+        "  • GitHub Actions: set secret GCP_CREDENTIALS_JSON\n"
+        f"  • Local: place your JSON key at '{CREDENTIALS_FILE}'"
+    )
+
+
+def connect_sheet() -> gspread.Worksheet:
+    """Authenticate and return the target worksheet."""
+    creds  = build_credentials()
+    client = gspread.Client(auth=creds)
+    client.session = requests.Session()
+    client.session.headers.update({"Authorization": f"Bearer {creds.token}"})
+
+    # Use gspread's built-in auth (works with gspread 5.x and 6.x)
+    gc = gspread.authorize(creds)
+    wb = gc.open_by_key(SHEET_ID)
+    ws = wb.get_worksheet(SHEET_TAB_INDEX)
+    log.info("Connected to spreadsheet: '%s'", wb.title)
     return ws
 
 
 def ensure_headers(ws: gspread.Worksheet):
-    """Create the header row if the sheet is empty."""
-    existing = ws.row_values(1)
-    if not existing:
-        ws.insert_row(GameRecord.HEADERS, index=1)
-        log.info("Header row created.")
+    """Write the header row if the sheet is empty."""
+    first_row = ws.row_values(1)
+    if not any(first_row):
+        ws.insert_row(SHEET_HEADERS, index=1)
+        log.info("Header row written.")
 
 
-def get_existing_keys(ws: gspread.Worksheet) -> set[str]:
-    """
-    Return a set of dedup keys already present in the sheet.
-    Key = "module_name|version" (both lower-cased).
-    """
-    records = ws.get_all_values()
-    if len(records) <= 1:
-        return set()   # only header (or empty)
+def get_existing_keys(ws: gspread.Worksheet) -> set:
+    """Return dedup keys (name|version) for all rows already in the sheet."""
+    all_rows = ws.get_all_values()
+    if len(all_rows) <= 1:
+        return set()
 
+    header = all_rows[0]
     try:
-        header = records[0]
-        name_idx    = header.index("Module Name")
-        version_idx = header.index("Version")
+        name_col    = header.index("Module Name")
+        version_col = header.index("Version")
     except ValueError:
-        log.warning("Expected columns not found; skipping dedup check.")
+        log.warning("Sheet headers not found – skipping dedup check.")
         return set()
 
     keys = set()
-    for row in records[1:]:
-        if len(row) > max(name_idx, version_idx):
-            key = f"{row[name_idx].lower().strip()}|{row[version_idx].lower().strip()}"
-            keys.add(key)
+    for row in all_rows[1:]:
+        if len(row) > max(name_col, version_col):
+            k = f"{row[name_col].lower().strip()}|{row[version_col].lower().strip()}"
+            keys.add(k)
     return keys
 
 
-def push_to_sheets(records: list[GameRecord]):
-    """Append only genuinely new records to the Google Sheet."""
+def push_to_sheets(games: list[dict]):
+    """Append only new (non-duplicate) games to the Google Sheet."""
     ws = connect_sheet()
     ensure_headers(ws)
 
-    existing_keys = get_existing_keys(ws)
-    log.info("Sheet currently has %d existing entries (dedup keys).", len(existing_keys))
+    existing = get_existing_keys(ws)
+    log.info("Sheet has %d existing entries.", len(existing))
 
     new_rows = []
-    for rec in records:
-        if rec.dedup_key in existing_keys:
-            log.debug("SKIP (duplicate): %s", rec.module_name)
+    for g in games:
+        key = f"{g['Module Name'].lower().strip()}|{g['Version'].lower().strip()}"
+        if key not in existing:
+            new_rows.append([g[h] for h in SHEET_HEADERS])
+            existing.add(key)   # prevent in-batch dupes
         else:
-            new_rows.append(rec.as_row())
-            existing_keys.add(rec.dedup_key)   # avoid in-batch duplicates too
+            log.debug("SKIP (dup): %s", g["Module Name"])
 
     if not new_rows:
-        log.info("No new records to add – sheet is already up to date.")
+        log.info("No new games – sheet is already up to date.")
         return
 
-    # Batch-append all new rows in one API call (efficient)
     ws.append_rows(new_rows, value_input_option="USER_ENTERED")
-    log.info("✅ Appended %d new record(s) to the sheet.", len(new_rows))
+    log.info("✅ Appended %d new game(s) to the sheet.", len(new_rows))
 
 
 # ─────────────────────────────────────────────
 # ENTRY POINT
 # ─────────────────────────────────────────────
 def main():
-    log.info("=" * 60)
+    log.info("=" * 55)
     log.info("AN1.com → Google Sheets Scraper")
-    log.info("=" * 60)
+    log.info("=" * 55)
 
-    # 1. Scrape all games (all pages)
-    records = scrape_all_games()
+    games = scrape_all_games()
+    if not games:
+        log.error("No games scraped – nothing to push.")
+        sys.exit(1)
 
-    if not records:
-        log.error("No records scraped. Exiting without updating the sheet.")
-        return
-
-    # 2. Push to Google Sheets (with deduplication)
-    push_to_sheets(records)
-
+    push_to_sheets(games)
     log.info("Done.")
 
 
