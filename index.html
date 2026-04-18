@@ -76,7 +76,7 @@
         <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; width:100%; max-width:1200px; margin:0 auto;">
             <!-- Left spacer (mirrors nav width to keep logo centred) -->
             <div></div>
-            <a href="#" class="logo" id="vaultLogo" onclick="triggerVaultBurst(); openVaultPicker(); return false;" style="text-decoration:none; justify-self:center;">
+            <a href="#" class="logo" id="vaultLogo" onclick="triggerVaultBurst(); window.scrollTo({top:0,behavior:'smooth'}); return false;" style="text-decoration:none; justify-self:center;">
                 <span class="brand-word">Mod</span>
                 <span class="vault-svg-wrap" id="vaultSvgWrap" aria-hidden="true">
                     <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -145,28 +145,6 @@
     </header>
 
     <div class="vault-burst-layer" id="vaultBurstLayer"></div>
-
-    <!-- VAULT SHOOT OVERLAY -->
-    <div id="vaultShootOverlay">
-        <div id="shootCard">
-            <div class="shoot-face">
-                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:54px;height:54px;">
-                    <circle cx="24" cy="24" r="22" fill="#1a1400" stroke="rgba(255,107,0,0.7)" stroke-width="1.5"/>
-                    <circle cx="24" cy="24" r="14" fill="none" stroke="rgba(255,107,0,0.3)" stroke-width="1"/>
-                    <line x1="24" y1="10" x2="24" y2="38" stroke="#FF6B00" stroke-width="1.8" stroke-linecap="round"/>
-                    <line x1="10" y1="24" x2="38" y2="24" stroke="#FF6B00" stroke-width="1.8" stroke-linecap="round"/>
-                    <circle cx="24" cy="24" r="4" fill="rgba(255,107,0,0.7)"/>
-                </svg>
-                <span class="shoot-face-label">MOD VAULT</span>
-            </div>
-            <div class="shoot-back">
-                <img id="shootGameImg" src="" alt="">
-                <div class="shoot-game-name" id="shootGameName"></div>
-                <div class="shoot-game-sub">TAP TO UNLOCK</div>
-            </div>
-        </div>
-        <div class="shoot-overlay-close" onclick="closeShootOverlay()">✕</div>
-    </div>
 
     <section class="hero">
         <div class="hero-content">
@@ -269,19 +247,6 @@
         </div>
     </footer>
 
-    <!-- VAULT PICKER -->
-    <div class="vault-picker" id="vaultPicker">
-        <div class="vault-picker-panel reveal">
-            <div class="vault-picker-head">
-                <div>
-                    <h3>Select a game</h3>
-                    <p>Pick one of these random games to open it directly.</p>
-                </div>
-                <button class="vault-picker-close" onclick="closeVaultPicker()" aria-label="Close">&times;</button>
-            </div>
-            <div class="vault-game-grid" id="vaultGameGrid"></div>
-        </div>
-    </div>
 
     <!-- GAME MODAL -->
     <div class="modal-overlay" id="viewGameModal">
@@ -691,80 +656,6 @@
             const sw=document.getElementById('vaultSvgWrap');
             if(sw){ sw.style.animation='vaultBurst 0.55s cubic-bezier(0.175,0.885,0.32,1.275) forwards'; setTimeout(()=>sw.style.animation='vaultBreath 3.8s ease-in-out infinite',700); }
         }
-
-        /* ============================================================
-           VAULT SHOOT — SINGLE CARD → REVEAL → CPA LOCKER
-        ============================================================ */
-        let shootGame = null;
-
-        window.openVaultPicker = function() {
-            if (gamesDB.length === 0) return;
-
-            // Pick 1 random game
-            shootGame = gamesDB[Math.floor(Math.random() * gamesDB.length)];
-
-            // Load game data into the card back
-            document.getElementById('shootGameImg').src  = shootGame.img;
-            document.getElementById('shootGameName').textContent = shootGame.title;
-
-            const overlay = document.getElementById('vaultShootOverlay');
-            const card    = document.getElementById('shootCard');
-
-            // Reset card state
-            card.className = '';
-            card.style.transform = '';
-
-            // Show overlay
-            overlay.classList.add('active');
-
-            // 1. Shoot the card to center
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    card.classList.add('shooting');
-                });
-            });
-
-            // 2. After card lands, flip it to reveal the game (800ms)
-            setTimeout(() => {
-                card.classList.remove('shooting');
-                card.classList.add('flipping');
-            }, 750);
-
-            // 3. After flip completes, mark as flipped + pulse (1650ms)
-            setTimeout(() => {
-                card.classList.remove('flipping');
-                card.classList.add('flipped');
-                card.classList.add('pulse');
-                overlay.classList.add('bg-ready');
-            }, 1650);
-
-            // 4. After pulse, open CPA locker directly (2500ms)
-            setTimeout(() => {
-                closeShootOverlay();
-                viewGame(shootGame.id, 'locker');
-            }, 2800);
-
-            // Clicking the revealed card immediately opens the locker
-            card.onclick = () => {
-                if (card.classList.contains('flipped')) {
-                    closeShootOverlay();
-                    viewGame(shootGame.id, 'locker');
-                }
-            };
-        }
-
-        window.closeShootOverlay = function() {
-            const overlay = document.getElementById('vaultShootOverlay');
-            const card    = document.getElementById('shootCard');
-            overlay.classList.remove('active', 'bg-ready');
-            card.className = '';
-            card.onclick = null;
-        }
-
-        // Close on backdrop
-        document.getElementById('vaultShootOverlay').addEventListener('click', function(e) {
-            if (e.target === this) closeShootOverlay();
-        });
 
         /* Auto light-eject every 5s */
         function lightEject() {
