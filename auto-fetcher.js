@@ -103,9 +103,29 @@ async function pushToSheets(games) {
     
     const sheet = doc.sheetsByIndex[0];
     
-    console.log(`Writing ${games.length} new games to the sheet under exact column headers...`);
-    await sheet.addRows(games);
-    console.log("🎉 SUCCESS! All games added to Google Sheets automatically!");
+    // Load existing rows to check for duplicates
+    const existingRows = await sheet.getRows();
+    const existingTitles = new Set(existingRows.map(row => (row['Module Name'] || '').toLowerCase().trim()));
+    const existingLinks = new Set(existingRows.map(row => (row['Access Link'] || '').trim()));
+    
+    const newGames = games.filter(game => {
+        const titleDup = existingTitles.has((game['Module Name'] || '').toLowerCase().trim());
+        const linkDup = existingLinks.has((game['Access Link'] || '').trim());
+        if (titleDup || linkDup) {
+            console.log(`⏭️  Skipping duplicate: ${game['Module Name']}`);
+            return false;
+        }
+        return true;
+    });
+    
+    if (newGames.length === 0) {
+        console.log("✅ No new games to add — all fetched games already exist in the sheet.");
+        return;
+    }
+    
+    console.log(`Writing ${newGames.length} new games to the sheet under exact column headers...`);
+    await sheet.addRows(newGames);
+    console.log("🎉 SUCCESS! All new games added to Google Sheets automatically!");
 }
 
 async function run() {
