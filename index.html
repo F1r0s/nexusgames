@@ -222,21 +222,24 @@
                     pointer-events:none;z-index:2;border-radius:10px;
                 "></div>
 
-                <iframe
+                <video
                     id="introVideo"
-                    src="https://www.youtube.com/embed/bPROLwISrzU?si=okyS60YDzWJUM2Hz&rel=0&modestbranding=1&color=white"
-                    title="Mod Vault — How to Download & Unlock Game Mods"
-                    frameborder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    referrerpolicy="strict-origin-when-cross-origin"
-                    allowfullscreen
-                    loading="lazy"
+                    autoplay
+                    muted
+                    loop
+                    playsinline
+                    controls
+                    preload="metadata"
                     style="
                         position:absolute;top:0;left:0;
                         width:100%;height:100%;
-                        border:none;border-radius:10px;
+                        object-fit:cover;
+                        border-radius:10px;
                     "
-                ></iframe>
+                >
+                    <source src="/video/mod-vault-games.mp4" type="video/mp4">
+                    Your browser does not support HTML5 video.
+                </video>
             </div>
 
             <!-- Caption under video -->
@@ -245,7 +248,7 @@
                 font-family:'Rajdhani',sans-serif;
                 font-size:0.82rem;letter-spacing:2px;
                 color:rgba(255,255,255,0.28);text-transform:uppercase;
-            ">▶ WATCH HOW TO UNLOCK YOUR GAME MOD IN 60 SECONDS</p>
+            ">▶ MOD VAULT — PREMIUM MOBILE GAME MODS SHOWCASE</p>
         </div>
     </section>
 

@@ -50,6 +50,43 @@ app.get('/style.min.css', (req, res) => {
     res.sendFile(path.join(__dirname, 'style.min.css'));
 });
 
+// ── VIDEO STREAMING — supports byte-range requests (seek + mobile buffer) ──
+app.get('/video/mod-vault-games.mp4', (req, res) => {
+    const videoPath = path.join(__dirname, 'Mod vault games.mp4');
+    if (!fs.existsSync(videoPath)) {
+        return res.status(404).send('Video not found');
+    }
+    const stat = fs.statSync(videoPath);
+    const fileSize = stat.size;
+    const range = req.headers.range;
+
+    if (range) {
+        // Partial content — lets the browser seek and buffer efficiently
+        const parts = range.replace(/bytes=/, '').split('-');
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : Math.min(start + 1048576, fileSize - 1);
+        const chunkSize = (end - start) + 1;
+        const stream = fs.createReadStream(videoPath, { start, end });
+        res.writeHead(206, {
+            'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+            'Accept-Ranges': 'bytes',
+            'Content-Length': chunkSize,
+            'Content-Type': 'video/mp4',
+            'Cache-Control': 'public, max-age=3600',
+        });
+        stream.pipe(res);
+    } else {
+        // Full file download
+        res.writeHead(200, {
+            'Content-Length': fileSize,
+            'Content-Type': 'video/mp4',
+            'Accept-Ranges': 'bytes',
+            'Cache-Control': 'public, max-age=3600',
+        });
+        fs.createReadStream(videoPath).pipe(res);
+    }
+});
+
 // Serve the frontend pages
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
