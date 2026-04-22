@@ -69,14 +69,62 @@
 
     <link rel="stylesheet" href="/style.min.css">
     <!-- Styles loaded from /style.min.css (minified) -->
+    <style>
+        html { scroll-behavior: smooth; }
+        /* ── HEADER REDESIGN ── */
+        header { display:flex; align-items:center; justify-content:space-between; padding:0 28px; height:68px; }
+        .header-inner { display:flex; align-items:center; justify-content:space-between; width:100%; max-width:1400px; margin:0 auto; }
+        /* Desktop nav */
+        .desktop-nav { display:flex; gap:8px; align-items:center; }
+        /* Hamburger */
+        .hamburger-btn { display:none; flex-direction:column; gap:5px; background:none; border:1px solid rgba(255,107,0,0.4); border-radius:6px; padding:8px 10px; cursor:pointer; }
+        .hamburger-btn span { display:block; width:20px; height:2px; background:var(--amber); border-radius:2px; transition:all 0.3s; }
+        .hamburger-btn.open span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+        .hamburger-btn.open span:nth-child(2) { opacity:0; }
+        .hamburger-btn.open span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
+        /* Mobile drawer */
+        #mobileMenu {
+            display:none; position:fixed; top:68px; left:0; right:0; bottom:0;
+            background:rgba(8,8,8,0.97); backdrop-filter:blur(20px);
+            z-index:999; flex-direction:column; align-items:center; justify-content:center; gap:24px;
+            animation:menuFade 0.25s ease;
+        }
+        #mobileMenu.open { display:flex; }
+        @keyframes menuFade { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
+        #mobileMenu a { font-family:var(--font-head); font-size:1.4rem; color:#fff; text-decoration:none; letter-spacing:3px; text-transform:uppercase; padding:12px 40px; border:1px solid rgba(255,107,0,0.3); border-radius:8px; transition:all 0.25s; width:220px; text-align:center; }
+        #mobileMenu a:hover { background:rgba(255,107,0,0.15); border-color:var(--amber); color:var(--amber); }
+        @media (max-width:768px) {
+            .desktop-nav { display:none; }
+            .hamburger-btn { display:flex; }
+            header .logo { position:absolute; left:50%; transform:translateX(-50%); }
+            header { position:fixed; }
+        }
+        @media (min-width:769px) {
+            #mobileMenu { display:none !important; }
+        }
+        /* Trending 2026 section */
+        .trending-section { padding:50px 20px 0; max-width:1400px; margin:0 auto; }
+        .trending-header { display:flex; align-items:center; gap:12px; margin-bottom:22px; padding-bottom:12px; border-bottom:1px solid rgba(255,107,0,0.2); }
+        .trending-header h2 { font-family:var(--font-head); font-size:1.4rem; color:#fff; text-transform:uppercase; letter-spacing:2px; margin:0; }
+        .trending-header .fire-icon { font-size:1.5rem; animation:firePulse 1.5s ease-in-out infinite alternate; }
+        @keyframes firePulse { 0%{text-shadow:0 0 6px rgba(255,100,0,0.7)} 100%{text-shadow:0 0 22px rgba(255,100,0,1),0 0 40px rgba(255,50,0,0.5)} }
+        .trending-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:14px; }
+        .trending-card { background:#111; border:1px solid rgba(255,107,0,0.2); border-radius:10px; overflow:hidden; cursor:pointer; transition:transform 0.25s,border-color 0.25s,box-shadow 0.25s; position:relative; }
+        .trending-card:hover { transform:translateY(-6px); border-color:rgba(255,107,0,0.7); box-shadow:0 8px 28px rgba(255,107,0,0.2); }
+        .trending-card img { width:100%; aspect-ratio:1/1; object-fit:cover; display:block; }
+        .trending-card .tc-rank { position:absolute; top:8px; left:8px; background:var(--amber); color:#000; font-family:var(--font-head); font-size:0.65rem; font-weight:900; padding:2px 8px; border-radius:4px; }
+        .trending-card .tc-name { padding:10px; font-family:var(--font-head); font-size:0.78rem; color:#ddd; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        @media (max-width:600px) { .trending-grid { grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:10px; } }
+    </style>
 </head>
 <body>
 
     <header>
-        <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; width:100%; max-width:1200px; margin:0 auto;">
-            <!-- Left spacer (mirrors nav width to keep logo centred) -->
-            <div></div>
-            <a href="#" class="logo" id="vaultLogo" onclick="triggerVaultBurst(); window.scrollTo({top:0,behavior:'smooth'}); return false;" style="text-decoration:none; justify-self:center;">
+        <div class="header-inner">
+            <!-- LOGO — left on desktop, centred on mobile via CSS -->
+            <a href="#" class="logo" id="vaultLogo"
+               onclick="triggerVaultBurst(); window.scrollTo({top:0,behavior:'smooth'}); return false;"
+               style="text-decoration:none; flex-shrink:0;">
                 <span class="brand-word">Mod</span>
                 <span class="vault-svg-wrap" id="vaultSvgWrap" aria-hidden="true">
                     <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -100,19 +148,12 @@
                                 <stop offset="100%" stop-color="rgba(255,107,0,0)"/>
                             </radialGradient>
                         </defs>
-                        <!-- 3D body -->
                         <circle cx="24" cy="24" r="22" fill="url(#vb)"/>
-                        <!-- Ambient amber glow layer -->
                         <circle cx="24" cy="24" r="22" fill="url(#vab)"/>
-                        <!-- Rim highlight (3D) -->
                         <circle cx="24" cy="24" r="22" fill="url(#vr)"/>
-                        <!-- Outer ring -->
                         <circle cx="24" cy="24" r="22" stroke="rgba(255,255,255,0.5)" stroke-width="1.2"/>
-                        <!-- Depth ring -->
                         <circle cx="24" cy="24" r="17.5" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
-                        <!-- Inner ring -->
                         <circle cx="24" cy="24" r="14" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
-                        <!-- Rotating spokes -->
                         <g class="vault-wheel">
                             <line x1="24" y1="10" x2="24" y2="14.5" stroke="rgba(255,107,0,0.9)" stroke-width="2.2" stroke-linecap="round"/>
                             <line x1="24" y1="33.5" x2="24" y2="38" stroke="rgba(255,107,0,0.9)" stroke-width="2.2" stroke-linecap="round"/>
@@ -123,12 +164,9 @@
                             <line x1="33.5" y1="14.5" x2="30.2" y2="17.8" stroke="rgba(255,200,100,0.5)" stroke-width="1.4" stroke-linecap="round"/>
                             <line x1="17.8" y1="30.2" x2="14.5" y2="33.5" stroke="rgba(255,200,100,0.5)" stroke-width="1.4" stroke-linecap="round"/>
                         </g>
-                        <!-- 3D center hub -->
                         <circle cx="24" cy="24" r="4.2" fill="url(#vh)"/>
                         <circle cx="24" cy="24" r="1.8" fill="rgba(0,0,0,0.7)"/>
-                        <!-- Specular highlight (3D illusion) -->
                         <ellipse cx="17" cy="15.5" rx="4.5" ry="3" fill="rgba(255,255,255,0.07)" transform="rotate(-30 17 15.5)"/>
-                        <!-- Amber bolt holes -->
                         <circle cx="24" cy="2.5" r="1.6" fill="rgba(255,107,0,0.5)"/>
                         <circle cx="24" cy="45.5" r="1.6" fill="rgba(255,107,0,0.5)"/>
                         <circle cx="2.5" cy="24" r="1.6" fill="rgba(255,107,0,0.5)"/>
@@ -136,13 +174,27 @@
                     </svg>
                 </span>
             </a>
-            <div style="justify-self:end; display:flex; gap:8px; align-items:center; flex-wrap:nowrap;">
+
+            <!-- DESKTOP NAV -->
+            <nav class="desktop-nav">
                 <a href="/game-mode-guide.html" class="nav-btn"><i class="fas fa-question-circle"></i><span class="nav-label">Guide</span></a>
                 <a href="/support.html" class="nav-btn"><i class="fas fa-headset"></i><span class="nav-label">Support</span></a>
                 <a href="/privacy.html" class="nav-btn"><i class="fas fa-shield-alt"></i><span class="nav-label">Privacy</span></a>
-            </div>
+            </nav>
+
+            <!-- HAMBURGER (mobile only) -->
+            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" onclick="toggleMobileMenu()">
+                <span></span><span></span><span></span>
+            </button>
         </div>
     </header>
+
+    <!-- MOBILE MENU DRAWER -->
+    <div id="mobileMenu">
+        <a href="/game-mode-guide.html" onclick="toggleMobileMenu()"><i class="fas fa-question-circle" style="margin-right:10px;color:var(--amber);"></i>Guide</a>
+        <a href="/support.html" onclick="toggleMobileMenu()"><i class="fas fa-headset" style="margin-right:10px;color:var(--amber);"></i>Support</a>
+        <a href="/privacy.html" onclick="toggleMobileMenu()"><i class="fas fa-shield-alt" style="margin-right:10px;color:var(--amber);"></i>Privacy</a>
+    </div>
 
     <div class="vault-burst-layer" id="vaultBurstLayer"></div>
 
@@ -251,6 +303,17 @@
         </p>
     </div>
 
+    <!-- ── TOP TRENDING GAMES 2026 ─────────────────────────────── -->
+    <div class="trending-section" id="trendingSection">
+        <div class="trending-header">
+            <span class="fire-icon">🔥</span>
+            <h2>Top Trending Games <span style="color:var(--amber);">2026</span></h2>
+        </div>
+        <div class="trending-grid" id="trendingGrid">
+            <div style="grid-column:1/-1;text-align:center;padding:20px;color:#444;font-family:var(--font-head);font-size:0.8rem;letter-spacing:2px;">LOADING TRENDING...</div>
+        </div>
+    </div>
+
     <div class="controls-section">
         <div class="hud-panel">
             <div class="hud-left">
@@ -279,6 +342,19 @@
             <div style="color:var(--text-muted); font-size:0.8rem;"> </div>
         </div>
         <div class="games-grid" id="gamesGrid"></div>
+
+        <!-- ── PAGINATION BAR ──────────────────────────────── -->
+        <div id="paginationBar" style="display:none;">
+            <button id="pgPrev" class="pg-btn" onclick="goPrevPage()">
+                <i class="fas fa-chevron-left"></i>
+                <span class="pg-label">PREV</span>
+            </button>
+            <span id="pgInfo" class="pg-info">PAGE 1 / 1</span>
+            <button id="pgNext" class="pg-btn" onclick="goNextPage()">
+                <span class="pg-label">NEXT</span>
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
     </div>
 
 
@@ -420,12 +496,25 @@
 
     <script>
         let gamesDB = [];
-        // ── Virtual scroll state ──────────────────────────────────
+        // ── Pagination state ──────────────────────────────────────
         let _filteredGames = [];   // current filtered+sorted list
-        let _renderedCount = 0;    // how many cards are in the DOM
-        const PAGE_SIZE = 20;      // cards per batch
-        let _scrollSentinel = null;
-        let _scrollObserver = null;
+        let _currentPage  = 1;
+        const PAGE_SIZE   = 10;   // games per page
+        let _animObserver = null;
+
+        // Initialize Animation Observer (toggles .in-view class)
+        function initAnimObserver() {
+            if (_animObserver) return;
+            _animObserver = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('in-view');
+                    } else {
+                        entry.target.classList.remove('in-view');
+                    }
+                });
+            }, { threshold: 0.1 });
+        }
 
         async function loadDatabase() {
             const CACHE_KEY = 'gamesDB_cache', CACHE_TS_KEY = 'gamesDB_ts', CACHE_DURATION = 5*60*1000;
@@ -489,39 +578,46 @@
             if (lowerTags.includes('hot')) card.classList.add('hot-tag');
             const displayTags = (game.categories || []).filter(c => { const l=c.toLowerCase().trim(); return l!=='legendary'&&l!=='new'&&l!=='hot'&&l!==''; });
             const catDisplay = displayTags.length > 0 ? displayTags.join(' / ') : 'Game';
-            card.innerHTML = `<div class="card-img-container" onclick="viewGame('${game.id}', 'info')"><img src="${game.img}" alt="${game.title}" loading="lazy"><span class="badge-cat">${catDisplay}</span></div><div class="card-content" onclick="viewGame('${game.id}', 'info')" style="cursor:pointer;"><h3 class="game-title">${game.title}</h3><div class="info-row"><span><i class="fas fa-code-branch"></i> ${game.version}</span><span><i class="fas fa-hdd"></i> ${game.size}</span></div><div class="play-btn" onclick="event.stopPropagation(); viewGame('${game.id}', 'info')" style="pointer-events:auto; cursor:pointer;"><i class="fas fa-download"></i> DOWNLOAD</div></div>`;
+            card.innerHTML = `<div class="card-img-container" onclick="viewGame('${game.id}', 'info')"><img src="${game.img}" alt="${game.title}" loading="lazy" decoding="async"><span class="badge-cat">${catDisplay}</span></div><div class="card-content" onclick="viewGame('${game.id}', 'info')" style="cursor:pointer;"><h3 class="game-title">${game.title}</h3><div class="info-row"><span><i class="fas fa-code-branch"></i> ${game.version}</span><span><i class="fas fa-hdd"></i> ${game.size}</span></div><div class="play-btn" onclick="event.stopPropagation(); viewGame('${game.id}', 'info')" style="pointer-events:auto; cursor:pointer;"><i class="fas fa-download"></i> DOWNLOAD</div></div>`;
+            
+            // Observe for animations
+            if (_animObserver) _animObserver.observe(card);
+            
             return card;
         }
 
-        // Append the next PAGE_SIZE cards from _filteredGames into the grid
-        function appendNextBatch() {
-            if (_renderedCount >= _filteredGames.length) return;
-            const frag = document.createDocumentFragment();
-            const end = Math.min(_renderedCount + PAGE_SIZE, _filteredGames.length);
-            for (let i = _renderedCount; i < end; i++) {
-                frag.appendChild(buildCard(_filteredGames[i]));
-            }
-            _renderedCount = end;
-            // Remove old sentinel before appending
-            if (_scrollSentinel && _scrollSentinel.parentNode === grid) grid.removeChild(_scrollSentinel);
+        // ── Pagination helpers ────────────────────────────────────
+        function totalPages() { return Math.max(1, Math.ceil(_filteredGames.length / PAGE_SIZE)); }
+
+        function renderPage(page) {
+            _currentPage = Math.max(1, Math.min(page, totalPages()));
+            grid.innerHTML = '';
+            const start = (_currentPage - 1) * PAGE_SIZE;
+            const end   = Math.min(start + PAGE_SIZE, _filteredGames.length);
+            const frag  = document.createDocumentFragment();
+            for (let i = start; i < end; i++) frag.appendChild(buildCard(_filteredGames[i]));
             grid.appendChild(frag);
-            // If more cards remain, add a new sentinel for IntersectionObserver
-            if (_renderedCount < _filteredGames.length) {
-                if (!_scrollSentinel) {
-                    _scrollSentinel = document.createElement('div');
-                    _scrollSentinel.style.cssText = 'grid-column:1/-1; height:1px;';
-                }
-                grid.appendChild(_scrollSentinel);
-                if (_scrollObserver) _scrollObserver.observe(_scrollSentinel);
-            }
+            renderPagination();
         }
 
-        // Set up IntersectionObserver once
-        function initScrollObserver() {
-            if (_scrollObserver) return;
-            _scrollObserver = new IntersectionObserver(entries => {
-                if (entries[0].isIntersecting) appendNextBatch();
-            }, { rootMargin: '200px' });
+        function renderPagination() {
+            const bar = document.getElementById('paginationBar');
+            if (!bar) return;
+            const total = totalPages();
+            if (total <= 1) { bar.style.display = 'none'; return; }
+            bar.style.display = 'flex';
+            document.getElementById('pgPrev').disabled = _currentPage === 1;
+            document.getElementById('pgNext').disabled = _currentPage === total;
+            document.getElementById('pgInfo').textContent = 'PAGE ' + _currentPage + ' / ' + total;
+        }
+
+        window.goPrevPage = function() {
+            renderPage(_currentPage - 1);
+            document.querySelector('.main-container').scrollIntoView({behavior:'smooth'});
+        }
+        window.goNextPage = function() {
+            renderPage(_currentPage + 1);
+            document.querySelector('.main-container').scrollIntoView({behavior:'smooth'});
         }
 
         function renderGames(fullRedraw = true) {
@@ -538,19 +634,19 @@
                 return p(b) - p(a);
             });
 
-            // Clear grid
-            grid.innerHTML = '';
-            _renderedCount = 0;
+            _currentPage = 1;
 
             if (currentFilterText === '' && currentFilterCat === 'All') renderFeatured(_filteredGames);
 
             if (_filteredGames.length === 0) {
                 grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); padding:60px;"><i class="fas fa-search" style="font-size:2rem; margin-bottom:15px; opacity:0.5;"></i><br>NO MODULES FOUND MATCHING YOUR QUERY.</div>';
+                const bar = document.getElementById('paginationBar');
+                if (bar) bar.style.display = 'none';
                 return;
             }
 
-            initScrollObserver();
-            appendNextBatch();  // render first 20
+            initAnimObserver();
+            renderPage(1);
         }
 
         function updateCategoryButtons() {
@@ -591,7 +687,14 @@
             });
         }
 
-        searchInput.addEventListener('input', e => { currentFilterText = e.target.value; renderGames(); });
+        let searchTimeout;
+        searchInput.addEventListener('input', e => { 
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                currentFilterText = e.target.value; 
+                renderGames(); 
+            }, 300);
+        });
 
         const viewModal = document.getElementById('viewGameModal');
         let currentGameLink = '';
@@ -755,17 +858,24 @@
 
         /* Auto light-eject every 5s */
         function lightEject() {
+            const isMobile = window.innerWidth < 660;
             const layer=document.getElementById('vaultBurstLayer');
-            // Only eject when we have real game images from the DB
+            // Only eject when we have real game images from the DB. 
+            // Skip or reduce frequency on mobile to avoid scroll lag.
             if(!layer||gamesDB.length===0||document.hidden) return;
+            if(isMobile && Math.random() > 0.3) return; // Only 30% chance on mobile
+
             const logo=document.getElementById('vaultLogo'); if(!logo) return;
             const lr=logo.getBoundingClientRect(), ox=lr.left+lr.width/2, oy=lr.top+lr.height/2;
-            [...gamesDB].sort(()=>Math.random()-0.5).slice(0,3).forEach((game,i)=>{
+
+            // Reduce count on mobile
+            const count = isMobile ? 1 : 2;
+            [...gamesDB].sort(()=>Math.random()-0.5).slice(0, count).forEach((game,i)=>{
                 const t=document.createElement('div'); t.className='burst-token';
-                t.style.width='38px'; t.style.height='38px';
+                t.style.width='32px'; t.style.height='32px';
                 t.style.backgroundImage=`url(${game.img})`; t.style.animationDuration='2.2s';
                 const angle=Math.PI*0.5+(i-1)*0.55, dist=55+Math.random()*70;
-                t.style.left=(ox-19)+'px'; t.style.top=(oy-19)+'px';
+                t.style.left=(ox-16)+'px'; t.style.top=(oy-16)+'px';
                 t.style.setProperty('--dx',(Math.cos(angle)*dist)+'px');
                 t.style.setProperty('--dy',(Math.sin(angle)*dist+15)+'px');
                 t.style.setProperty('--rot',((Math.random()-0.5)*35)+'deg');
@@ -773,7 +883,7 @@
                 layer.appendChild(t); setTimeout(()=>t.remove(),2600);
             });
         }
-        setInterval(lightEject, 5000);
+        setInterval(lightEject, 7000); // Increased interval from 5s to 7s
 
         /* IntersectionObserver for .reveal */
         const revealObserver = new IntersectionObserver(entries=>{
@@ -781,7 +891,58 @@
         }, { threshold:0.1, rootMargin:'0px 0px -40px 0px' });
         document.querySelectorAll('.reveal').forEach(el=>revealObserver.observe(el));
 
+        /* ── Hamburger menu toggle ── */
+        window.toggleMobileMenu = function() {
+            const btn = document.getElementById('hamburgerBtn');
+            const menu = document.getElementById('mobileMenu');
+            btn.classList.toggle('open');
+            menu.classList.toggle('open');
+            document.body.style.overflow = menu.classList.contains('open') ? 'hidden' : '';
+        }
+        // Close menu on outside click
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('mobileMenu');
+            const btn = document.getElementById('hamburgerBtn');
+            if (menu && menu.classList.contains('open') && !menu.contains(e.target) && !btn.contains(e.target)) {
+                btn.classList.remove('open');
+                menu.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+        });
+
+        /* ── Trending 2026 renderer ── */
+        function renderTrending() {
+            const grid = document.getElementById('trendingGrid');
+            if (!grid || gamesDB.length === 0) return;
+            // Pick 'legendary' + 'hot' games first, then fill with others — max 10
+            const priority = gamesDB.filter(g => {
+                const tags = (g.categories||[]).map(c=>c.toLowerCase().trim());
+                return tags.includes('legendary') || tags.includes('hot') || tags.includes('new');
+            });
+            const rest = gamesDB.filter(g => !priority.includes(g));
+            const pool = [...priority, ...rest].slice(0, 10);
+            grid.innerHTML = '';
+            pool.forEach((game, i) => {
+                const card = document.createElement('div');
+                card.className = 'trending-card';
+                card.onclick = () => viewGame(game.id, 'info');
+                card.innerHTML = `
+                    <img src="${game.img}" alt="${game.title}" loading="lazy" decoding="async">
+                    <div class="tc-rank">#${i + 1}</div>
+                    <div class="tc-name">${game.title}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
         loadDatabase();
+
+        // Re-render trending after DB loads (hook into fetchFreshGames result)
+        const _origRenderGames = window.renderGames || null;
+        const _trendObserver = new MutationObserver(() => {
+            if (gamesDB.length > 0) { renderTrending(); _trendObserver.disconnect(); }
+        });
+        _trendObserver.observe(document.getElementById('gamesGrid'), { childList: true });
     </script>
 </body>
 </html>
