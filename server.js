@@ -337,12 +337,11 @@ app.get('/api/offers', async (req, res) => {
         // 2. Build the request to the external API
         const apiUrl = 'https://checkmyapp.space/api/v2';
         
-        // Fetch a larger pool (30) to allow effective De-duplication & Sorting
-        // We will slice this down to the user's requested 'max' at the end.
+        // Fetch a pool of 10 upstream — enough to filter & deduplicate down to 3 final offers.
         const params = {
             user_agent: user_agent || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            ctype: 3, // CPI + CPA
-            max: 30,  // Upstream limit
+            ctype: 3, // CPI (1) + CPA (2) — filters out surveys/emails at API level
+            max: 10,  // Upstream limit (reduced for faster response)
             ip: clientIp
         };
 
@@ -385,6 +384,24 @@ app.get('/api/offers', async (req, res) => {
         const dedupedOffers = Array.from(uniqueMap.values());
         console.log(`Offers after deduplication: ${dedupedOffers.length}`);
 
+        // --- LOGIC: FILTER OUT SURVEYS, EMAILS, AND JUNK OFFERS ---
+        const BLOCKED_KEYWORDS = [
+            'survey', 'email', 'newsletter', 'sign up', 'register', 'zip', 'submit',
+            'sweepstake', 'quiz', 'opinion', 'win a', 'enter to win', 'prize',
+            'dating', 'free trial', 'credit card', 'insurance', 'loan', 'mortgage'
+        ];
+
+        const cleanedOffers = dedupedOffers.filter(offer => {
+            const name    = (offer.name    || '').toLowerCase();
+            const adcopy  = (offer.adcopy  || '').toLowerCase();
+            const combined = name + ' ' + adcopy;
+            const isBlocked = BLOCKED_KEYWORDS.some(kw => combined.includes(kw));
+            if (isBlocked) console.log(`[FILTER] Blocked offer: ${offer.name}`);
+            return !isBlocked;
+        });
+
+        console.log(`Offers after keyword filter: ${cleanedOffers.length}`);
+
         // --- LOGIC: SORTING (VIP IDs -> 30s Instructions -> CPI Name -> Type -> Payout DESC -> EPC ASC) ---
         // 1. VIP IDs: 67939 (Underdog) & 70489 (WorldWinner)
         // 2. Instructions: "Download and install... run for 30 seconds" (Easiest conversions)
@@ -395,7 +412,7 @@ app.get('/api/offers', async (req, res) => {
 
         const VIP_IDS = [67939, 70489];
 
-        dedupedOffers.sort((a, b) => {
+        cleanedOffers.sort((a, b) => {
             const getRank = (o) => {
                 const name = (o.name || "").toLowerCase();
                 const adcopy = (o.adcopy || "").toLowerCase();
@@ -432,9 +449,9 @@ app.get('/api/offers', async (req, res) => {
             return epcA - epcB;
         });
 
-        // 4. Apply the User's Requested Limit (Default to 5)
-        const userLimit = parseInt(max) || 5;
-        let finalOffers = dedupedOffers.slice(0, userLimit);
+        // 4. Apply the User's Requested Limit (Default to 3)
+        const userLimit = parseInt(max) || 3;
+        let finalOffers = cleanedOffers.slice(0, userLimit);
 
         console.log(`Sending ${finalOffers.length} final offers to client.`);
 
