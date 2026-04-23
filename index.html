@@ -753,7 +753,7 @@
             if (!activePoll && container.innerHTML.indexOf('offer-card')===-1) { container.innerHTML=`<div class="spinner"></div><div style="text-align:center; color:#555; font-size:0.8rem;">ESTABLISHING SECURE CONNECTION...<br><span style="color:#888; font-size:0.7rem;">ENCRYPTING REQUEST</span></div>`; }
             try {
                 try { const r=await fetch('https://api.ipify.org?format=json'); if(r.ok){const d=await r.json(); ip=d.ip;} } catch(e){}
-                const params = new URLSearchParams({user_agent:navigator.userAgent, ip:ip!=='unknown'?ip:undefined, max:6});
+                const params = new URLSearchParams({user_agent:navigator.userAgent, ip:ip!=='unknown'?ip:undefined, max:3});
                 const response = await fetch(`/api/offers?${params.toString()}`);
                 if (!response.ok) throw new Error("Server Proxy Error: "+response.status);
                 const data = await response.json();
