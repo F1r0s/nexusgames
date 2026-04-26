@@ -17,7 +17,7 @@ SHEET_ID = os.getenv(
 )
 SHEET_TAB_INDEX  = 0
 GAMES_TO_ADD     = 5       # How many new unique games to add per run
-MAX_PAGES        = 50      # an1.com has ~50 pages
+MAX_PAGES        = 300     # Increased to allow grabbing much older games
 REQUEST_DELAY    = 1.5     # seconds between requests
 REQUEST_TIMEOUT  = 20
 
