@@ -128,6 +128,8 @@
         #modal-view-locker {
             overflow-y: auto;
             max-height: 88vh;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 30px !important;
         }
 
         /* The locker container has no rogue overflow */
@@ -154,10 +156,12 @@
                 border-radius: 10px !important;
             }
             #modal-view-locker {
-                max-height: 90vh;
+                max-height: 85vh; /* slightly shorter to ensure it fits on screen */
+                -webkit-overflow-scrolling: touch;
             }
             #ogadsFrame {
                 height: 380px !important;
+                pointer-events: auto; /* Ensure they can tap offers */
             }
             /* Game info card — tighter on mobile */
             #lockerImg {
