@@ -444,47 +444,54 @@
                 <div class="locker-container">
                     <div class="terminal-header">
                         <span class="terminal-title">> SECURITY HANDSHAKE</span>
-                        <span class="terminal-status">[ESTABLISHING SECURE TUNNEL...]</span>
+                        <span class="terminal-status" id="terminalStatus">[ESTABLISHING SECURE TUNNEL...]</span>
                     </div>
+
+                    <!-- Dynamic game info injected by JS -->
                     <div class="locker-info-box">
-                        <img id="lockerImg" class="locker-img" src="" alt="Game">
+                        <img id="lockerImg" class="locker-img" src="" alt="Game"
+                             style="max-height:180px; width:100%; object-fit:cover; border-radius:8px; margin-bottom:12px;">
                         <div class="locker-text">
                             <h4 id="lockerTitle">Target App</h4>
                             <p>STATUS: LOCKED // VERIFICATION REQUIRED</p>
                         </div>
                     </div>
-                    <div class="progress-section">
-                        <div class="progress-label">
-                            <span id="progressText">VERIFICATION PROGRESS</span>
-                            <span id="progressPercent">0%</span>
-                        </div>
-                        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-                        <div style="font-size:0.7rem; color:#555; margin-top:5px; text-align:center;">COMPLETE <span style="color:#fff;">1 VERIFICATION</span> TO ESTABLISH CONNECTION</div>
-                    </div>
 
                     <!-- 3-Step CPA Flow -->
                     <div class="steps-container">
                         <div class="step-card"><div class="step-num">1</div><h5>SELECT MOD</h5><p>Pick your game from the library.</p></div>
-                        <div class="step-card"><div class="step-num">2</div><h5>HUMAN VERIFY</h5><p>Complete one quick verification task.</p></div>
+                        <div class="step-card"><div class="step-num">2</div><h5>COMPLETE TASK</h5><p>Finish one quick verification.</p></div>
                         <div class="step-card"><div class="step-num">3</div><h5>UNLOCK</h5><p>Access granted instantly.</p></div>
                     </div>
 
-                    <div style="text-align:center; margin-bottom:15px;">
-                        <a href="#tutorialSection" style="color:var(--text-muted); border:1px solid rgba(255,255,255,0.15); padding:8px 20px; border-radius:20px; font-size:0.75rem; text-decoration:none; display:inline-flex; align-items:center; transition:0.3s; background:rgba(255,255,255,0.04);">
-                            <i class="fas fa-play-circle" style="color:var(--alert-red); margin-right:8px;"></i> Watch Video Tutorial
-                        </a>
+                    <!-- OGAds Global Iframe Locker -->
+                    <div id="ogadsLockerWrap" style="
+                        width:100%; border-radius:10px;
+                        border:1px solid rgba(255,107,0,0.25);
+                        background:rgba(0,0,0,0.3);
+                        margin-top:10px;
+                        position:relative;
+                        min-height:300px;
+                    ">
+                        <div id="ogadsLoadingMsg" style="
+                            position:absolute; inset:0; display:flex; flex-direction:column;
+                            align-items:center; justify-content:center; gap:10px;
+                            color:#666; font-size:0.78rem; letter-spacing:2px;
+                        ">
+                            <div class="spinner" style="width:22px;height:22px;border-width:2px;"></div>
+                            LOADING VERIFICATION...
+                        </div>
+                        <iframe
+                            id="ogadsFrame"
+                            src=""
+                            style="width:100%; border:none; height:520px; display:none; border-radius:10px;"
+                            scrolling="yes"
+                            allowtransparency="true"
+                            onload="onOgadsFrameLoad()"
+                        ></iframe>
                     </div>
 
-                    <div id="offersContainer" class="offers-list">
-                        <div class="spinner"></div>
-                        <div style="text-align:center; color:#555; font-size:0.8rem;">SCANNING FOR VERIFICATION PROTOCOLS...</div>
-                    </div>
-
-                    <button id="finalDownloadBtn" class="unlock-btn" disabled>
-                        <i class="fas fa-lock"></i> SYSTEM LOCKED
-                    </button>
-
-                    <div id="tutorialSection" class="locker-video">
+                    <div id="tutorialSection" class="locker-video" style="margin-top:20px;">
                         <div style="color:var(--text-muted); font-size:0.8rem; margin-bottom:10px; text-align:center;">TUTORIAL: HOW TO UNLOCK</div>
                         <div class="video-container">
                             <iframe src="https://www.youtube.com/embed/bPROLwISrzU?si=okyS60YDzWJUM2Hz" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
@@ -689,16 +696,19 @@
         }
 
         let searchTimeout;
-        searchInput.addEventListener('input', e => { 
+        searchInput.addEventListener('input', e => {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
-                currentFilterText = e.target.value; 
-                renderGames(); 
+                currentFilterText = e.target.value;
+                renderGames();
             }, 300);
         });
 
         const viewModal = document.getElementById('viewGameModal');
         let currentGameLink = '';
+
+        // ── Global OGAds Locker URL ──────────────────────────────────
+        const OGADS_LOCKER_URL = 'https://authenticateapp.online/cl/i/4orwv4';
 
         window.viewGame = function(id, mode='info') {
             const game = gamesDB.find(g => g.id == id);
@@ -713,73 +723,64 @@
             if (game.os.includes('android')) osHtml += '<i class="fab fa-android" style="color:#3DDC84; margin-left:10px;"></i> Android ';
             if (game.os.includes('ios')) osHtml += '<i class="fab fa-apple" style="color:#fff; margin-left:10px;"></i> iOS';
             document.getElementById('viewOS').innerHTML = osHtml;
+            // Inject game data into the global locker
             document.getElementById('lockerImg').src = game.img;
             document.getElementById('lockerTitle').innerText = game.title;
             viewModal.style.display = 'flex';
             if (mode === 'locker') { initializeInjection(); } else { switchModalView('info'); }
         }
 
-        window.closeViewModal = function() { viewModal.style.display='none'; if(activePoll){clearInterval(activePoll); activePoll=null;} }
-        window.switchModalView = function(v) { document.querySelectorAll('.modal-view').forEach(x=>x.classList.remove('active')); document.getElementById('modal-view-'+v).classList.add('active'); }
-        window.initializeInjection = function() { switchModalView('locker'); fetchOffers(); }
-        window.onclick = e => { if(e.target==viewModal) closeViewModal(); }
-
-        const REQUIRED_OFFERS = 1;
-        let completedOffers = new Set(), activePoll = null;
-
-        function displayOffers(offers) {
-            const container = document.getElementById('offersContainer');
-            if (offers.length === 0) {
-                container.innerHTML = `<div style="background:rgba(255,77,77,0.1); border:1px solid var(--alert-red); padding:15px; border-radius:4px; text-align:center;"><i class="fas fa-exclamation-triangle" style="color:var(--alert-red); font-size:1.5rem; margin-bottom:10px;"></i><br><strong style="color:#fff;">NO CONNECTION NODES FOUND</strong><br><span style="color:#ccc; font-size:0.8rem;">Your current region may be restricted.<br>1. Disable AdBlock / Web Shield.<br>2. <strong>Try using a VPN (USA/Europe).</strong></span><br><button onclick="fetchOffers()" style="margin-top:10px; background:var(--alert-red); border:none; color:white; padding:5px 15px; border-radius:3px; cursor:pointer; font-weight:bold;"><i class="fas fa-sync"></i> RETRY SCAN</button></div>`; return;
-            }
-            let html = '';
-            offers.forEach(offer => {
-                const isCompleted = completedOffers.has(offer.offerid);
-                const safeLink = (offer.link||'#').replace(/'/g,"\\'\'");
-                html += `<div class="offer-card ${isCompleted?'completed':''}" onclick="handleOfferClick(${offer.offerid}, '${safeLink}')"><div class="offer-info"><div class="offer-title-text">${offer.name_short||offer.name}</div><div class="offer-desc">${offer.adcopy||'Install and run to verify.'}</div></div><div class="offer-action">${isCompleted?'VERIFIED':'VERIFY'}</div></div>`;
-            });
-            container.innerHTML = html;
+        window.closeViewModal = function() {
+            viewModal.style.display = 'none';
+            // Reset iframe to stop loading when modal closes
+            const frame = document.getElementById('ogadsFrame');
+            if (frame) { frame.src = ''; frame.style.display = 'none'; }
+            const loading = document.getElementById('ogadsLoadingMsg');
+            if (loading) loading.style.display = 'flex';
         }
 
-        window.handleOfferClick = function(id, link) {
-            if (completedOffers.has(id)) return;
-            const w = window.open(link,'_blank'); if(!w) window.location.href=link;
-            document.querySelectorAll('.offer-card').forEach(c => { if(c.getAttribute('onclick').includes(id)){const a=c.querySelector('.offer-action'); a.innerText='CHECKING...'; a.style.background='rgba(255,255,255,0.1)'; a.style.color='#fff'; a.style.animation='blink 1s infinite';} });
-            if (!activePoll) activePoll = setInterval(fetchOffers, 7000);
+        window.switchModalView = function(v) {
+            document.querySelectorAll('.modal-view').forEach(x => x.classList.remove('active'));
+            document.getElementById('modal-view-' + v).classList.add('active');
         }
 
-        async function fetchOffers() {
-            let ip='unknown';
-            const container = document.getElementById('offersContainer');
-            if (!activePoll && container.innerHTML.indexOf('offer-card')===-1) { container.innerHTML=`<div class="spinner"></div><div style="text-align:center; color:#555; font-size:0.8rem;">ESTABLISHING SECURE CONNECTION...<br><span style="color:#888; font-size:0.7rem;">ENCRYPTING REQUEST</span></div>`; }
-            try {
-                try { const r=await fetch('https://api.ipify.org?format=json'); if(r.ok){const d=await r.json(); ip=d.ip;} } catch(e){}
-                const params = new URLSearchParams({user_agent:navigator.userAgent, ip:ip!=='unknown'?ip:undefined, max:3});
-                const response = await fetch(`/api/offers?${params.toString()}`);
-                if (!response.ok) throw new Error("Server Proxy Error: "+response.status);
-                const data = await response.json();
-                if (data.leads && data.leads > 0) { completedOffers.add('API_CONFIRMED'); updateProgress(); }
-                displayOffers(data.offers||[]);
-            } catch(e) {
-                console.error("Locker Error:", e);
-                if (!activePoll && container.innerHTML.indexOf('offer-card')===-1) container.innerHTML='<div style="color:var(--alert-red); text-align:center;">CONNECTION INTERRUPTED.</div>';
-            }
+        // Called when Download button is clicked — injects game data then shows locker
+        window.initializeInjection = function() {
+            switchModalView('locker');
+            loadOgadsLocker();
         }
 
-        function updateProgress() {
-            const count=completedOffers.size, pct=Math.min((count/REQUIRED_OFFERS)*100,100);
-            const fill=document.getElementById('progressFill'), txt=document.getElementById('progressPercent'), btn=document.getElementById('finalDownloadBtn');
-            fill.style.width=pct+'%'; txt.innerText=Math.floor(pct)+'%';
-            if (count >= REQUIRED_OFFERS) {
-                btn.disabled=false; btn.classList.add('active'); btn.innerHTML='<i class="fas fa-check-circle"></i> ACCESS GRANTED - DOWNLOAD NOW';
-                btn.onclick = () => { window.location.href=currentGameLink; };
-                document.querySelector('.terminal-status').innerText='[HANDSHAKE COMPLETE]';
-                document.querySelector('.terminal-status').style.cssText='color:var(--neon-green); animation:none;';
-                fill.style.background='var(--neon-green)'; fill.style.boxShadow='0 0 18px rgba(10,255,0,0.7)';
-                document.getElementById('progressText').innerText='VERIFICATION COMPLETE';
-                document.getElementById('progressText').style.color='var(--neon-green)';
-                setTimeout(()=>{ if(window.location.href.indexOf(currentGameLink)===-1) window.location.href=currentGameLink; }, 2500);
-                if(activePoll) clearInterval(activePoll);
+        window.onclick = e => { if (e.target == viewModal) closeViewModal(); }
+
+        // Load the OGAds iframe locker (single global URL for all games)
+        // Passes sub1=downloadURL, sub2=imageURL, sub3=gameTitle
+        // OGAds replaces {sub2} and {sub3} inside the description HTML
+        function loadOgadsLocker() {
+            const frame = document.getElementById('ogadsFrame');
+            const loading = document.getElementById('ogadsLoadingMsg');
+            const statusEl = document.getElementById('terminalStatus');
+            if (!frame) return;
+            frame.style.display = 'none';
+            if (loading) loading.style.display = 'flex';
+            if (statusEl) statusEl.innerText = '[ESTABLISHING SECURE TUNNEL...]';
+            // Grab current game image and title from the already-injected locker UI
+            const gameImg   = document.getElementById('lockerImg').src || '';
+            const gameTitle = document.getElementById('lockerTitle').innerText || 'MOD VAULT';
+            const sub1 = encodeURIComponent(currentGameLink || '');
+            const sub2 = encodeURIComponent(gameImg);
+            const sub3 = encodeURIComponent(gameTitle.toUpperCase());
+            frame.src = OGADS_LOCKER_URL + '?sub1=' + sub1 + '&sub2=' + sub2 + '&sub3=' + sub3;
+        }
+
+        // Called when OGAds iframe finishes loading
+        window.onOgadsFrameLoad = function() {
+            const frame = document.getElementById('ogadsFrame');
+            const loading = document.getElementById('ogadsLoadingMsg');
+            const statusEl = document.getElementById('terminalStatus');
+            if (frame && frame.src && frame.src !== 'about:blank' && frame.src !== '') {
+                if (loading) loading.style.display = 'none';
+                frame.style.display = 'block';
+                if (statusEl) { statusEl.innerText = '[VERIFICATION ACTIVE]'; statusEl.style.color = 'var(--amber)'; }
             }
         }
 

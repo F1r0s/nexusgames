@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Access Granted — Mod Vault</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #080808;
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,107,0,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,107,0,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    animation: gridShift 8s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes gridShift { to { background-position: 40px 40px; } }
+
+  .card {
+    position: relative;
+    background: linear-gradient(160deg, #111 0%, #0d0d0d 100%);
+    border: 1px solid rgba(255,107,0,0.4);
+    border-radius: 16px;
+    padding: 40px 32px;
+    max-width: 420px;
+    width: 92vw;
+    text-align: center;
+    box-shadow: 0 0 80px rgba(255,107,0,0.15), 0 30px 80px rgba(0,0,0,0.9);
+    animation: cardIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275) forwards;
+  }
+  @keyframes cardIn { from { opacity:0; transform:translateY(30px) scale(0.95); } to { opacity:1; transform:none; } }
+
+  /* Corner accents */
+  .card::before, .card::after {
+    content: ''; position: absolute; width: 20px; height: 20px;
+  }
+  .card::before { top: -1px; left: -1px; border-top: 2px solid #FF6B00; border-left: 2px solid #FF6B00; border-radius: 4px 0 0 0; }
+  .card::after  { bottom: -1px; right: -1px; border-bottom: 2px solid #FF6B00; border-right: 2px solid #FF6B00; border-radius: 0 0 4px 0; }
+
+  /* Checkmark circle */
+  .check-wrap {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: rgba(10,255,60,0.08);
+    border: 2px solid rgba(10,255,60,0.6);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px;
+    animation: pulse 2s ease-in-out infinite;
+    box-shadow: 0 0 30px rgba(10,255,60,0.25);
+  }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 20px rgba(10,255,60,0.2); }
+    50% { box-shadow: 0 0 40px rgba(10,255,60,0.5); }
+  }
+  .check-wrap svg { width: 40px; height: 40px; }
+  .check-wrap svg path { stroke: #0aff3c; stroke-width: 3; fill: none; stroke-dasharray: 60; animation: drawCheck 0.6s 0.3s ease forwards; stroke-dashoffset: 60; }
+  @keyframes drawCheck { to { stroke-dashoffset: 0; } }
+
+  h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.4rem; font-weight: 900;
+    color: #0aff3c;
+    text-shadow: 0 0 20px rgba(10,255,60,0.5);
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+  }
+  .sub {
+    color: #888; font-size: 0.85rem; letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 28px;
+  }
+
+  /* Progress bar */
+  .bar-wrap { background: rgba(255,255,255,0.05); border-radius: 4px; height: 4px; overflow: hidden; margin-bottom: 12px; }
+  .bar-fill {
+    height: 100%; width: 0%; border-radius: 4px;
+    background: linear-gradient(90deg, #0aff3c, #00d2ff);
+    box-shadow: 0 0 10px rgba(10,255,60,0.6);
+    transition: width 0.1s linear;
+  }
+
+  .countdown { color: #FF6B00; font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 24px; }
+  .countdown span { color: #fff; }
+
+  .dl-btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: linear-gradient(135deg, #0aff3c, #00c830);
+    color: #000; font-family: 'Orbitron', sans-serif;
+    font-weight: 700; font-size: 0.85rem; letter-spacing: 2px;
+    text-transform: uppercase; text-decoration: none;
+    padding: 14px 28px; border-radius: 8px;
+    box-shadow: 0 0 30px rgba(10,255,60,0.4);
+    transition: box-shadow 0.3s, transform 0.2s;
+    border: none; cursor: pointer; width: 100%; justify-content: center;
+  }
+  .dl-btn:hover { box-shadow: 0 0 50px rgba(10,255,60,0.7); transform: translateY(-2px); }
+  .dl-btn svg { width: 18px; height: 18px; }
+
+  .safe-note {
+    margin-top: 18px; color: #444; font-size: 0.72rem;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  .safe-note span { color: #0aff3c; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="check-wrap">
+    <svg viewBox="0 0 50 50">
+      <path d="M10 25 L20 35 L40 15" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <h1>ACCESS GRANTED</h1>
+  <p class="sub">Verification complete — download starting</p>
+
+  <div class="bar-wrap"><div class="bar-fill" id="barFill"></div></div>
+  <p class="countdown">Redirecting in <span id="countNum">3</span>s...</p>
+
+  <a href="#" class="dl-btn" id="dlBtn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+      <path d="M12 3v13M5 16l7 7 7-7"/><path d="M3 21h18"/>
+    </svg>
+    DOWNLOAD NOW
+  </a>
+
+  <p class="safe-note"><span>✓</span> Verified &nbsp;·&nbsp; <span>✓</span> Safe &nbsp;·&nbsp; <span>✓</span> Mod Vault</p>
+</div>
+
+<script>
+  // Read `url` param from query string (set by OGAds redirect: ?url={sub1})
+  function getParam(name) {
+    return new URLSearchParams(window.location.search).get(name);
+  }
+
+  const downloadURL = getParam('url') || getParam('sub1') || '/';
+  const dlBtn = document.getElementById('dlBtn');
+  const barFill = document.getElementById('barFill');
+  const countEl = document.getElementById('countNum');
+
+  dlBtn.href = downloadURL;
+
+  // Countdown 3s then auto-redirect
+  let remaining = 3;
+  const totalMs = 3000;
+  const startTime = Date.now();
+
+  function tick() {
+    const elapsed = Date.now() - startTime;
+    const pct = Math.min((elapsed / totalMs) * 100, 100);
+    barFill.style.width = pct + '%';
+    remaining = Math.max(0, Math.ceil((totalMs - elapsed) / 1000));
+    countEl.textContent = remaining;
+
+    if (elapsed >= totalMs) {
+      window.location.href = downloadURL;
+    } else {
+      requestAnimationFrame(tick);
+    }
+  }
+  requestAnimationFrame(tick);
+</script>
+</body>
+</html>
