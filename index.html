@@ -441,62 +441,51 @@
             </div>
 
             <div id="modal-view-locker" class="modal-view">
-                <div class="locker-container">
-                    <div class="terminal-header">
-                        <span class="terminal-title">> SECURITY HANDSHAKE</span>
-                        <span class="terminal-status" id="terminalStatus">[ESTABLISHING SECURE TUNNEL...]</span>
+                <div class="locker-container" style="padding:0; background:transparent; border:none; box-shadow:none;">
+
+                    <!-- ── TOP BAR ── -->
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:rgba(255,107,0,0.06); border-bottom:1px solid rgba(255,107,0,0.18); border-radius:10px 10px 0 0;">
+                        <span style="color:#FF6B00; font-family:'Orbitron',sans-serif; font-size:10px; font-weight:700; letter-spacing:3px; text-transform:uppercase; text-shadow:0 0 10px rgba(255,107,0,0.4);">
+                            <i class="fas fa-shield-virus" style="margin-right:6px;"></i>SECURE GATEWAY
+                        </span>
+                        <span id="terminalStatus" style="color:#555; font-size:9px; font-family:'Rajdhani',sans-serif; letter-spacing:2px;">[ESTABLISHING...]</span>
                     </div>
 
-                    <!-- Dynamic game info injected by JS -->
-                    <div class="locker-info-box">
-                        <img id="lockerImg" class="locker-img" src="" alt="Game"
-                             style="max-height:180px; width:100%; object-fit:cover; border-radius:8px; margin-bottom:12px;">
-                        <div class="locker-text">
-                            <h4 id="lockerTitle">Target App</h4>
-                            <p>STATUS: LOCKED // VERIFICATION REQUIRED</p>
+                    <!-- ── GAME INFO CARD ── -->
+                    <div style="display:flex; align-items:center; gap:14px; padding:16px; background:linear-gradient(135deg,rgba(20,10,0,0.9),rgba(10,5,0,0.9)); border-bottom:1px solid rgba(255,107,0,0.12);">
+                        <img id="lockerImg" src="" alt="Game"
+                             style="width:72px; height:72px; border-radius:12px; object-fit:cover; flex-shrink:0;
+                                    border:2px solid rgba(255,107,0,0.5); box-shadow:0 0 20px rgba(255,107,0,0.25);">
+                        <div style="min-width:0;">
+                            <div id="lockerTitle" style="font-family:'Orbitron',sans-serif; font-size:13px; font-weight:700; color:#fff; letter-spacing:1px; text-transform:uppercase; margin-bottom:5px; text-shadow:0 0 12px rgba(255,107,0,0.3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                Target App
+                            </div>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span style="background:rgba(255,107,0,0.15); border:1px solid rgba(255,107,0,0.4); color:#FF6B00; font-size:9px; font-family:'Rajdhani',sans-serif; letter-spacing:2px; padding:2px 8px; border-radius:20px;">
+                                    <i class="fas fa-lock" style="margin-right:4px;"></i>LOCKED
+                                </span>
+                                <span style="color:#0aff3c; font-size:9px; font-family:'Rajdhani',sans-serif; letter-spacing:1px;">✓ VERIFIED SAFE</span>
+                            </div>
+                            <div style="margin-top:6px; color:#555; font-size:9px; font-family:'Rajdhani',sans-serif; letter-spacing:1px;">COMPLETE 1 TASK TO UNLOCK DOWNLOAD</div>
                         </div>
                     </div>
 
-                    <!-- 3-Step CPA Flow -->
-                    <div class="steps-container">
-                        <div class="step-card"><div class="step-num">1</div><h5>SELECT MOD</h5><p>Pick your game from the library.</p></div>
-                        <div class="step-card"><div class="step-num">2</div><h5>COMPLETE TASK</h5><p>Finish one quick verification.</p></div>
-                        <div class="step-card"><div class="step-num">3</div><h5>UNLOCK</h5><p>Access granted instantly.</p></div>
-                    </div>
-
-                    <!-- OGAds Global Iframe Locker -->
-                    <div id="ogadsLockerWrap" style="
-                        width:100%; border-radius:10px;
-                        border:1px solid rgba(255,107,0,0.25);
-                        background:rgba(0,0,0,0.3);
-                        margin-top:10px;
-                        position:relative;
-                        min-height:300px;
-                    ">
-                        <div id="ogadsLoadingMsg" style="
-                            position:absolute; inset:0; display:flex; flex-direction:column;
-                            align-items:center; justify-content:center; gap:10px;
-                            color:#666; font-size:0.78rem; letter-spacing:2px;
-                        ">
+                    <!-- ── OGADS IFRAME ── -->
+                    <div id="ogadsLockerWrap" style="position:relative; min-height:300px; background:rgba(0,0,0,0.3);">
+                        <div id="ogadsLoadingMsg" style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; color:#555; font-size:11px; font-family:'Rajdhani',sans-serif; letter-spacing:2px;">
                             <div class="spinner" style="width:22px;height:22px;border-width:2px;"></div>
                             LOADING VERIFICATION...
                         </div>
                         <iframe
                             id="ogadsFrame"
                             src=""
-                            style="width:100%; border:none; height:520px; display:none; border-radius:10px;"
+                            style="width:100%; border:none; height:500px; display:none; border-radius:0 0 10px 10px;"
                             scrolling="yes"
                             allowtransparency="true"
                             onload="onOgadsFrameLoad()"
                         ></iframe>
                     </div>
 
-                    <div id="tutorialSection" class="locker-video" style="margin-top:20px;">
-                        <div style="color:var(--text-muted); font-size:0.8rem; margin-bottom:10px; text-align:center;">TUTORIAL: HOW TO UNLOCK</div>
-                        <div class="video-container">
-                            <iframe src="https://www.youtube.com/embed/bPROLwISrzU?si=okyS60YDzWJUM2Hz" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
