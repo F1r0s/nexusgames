@@ -116,6 +116,53 @@
         .trending-card .tc-rank { position:absolute; top:8px; left:8px; background:var(--amber); color:#000; font-family:var(--font-head); font-size:0.65rem; font-weight:900; padding:2px 8px; border-radius:4px; }
         .trending-card .tc-name { padding:10px; font-family:var(--font-head); font-size:0.78rem; color:#ddd; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
         @media (max-width:600px) { .trending-grid { grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:10px; } }
+        /* ── LOCKER MODAL FIXES ── */
+
+        /* Make the modal itself scrollable — removes the overflow:hidden from style.min.css */
+        .view-modal {
+            overflow-y: auto !important;
+            max-height: 92vh !important;
+        }
+
+        /* Locker view panel — scrollable on web */
+        #modal-view-locker {
+            overflow-y: auto;
+            max-height: 88vh;
+        }
+
+        /* The locker container has no rogue overflow */
+        .locker-container {
+            overflow: visible !important;
+        }
+
+        /* OGAds iframe wrapper — fits content tightly, scrollable */
+        #ogadsLockerWrap {
+            overflow: hidden;
+        }
+
+        /* iframe auto-sizes: use a sensible default, no giant blank space */
+        #ogadsFrame {
+            height: 420px !important;
+        }
+
+        /* Mobile: full-width modal, sensible iframe height */
+        @media (max-width: 600px) {
+            .view-modal {
+                max-height: 95vh !important;
+                border-radius: 10px !important;
+            }
+            #modal-view-locker {
+                max-height: 90vh;
+            }
+            #ogadsFrame {
+                height: 380px !important;
+            }
+            /* Game info card — tighter on mobile */
+            #lockerImg {
+                width: 58px !important;
+                height: 58px !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -479,7 +526,7 @@
                         <iframe
                             id="ogadsFrame"
                             src=""
-                            style="width:100%; border:none; height:500px; display:none; border-radius:0 0 10px 10px;"
+                            style="width:100%; border:none; display:none; border-radius:0 0 10px 10px;"
                             scrolling="yes"
                             allowtransparency="true"
                             onload="onOgadsFrameLoad()"
