@@ -114,6 +114,44 @@ app.get('/robots.txt', (req, res) => {
     res.sendFile(path.join(__dirname, 'robots.txt'));
 });
 
+// ── FAVICON ROUTES — must be explicit so the catch-all rewrite doesn't swallow them ──
+app.get('/favicon.ico', (req, res) => {
+    // Redirect .ico requests to the 32px PNG (widely supported fallback)
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=604800');
+    res.sendFile(path.join(__dirname, 'favicon-32.png'));
+});
+
+app.get('/favicon.svg', (req, res) => {
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Cache-Control', 'public, max-age=604800');
+    res.sendFile(path.join(__dirname, 'favicon.svg'));
+});
+
+app.get('/favicon-16.png', (req, res) => {
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=604800');
+    res.sendFile(path.join(__dirname, 'favicon-16.png'));
+});
+
+app.get('/favicon-32.png', (req, res) => {
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=604800');
+    res.sendFile(path.join(__dirname, 'favicon-32.png'));
+});
+
+app.get('/favicon-512.png', (req, res) => {
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=604800');
+    res.sendFile(path.join(__dirname, 'favicon-512.png'));
+});
+
+app.get('/manifest.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/manifest+json');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.sendFile(path.join(__dirname, 'manifest.json'));
+});
+
 // Endpoint to get games (Cached + Protected Manual Sync)
 app.get('/api/games', async (req, res) => {
     const now = Date.now();
