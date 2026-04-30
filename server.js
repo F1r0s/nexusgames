@@ -116,10 +116,9 @@ app.get('/robots.txt', (req, res) => {
 
 // ── FAVICON ROUTES — must be explicit so the catch-all rewrite doesn't swallow them ──
 app.get('/favicon.ico', (req, res) => {
-    // Redirect .ico requests to the 32px PNG (widely supported fallback)
-    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Content-Type', 'image/x-icon');
     res.setHeader('Cache-Control', 'public, max-age=604800');
-    res.sendFile(path.join(__dirname, 'favicon-32.png'));
+    res.sendFile(path.join(__dirname, 'favicon.ico'));
 });
 
 app.get('/favicon.svg', (req, res) => {
