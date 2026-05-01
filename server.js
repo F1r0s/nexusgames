@@ -5,7 +5,10 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
-// --- GOOGLE SHEETS CONFIG ---
+// --- STATIC JSON DATABASE (Primary — instant, no latency) ---
+const GAMES_JSON_FILE = path.join(__dirname, 'games.json');
+
+// --- GOOGLE SHEETS CONFIG (Background refresh only) ---
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTmd9N77OuTj1k_QFR0hyiqVjxfZvfnYUPO55kUSFN8RyW7MoZNICzc8gGYZuG0uVL_ccPXnG96ltKT/pub?output=csv";
 const FALLBACK_FILE = path.join(__dirname, 'fallback_games.csv');
 
@@ -14,18 +17,35 @@ let gamesCache = {
     lastUpdated: 0,
     isFetching: false
 };
-const CACHE_DURATION = 2 * 60 * 1000; // Shorter 2-minute cache for better responsiveness
+const CACHE_DURATION = 10 * 60 * 1000; // 10-minute cache (relaxed — JSON file is the source of truth)
 
-// Initialize with Fallback on boot
+// ── Load static games.json first (instant, no network) ──
 try {
-    if (fs.existsSync(FALLBACK_FILE)) {
-        console.log("[INIT] Loading fallback_games.csv...");
-        const fallbackText = fs.readFileSync(FALLBACK_FILE, 'utf8');
-        gamesCache.data = parseCSV(fallbackText);
-        console.log(`[INIT] Loaded ${gamesCache.data.length} games from fallback.`);
+    if (fs.existsSync(GAMES_JSON_FILE)) {
+        console.log("[INIT] Loading games.json (static database)...");
+        const jsonData = JSON.parse(fs.readFileSync(GAMES_JSON_FILE, 'utf8'));
+        if (Array.isArray(jsonData) && jsonData.length > 0) {
+            gamesCache.data = jsonData;
+            gamesCache.lastUpdated = Date.now();
+            console.log(`[INIT] ✅ Loaded ${gamesCache.data.length} games from games.json.`);
+        }
     }
 } catch (e) {
-    console.error("[INIT] Fallback load failed:", e.message);
+    console.error("[INIT] games.json load failed:", e.message);
+}
+
+// ── Fallback to CSV if JSON not available ──
+if (gamesCache.data.length === 0) {
+    try {
+        if (fs.existsSync(FALLBACK_FILE)) {
+            console.log("[INIT] No games.json found. Loading fallback_games.csv...");
+            const fallbackText = fs.readFileSync(FALLBACK_FILE, 'utf8');
+            gamesCache.data = parseCSV(fallbackText);
+            console.log(`[INIT] Loaded ${gamesCache.data.length} games from fallback CSV.`);
+        }
+    } catch (e) {
+        console.error("[INIT] Fallback load failed:", e.message);
+    }
 }
 
 const app = express();
@@ -151,49 +171,43 @@ app.get('/manifest.json', (req, res) => {
     res.sendFile(path.join(__dirname, 'manifest.json'));
 });
 
-// Endpoint to get games (Cached + Protected Manual Sync)
+// ══════════════════════════════════════════════════════════════
+// GAMES API — Serves static JSON (instant) with optional
+// background refresh from Google Sheets
+// ══════════════════════════════════════════════════════════════
 app.get('/api/games', async (req, res) => {
-    const now = Date.now();
     const queryKey = req.query.key;
     const isManualSync = req.query.sync === 'true' || req.query.refresh === 'true';
     
     // Validate secret if manual sync is requested
     const SYNC_SECRET = process.env.SYNC_SECRET || "default_safe_key_123";
     const isAuthorized = queryKey === SYNC_SECRET;
-
     const forceSync = isManualSync && isAuthorized;
     
     if (isManualSync && !isAuthorized) {
         console.warn(`[AUTH] Unauthorized sync attempt with key: ${queryKey}`);
     }
 
-    // If cache is expired OR authorized user forced a sync, update it
-    if (forceSync || (now - gamesCache.lastUpdated > CACHE_DURATION)) {
-        if (!gamesCache.isFetching) {
-            console.log(forceSync ? "[API] Manual sync requested." : "[API] Cache expired, refreshing...");
-            await refreshGamesCache();
-        } else if (forceSync) {
-            // If already fetching, wait briefly for it to finish
-            let waitTime = 0;
-            while (gamesCache.isFetching && waitTime < 5) { 
-                await new Promise(r => setTimeout(r, 1000));
-                waitTime++;
-            }
-        }
+    // Only fetch from Google Sheets if manually triggered with auth
+    // Normal user requests always get the cached/static data instantly
+    if (forceSync) {
+        console.log("[API] Authorized manual sync requested.");
+        await refreshFromSheets();
     }
 
+    // Set cache headers — Vercel edge will cache this response
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
     res.json(gamesCache.data);
 });
 
-async function refreshGamesCache() {
+// Background refresh from Google Sheets (only for manual sync)
+async function refreshFromSheets() {
     if (gamesCache.isFetching) return;
     gamesCache.isFetching = true;
-    console.log("[CACHE] Fetching fresh data from Google Sheets...");
+    console.log("[SYNC] Fetching fresh data from Google Sheets...");
 
     try {
         const fetchUrl = `${SHEET_URL}&t=${Date.now()}`;
-        console.log(`[CACHE] External Fetch: ${fetchUrl}`);
-        
         const response = await axios.get(fetchUrl, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -204,26 +218,29 @@ async function refreshGamesCache() {
         
         let csvText = response.data;
         if (!csvText || typeof csvText !== 'string' || csvText.length < 100) {
-            console.warn(`[CACHE] Invalid response from Google (length: ${csvText ? csvText.length : 0}). Skipping update.`);
+            console.warn(`[SYNC] Invalid response from Google (length: ${csvText ? csvText.length : 0}). Skipping.`);
             return;
         }
-
-        console.log(`[CACHE] Received ${csvText.length} bytes from Google.`);
 
         const parsed = parseCSV(csvText);
         
         if (parsed && parsed.length > 0) {
             gamesCache.data = parsed;
             gamesCache.lastUpdated = Date.now();
-            console.log(`[CACHE] Successfully cached ${parsed.length} games.`);
+            console.log(`[SYNC] ✅ Updated cache with ${parsed.length} games from Google Sheets.`);
+            
+            // Also save to games.json so next deploy has fresh data
+            try {
+                fs.writeFileSync(GAMES_JSON_FILE, JSON.stringify(parsed, null, 2), 'utf8');
+                console.log("[SYNC] ✅ Saved updated games.json to disk.");
+            } catch (writeErr) {
+                console.warn("[SYNC] Could not write games.json:", writeErr.message);
+            }
         } else {
-            console.warn("[CACHE] Parsed data is empty. Check CSV structure.");
+            console.warn("[SYNC] Parsed data is empty. Check CSV structure.");
         }
     } catch (error) {
-        console.error("[CACHE] Error fetching Google Sheets:", error.message);
-        if (error.response) {
-            console.error("[CACHE] Response status:", error.response.status);
-        }
+        console.error("[SYNC] Error fetching Google Sheets:", error.message);
     } finally {
         gamesCache.isFetching = false;
     }
@@ -339,6 +356,7 @@ module.exports = app;
 if (require.main === module) {
     app.listen(PORT, () => {
         console.log(`\n>>> Secure Server is running at http://localhost:${PORT}`);
+        console.log(`>>> Serving ${gamesCache.data.length} games from static JSON.`);
         console.log(`>>> Your API Key is hidden safely in the .env file.\n`);
     });
 }

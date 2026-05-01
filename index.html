@@ -1,21 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-6Q340NT0XW"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-6Q340NT0XW');
-    </script>
-    <script type="text/javascript">
-    (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "v3z31avuqb");
-    </script>
+    <!-- ═══ PRECONNECT — Start DNS+TLS early for critical CDNs ═══ -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://i.postimg.cc" crossorigin>
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://is1-ssl.mzstatic.com">
+    <!-- ═══ ANALYTICS — Deferred to avoid render-blocking ═══ -->
+    <!-- GA and Clarity load AFTER the page paints, not before -->
     <meta charset="UTF-8">
     <meta name="google-site-verification" content="ylkEz-PhzT_epqyvhBmZBmTZLCn2FOQcD7U9fu0xhdg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -67,8 +61,9 @@
       "description": "Premium mobile game mods, unlocked features, and exclusive game enhancements for mobile gamers."
     }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome — loaded async to avoid render-blocking (80KB saved from critical path) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
 
     <link rel="stylesheet" href="/style.min.css">
     <!-- Styles loaded from /style.min.css (minified) -->
@@ -310,12 +305,11 @@
 
                 <video
                     id="introVideo"
-                    autoplay
                     muted
                     loop
                     playsinline
                     controls
-                    preload="metadata"
+                    preload="none"
                     style="
                         position:absolute;top:0;left:0;
                         width:100%;height:100%;
@@ -323,9 +317,26 @@
                         border-radius:10px;
                     "
                 >
-                    <source src="/video/mod-vault-games.mp4" type="video/mp4">
+                    <source data-src="/video/mod-vault-games.mp4" type="video/mp4">
                     Your browser does not support HTML5 video.
                 </video>
+                <!-- Play overlay — click to load the 22MB video -->
+                <div id="videoPlayOverlay" style="
+                    position:absolute;inset:0;z-index:3;
+                    display:flex;align-items:center;justify-content:center;
+                    cursor:pointer;background:rgba(0,0,0,0.5);
+                    border-radius:10px;transition:opacity 0.4s;
+                " onclick="launchVideo()">
+                    <div style="
+                        width:72px;height:72px;border-radius:50%;
+                        background:rgba(255,107,0,0.9);display:flex;
+                        align-items:center;justify-content:center;
+                        box-shadow:0 0 40px rgba(255,107,0,0.6);
+                        transition:transform 0.25s,box-shadow 0.25s;
+                    " onmouseover="this.style.transform='scale(1.12)';this.style.boxShadow='0 0 60px rgba(255,107,0,0.9)'" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 0 40px rgba(255,107,0,0.6)'">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="#000"><path d="M8 5v14l11-7z"/></svg>
+                    </div>
+                </div>
             </div>
 
             <!-- Caption under video -->
@@ -967,13 +978,15 @@
         function renderTrending() {
             const grid = document.getElementById('trendingGrid');
             if (!grid || gamesDB.length === 0) return;
-            // Pick 'legendary' + 'hot' games first, then fill with others — max 10
+            // Pick 'legendary' + 'hot' games first — cap at 6 on mobile to reduce image requests
+            const isMobileTrend = window.innerWidth < 600;
+            const maxTrending = isMobileTrend ? 6 : 10;
             const priority = gamesDB.filter(g => {
                 const tags = (g.categories||[]).map(c=>c.toLowerCase().trim());
                 return tags.includes('legendary') || tags.includes('hot') || tags.includes('new');
             });
             const rest = gamesDB.filter(g => !priority.includes(g));
-            const pool = [...priority, ...rest].slice(0, 10);
+            const pool = [...priority, ...rest].slice(0, maxTrending);
             grid.innerHTML = '';
             pool.forEach((game, i) => {
                 const card = document.createElement('div');
@@ -996,6 +1009,53 @@
             if (gamesDB.length > 0) { renderTrending(); _trendObserver.disconnect(); }
         });
         _trendObserver.observe(document.getElementById('gamesGrid'), { childList: true });
+
+        /* ── Lazy Video Loader ── */
+        window.launchVideo = function() {
+            const video = document.getElementById('introVideo');
+            const overlay = document.getElementById('videoPlayOverlay');
+            if (!video) return;
+            // Move data-src to src to start loading
+            const source = video.querySelector('source[data-src]');
+            if (source && !source.src) {
+                source.src = source.getAttribute('data-src');
+                source.removeAttribute('data-src');
+                video.load();
+            }
+            video.play().catch(()=>{});
+            if (overlay) { overlay.style.opacity = '0'; setTimeout(()=> overlay.style.display = 'none', 400); }
+        }
+        // On desktop (wide screens), auto-launch video after page settles
+        if (window.innerWidth > 768) {
+            // Wait for main content to paint first, then load video
+            requestIdleCallback ? requestIdleCallback(launchVideo) : setTimeout(launchVideo, 2000);
+        }
+
+        /* ── Deferred Analytics Loader ── */
+        // Load GA + Clarity after the page is interactive (saves ~300ms FCP)
+        function loadDeferredAnalytics() {
+            // Google Analytics
+            var gs = document.createElement('script');
+            gs.src = 'https://www.googletagmanager.com/gtag/js?id=G-6Q340NT0XW';
+            gs.async = true;
+            document.head.appendChild(gs);
+            gs.onload = function() {
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                window.gtag = gtag;
+                gtag('js', new Date());
+                gtag('config', 'G-6Q340NT0XW');
+            };
+            // Microsoft Clarity
+            (function(c,l,a,r,i,t,y){
+                c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                t=l.createElement(r);t.async=1;t.src='https://www.clarity.ms/tag/'+i;
+                y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+            })(window, document, 'clarity', 'script', 'v3z31avuqb');
+        }
+        // Fire after page is interactive
+        if (document.readyState === 'complete') { setTimeout(loadDeferredAnalytics, 100); }
+        else { window.addEventListener('load', function() { setTimeout(loadDeferredAnalytics, 1000); }); }
     </script>
 </body>
 </html>
