@@ -71,6 +71,12 @@ if (gamesCache.data.length === 0) {
     }
 }
 
+// ── Final fallback: Mark that Google Sheets should be fetched on first request if still empty ──
+if (gamesCache.data.length === 0) {
+    console.warn("[INIT] ⚠️ No local data found. Will fetch from Google Sheets on first request.");
+    gamesCache.shouldFetchFromSheets = true;
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -209,6 +215,13 @@ app.get('/api/games', async (req, res) => {
     
     if (isManualSync && !isAuthorized) {
         console.warn(`[AUTH] Unauthorized sync attempt with key: ${queryKey}`);
+    }
+
+    // If no data loaded and this is the first request, fetch from Google Sheets immediately
+    if (gamesCache.data.length === 0 && gamesCache.shouldFetchFromSheets) {
+        console.log("[API] No data in cache. Fetching from Google Sheets immediately...");
+        gamesCache.shouldFetchFromSheets = false; // Only try once per startup
+        await refreshFromSheets();
     }
 
     // Only fetch from Google Sheets if manually triggered with auth
