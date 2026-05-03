@@ -23,14 +23,22 @@ function resolveDataFile(fileName) {
     const candidates = [
         path.join(__dirname, fileName),
         path.join(process.cwd(), fileName),
+        path.join('/var/task', fileName),  // Vercel serverless root
+        path.join(__dirname, '..', fileName),
     ];
 
     for (const candidate of candidates) {
-        if (fs.existsSync(candidate)) {
-            return candidate;
+        try {
+            if (fs.existsSync(candidate)) {
+                console.log(`[FILE] Found ${fileName} at: ${candidate}`);
+                return candidate;
+            }
+        } catch (e) {
+            // Path doesn't exist, continue
         }
     }
 
+    console.warn(`[FILE] ${fileName} not found in any candidate locations`);
     return candidates[0];
 }
 
