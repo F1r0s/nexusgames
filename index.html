@@ -683,11 +683,9 @@
 
         window.goPrevPage = function() {
             renderPage(_currentPage - 1);
-            document.querySelector('.main-container').scrollIntoView({behavior:'smooth'});
         }
         window.goNextPage = function() {
             renderPage(_currentPage + 1);
-            document.querySelector('.main-container').scrollIntoView({behavior:'smooth'});
         }
 
         function renderGames(fullRedraw = true) {

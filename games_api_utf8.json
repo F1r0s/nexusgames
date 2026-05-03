@@ -1,4 +1,4 @@
-﻿{
+{
     "value":  [
                   {
                       "id":  "g1_moa1ly5i",
@@ -949,40 +949,6 @@
                       "img":  "https://i.postimg.cc/QCxdmqdn/image.png",
                       "link":  "https://d.apkpure.com/b/APK/fallout.n3mods?version=latest",
                       "desc":  "With Fallout 3: Game of the Year Edition, experience the most acclaimed game of 2008 like never before. Create a character of your choosing and descend into an awe-inspiring, post-apocalyptic world where every minute is a fight for survival. Fallout 3: Game of the Year Edition includes all five of the Fallout 3 Game Add-on Packs:\r\nOperation: Anchorage - Enter a military simulation and fight in the liberation of Anchorage, Alaska from its Chinese Communist invaders.\r\nThe Pitt - Travel to the post-apocalyptic remains of Pittsburgh and become embroiled in a conflict between slaves and their Raider masters.\r\nBroken Steel - Increase your level cap to 30, and finish the fight against the Enclave remnants alongside Liberty Prime.\r\nPoint Lookout - Embark on a mysterious and open-ended adventure in a huge, murky swampland along the coast of Maryland.\r\nMothership Zeta - Defy hostile alien abductors and fight your way off of the alien mothership, orbiting miles above the Capital Wasteland."
-                  },
-                  {
-                      "id":  "g59_moa1ly5k",
-                      "title":  "Five nights at Epstein\u0027s",
-                      "version":  "v1",
-                      "size":  "200 MB",
-                      "os":  [
-                                 "android",
-                                 "ios"
-                             ],
-                      "categories":  [
-                                         "Strategy",
-                                         "Legendary"
-                                     ],
-                      "img":  "https://i.postimg.cc/DZ0NcJKm/image.png",
-                      "link":  "https://www.gameflare.com/online-game/five-nights-at-epstein-s/",
-                      "desc":  "Five Nights at Epstein’s is a darkly satirical survival horror game that drops you into a tense night-time nightmare on Epstein Island where your only goal is to survive five harrowing nights until rescue arrives. Inspired by the mechanics of Five Nights at Freddy’s, this indie title challenges players to monitor multiple security cameras, strategically use audio lures to redirect stalking threats, and react with split-second precision to avoid being caught in the shadows.\r\n\r\nYou start trapped in a bathroom after a botched investigation, isolated with grainy camera feeds and diminishing defenses. With 11 cameras to watch, enemies like Epstein and others roam relentlessly, requiring smart sound tactics and camera management to keep them at bay. Each night ramps up in difficulty, forcing you to juggle vent control, system resets, and lightning-fast reactions under pressure."
-                  },
-                  {
-                      "id":  "g60_moa1ly5k",
-                      "title":  "Play with Diddy",
-                      "version":  "v1",
-                      "size":  "320 MB",
-                      "os":  [
-                                 "android",
-                                 "ios"
-                             ],
-                      "categories":  [
-                                         "Horror",
-                                         "Legendary"
-                                     ],
-                      "img":  "https://i.postimg.cc/vBSZPVxd/image.png",
-                      "link":  "https://gamejolt.com/get/build?game=975489\u0026build=1723666",
-                      "desc":  "Spend 5 nights at diddy\u0027s party place and in the end, obliterate him"
                   },
                   {
                       "id":  "g61_moa1ly5k",
@@ -13093,3 +13059,4 @@
               ],
     "Count":  772
 }
+

@@ -6,11 +6,11 @@ const fs = require('fs');
 const path = require('path');
 
 // --- STATIC JSON DATABASE (Primary — instant, no latency) ---
-const GAMES_JSON_FILE = path.join(__dirname, 'games.json');
+const GAMES_JSON_FILE = resolveDataFile('games.json');
 
 // --- GOOGLE SHEETS CONFIG (Background refresh only) ---
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTmd9N77OuTj1k_QFR0hyiqVjxfZvfnYUPO55kUSFN8RyW7MoZNICzc8gGYZuG0uVL_ccPXnG96ltKT/pub?output=csv";
-const FALLBACK_FILE = path.join(__dirname, 'fallback_games.csv');
+const FALLBACK_FILE = resolveDataFile('fallback_games.csv');
 
 let gamesCache = {
     data: [],
@@ -19,10 +19,25 @@ let gamesCache = {
 };
 const CACHE_DURATION = 10 * 60 * 1000; // 10-minute cache (relaxed — JSON file is the source of truth)
 
+function resolveDataFile(fileName) {
+    const candidates = [
+        path.join(__dirname, fileName),
+        path.join(process.cwd(), fileName),
+    ];
+
+    for (const candidate of candidates) {
+        if (fs.existsSync(candidate)) {
+            return candidate;
+        }
+    }
+
+    return candidates[0];
+}
+
 // ── Load static games.json first (instant, no network) ──
 try {
     if (fs.existsSync(GAMES_JSON_FILE)) {
-        console.log("[INIT] Loading games.json (static database)...");
+        console.log(`[INIT] Loading games.json (static database) from: ${GAMES_JSON_FILE}`);
         const jsonData = JSON.parse(fs.readFileSync(GAMES_JSON_FILE, 'utf8'));
         if (Array.isArray(jsonData) && jsonData.length > 0) {
             gamesCache.data = jsonData;
@@ -38,7 +53,7 @@ try {
 if (gamesCache.data.length === 0) {
     try {
         if (fs.existsSync(FALLBACK_FILE)) {
-            console.log("[INIT] No games.json found. Loading fallback_games.csv...");
+            console.log(`[INIT] No games.json found at ${GAMES_JSON_FILE}. Loading fallback_games.csv from ${FALLBACK_FILE}...`);
             const fallbackText = fs.readFileSync(FALLBACK_FILE, 'utf8');
             gamesCache.data = parseCSV(fallbackText);
             console.log(`[INIT] Loaded ${gamesCache.data.length} games from fallback CSV.`);
