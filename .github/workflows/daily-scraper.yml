@@ -2,10 +2,15 @@ name: Daily Game Scraper
 
 on:
   schedule:
-    # Runs every 4 hours (00:00, 04:00, 08:00, 12:00, 16:00, 20:00 UTC)
-    - cron: '0 */4 * * *'
+    # Runs every 6 hours (00:00, 06:00, 12:00, 18:00 UTC)
+    # This is the optimal schedule to keep the site updated quickly
+    # while completely avoiding IP bans/rate limits from the source site.
+    - cron: '0 */6 * * *'
   # Allows manual trigger from the Actions tab
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   scrape-and-update:

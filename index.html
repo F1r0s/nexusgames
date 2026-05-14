@@ -587,14 +587,27 @@
         }
 
         async function loadDatabase() {
-            const CACHE_KEY = 'gamesDB_cache', CACHE_TS_KEY = 'gamesDB_ts', CACHE_DURATION = 5*60*1000;
-            const cachedData = localStorage.getItem(CACHE_KEY), cachedTs = localStorage.getItem(CACHE_TS_KEY), now = Date.now();
-            if (cachedData && cachedTs && (now - parseInt(cachedTs) < CACHE_DURATION)) {
+            const CACHE_KEY = 'gamesDB_cache';
+            const cachedData = localStorage.getItem(CACHE_KEY);
+            
+            // ALWAYS use cached data immediately if it exists (Stale-While-Revalidate pattern)
+            // This eliminates the "loading screen" lag completely for returning visitors.
+            if (cachedData) {
                 try {
                     const parsed = JSON.parse(cachedData);
-                    if (Array.isArray(parsed)) { gamesDB = parsed; renderGames(); fetchFreshGames(true); return; }
-                } catch(e) { localStorage.removeItem(CACHE_KEY); }
+                    if (Array.isArray(parsed) && parsed.length > 0) { 
+                        gamesDB = parsed; 
+                        renderGames(); 
+                        // Fetch fresh games in the background silently without showing the spinner
+                        fetchFreshGames(true); 
+                        return; 
+                    }
+                } catch(e) { 
+                    localStorage.removeItem(CACHE_KEY); 
+                }
             }
+            
+            // Only show the loading screen if we have NO cached data at all (first visit)
             await fetchFreshGames();
         }
 

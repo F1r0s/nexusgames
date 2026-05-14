@@ -225,10 +225,11 @@ app.get('/api/games', async (req, res) => {
     }
 
     // Only fetch from Google Sheets if manually triggered with auth
-    // Normal user requests always get the cached/static data instantly
     if (forceSync) {
         console.log("[API] Authorized manual sync requested.");
-        await refreshFromSheets();
+        // Run in background instead of awaiting to prevent request lag
+        refreshFromSheets().catch(err => console.error("[SYNC] Error:", err));
+        return res.json({ status: "Syncing in background. New data will be available shortly.", currentCacheSize: gamesCache.data.length });
     }
 
     // Set cache headers — Vercel edge will cache this response

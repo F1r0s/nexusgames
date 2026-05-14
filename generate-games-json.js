@@ -83,8 +83,35 @@ function parseCSV(csvText) {
     return result;
 }
 
-// Generate
-const csvText = fs.readFileSync(FALLBACK_FILE, 'utf8');
-const games = parseCSV(csvText);
-fs.writeFileSync(OUTPUT_FILE, JSON.stringify(games, null, 2), 'utf8');
-console.log(`✅ Generated games.json with ${games.length} games (${(fs.statSync(OUTPUT_FILE).size / 1024).toFixed(1)} KB)`);
+// Generate from Google Sheets instead of a static local file
+async function generate() {
+    try {
+        console.log('Fetching latest data from Google Sheets...');
+        // We use the same public CSV link that the server uses
+        const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTmd9N77OuTj1k_QFR0hyiqVjxfZvfnYUPO55kUSFN8RyW7MoZNICzc8gGYZuG0uVL_ccPXnG96ltKT/pub?output=csv";
+        const fetchUrl = `${SHEET_URL}&t=${Date.now()}`;
+        
+        const response = await fetch(fetchUrl);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const csvText = await response.text();
+        if (!csvText || csvText.length < 100) throw new Error("Invalid CSV data received");
+        
+        const games = parseCSV(csvText);
+        
+        if (games.length > 0) {
+            fs.writeFileSync(OUTPUT_FILE, JSON.stringify(games, null, 2), 'utf8');
+            console.log(`✅ Generated games.json with ${games.length} games (${(fs.statSync(OUTPUT_FILE).size / 1024).toFixed(1)} KB)`);
+            
+            fs.writeFileSync(FALLBACK_FILE, csvText, 'utf8');
+            console.log(`✅ Updated fallback_games.csv`);
+        } else {
+            console.error("❌ No games parsed from CSV. Aborting update.");
+        }
+    } catch (err) {
+        console.error("❌ Error generating games.json:", err.message);
+        process.exit(1);
+    }
+}
+
+generate();
