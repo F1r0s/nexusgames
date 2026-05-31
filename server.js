@@ -101,7 +101,7 @@ app.get('/style.min.css', (req, res) => {
 
 // ── VIDEO STREAMING — supports byte-range requests (seek + mobile buffer) ──
 app.get('/video/mod-vault-games.mp4', (req, res) => {
-    const videoPath = path.join(__dirname, 'Mod vault games.mp4');
+    const videoPath = path.join(__dirname, 'Intro to modvault games.mp4');
     if (!fs.existsSync(videoPath)) {
         return res.status(404).send('Video not found');
     }
