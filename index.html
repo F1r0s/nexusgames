@@ -1021,6 +1021,24 @@
         });
         _trendObserver.observe(document.getElementById('gamesGrid'), { childList: true });
 
+        /* ── Deep-link: ?game=GAME_ID opens modal automatically ── */
+        (function handleGameDeepLink() {
+            const gameId = new URLSearchParams(window.location.search).get('game');
+            if (!gameId) return;
+            // Wait for gamesDB to populate, then open modal
+            const checkInterval = setInterval(() => {
+                if (gamesDB.length > 0) {
+                    clearInterval(checkInterval);
+                    const game = gamesDB.find(g => g.id === gameId);
+                    if (game) {
+                        setTimeout(() => viewGame(game.id, 'info'), 300);
+                    }
+                }
+            }, 200);
+            // Stop checking after 10 seconds
+            setTimeout(() => clearInterval(checkInterval), 10000);
+        })();
+
         /* ── Lazy Video Loader ── */
         window.launchVideo = function() {
             const video = document.getElementById('introVideo');

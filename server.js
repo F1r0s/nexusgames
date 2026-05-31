@@ -153,6 +153,10 @@ app.get('/game-mode-guide.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'game-mode-guide.html'));
 });
 
+app.get('/best-games.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'best-games.html'));
+});
+
 app.get('/sitemap.xml', (req, res) => {
     res.type('application/xml');
     res.sendFile(path.join(__dirname, 'sitemap.xml'));
