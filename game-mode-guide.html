@@ -132,6 +132,46 @@
             "@type": "Answer",
             "text": "Modding Android games carries risks if you use untrusted sources. Risks include malware, account bans, and data loss. To stay safe: only use reputable APK sources, scan files with antivirus apps, avoid modding games tied to your main accounts, and back up your data before installing mods."
           }
+        },
+        {
+          "@type": "Question",
+          "name": "What are the key features of iPhone Game Mode?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Key features include CPU and GPU priority boost for smoother gameplay, notification management to block distracting alerts, display enhancements for more vibrant visuals, increased touch sensitivity for more responsive inputs, and thermal management to prevent overheating during extended gaming sessions."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What are the benefits of using iPhone Game Mode?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Benefits include improved performance with reduced lag and faster load times, minimized distractions through notification management, enhanced visual quality with vibrant display settings, increased touch sensitivity for precise inputs, and an overall more immersive and engaging gaming experience."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the difference between Game Mode and Standard Mode on iPhone?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "In Standard Mode, resources are distributed across all running apps which can cause lag during gaming. Game Mode prioritizes resources for gaming, resulting in faster load times and reduced lag. Game Mode also offers notification customization and display/touch enhancements not available in Standard Mode."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which popular games benefit from iPhone Game Mode?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Popular games that benefit include PUBG Mobile (smoother battle royale gameplay), Call of Duty Mobile (faster reactions and precise aiming), and Fortnite (reduced lag for demanding graphics). Any fast-paced or competitive mobile game will see improvements with Game Mode enabled."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How to troubleshoot iPhone Game Mode issues?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "For performance drops, restart your iPhone and close background apps. For notification issues, double-check Game Mode notification settings. For touch sensitivity problems, adjust Game Mode display settings. Always ensure iOS and your gaming apps are updated to the latest versions."
+          }
         }
       ]
     }
@@ -449,7 +489,7 @@ header {
     border-top: 1px solid transparent;
 }
 .qa-card.open .qa-answer {
-    max-height: 600px;
+    max-height: 2000px;
     padding: 22px;
     border-top-color: rgba(255,107,0,0.18);
 }
@@ -498,6 +538,88 @@ header {
     color: rgba(255,200,100,0.85);
 }
 .answer-note i { margin-right: 6px; }
+
+/* ---- ARTICLE PROSE INSIDE QA ---- */
+.article-prose { margin-top: 14px; }
+.article-prose h3 {
+    font-family: var(--font-head);
+    font-size: 0.95rem;
+    color: var(--amber);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin: 22px 0 10px;
+}
+.article-prose h3:first-child { margin-top: 0; }
+.article-prose p {
+    color: var(--text-muted);
+    line-height: 1.75;
+    margin-bottom: 12px;
+    font-size: 0.97rem;
+}
+.article-prose p strong { color: #fff; }
+.article-prose ul, .article-prose ol {
+    list-style: none; padding: 0; margin: 12px 0;
+    display: flex; flex-direction: column; gap: 8px;
+}
+.article-prose li {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    padding: 12px 14px; border-radius: 8px;
+    font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;
+}
+.article-prose li::before {
+    content: '▸'; color: var(--amber); font-weight: bold;
+    flex-shrink: 0; margin-top: 1px;
+}
+/* Comparison table */
+.compare-table {
+    width: 100%; border-collapse: collapse;
+    margin: 16px 0; font-size: 0.92rem;
+}
+.compare-table th, .compare-table td {
+    padding: 12px 16px; text-align: left;
+    border: 1px solid rgba(255,255,255,0.08);
+}
+.compare-table th {
+    background: rgba(255,107,0,0.12);
+    color: var(--amber);
+    font-family: var(--font-head);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+.compare-table td { color: var(--text-muted); background: rgba(255,255,255,0.015); }
+.compare-table tr:hover td { background: rgba(255,255,255,0.04); }
+.compare-table .icon-check { color: var(--neon-green); font-weight: bold; }
+.compare-table .icon-cross { color: #cc3300; font-weight: bold; }
+/* Game badge */
+.game-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px; padding: 10px 16px;
+    margin: 6px 4px; font-size: 0.9rem;
+    color: #fff; transition: 0.3s;
+}
+.game-badge:hover {
+    border-color: var(--amber);
+    background: rgba(255,107,0,0.08);
+    box-shadow: 0 0 14px rgba(255,107,0,0.2);
+}
+.game-badge i { color: var(--amber); font-size: 1rem; }
+.games-grid {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin: 14px 0;
+}
+/* Responsive table */
+@media (max-width: 600px) {
+    .compare-table th, .compare-table td {
+        padding: 8px 10px; font-size: 0.82rem;
+    }
+    .compare-table th { font-size: 0.7rem; letter-spacing: 1px; }
+    .game-badge { padding: 8px 12px; font-size: 0.82rem; }
+}
 
 /* ---- DIVIDER ---- */
 .guide-divider {
@@ -689,6 +811,9 @@ footer a:hover { text-shadow: 0 0 10px rgba(255,107,0,0.7); }
             <a class="jump-pill" href="#iphone-game-mode" id="pill-iphone">
                 <i class="fab fa-apple"></i> iPhone Game Mode
             </a>
+            <a class="jump-pill" href="#iphone-deep-dive" id="pill-deepdive">
+                <i class="fas fa-rocket"></i> Deep Dive
+            </a>
             <a class="jump-pill" href="#samsung-game-mode" id="pill-samsung">
                 <i class="fas fa-tv"></i> Samsung TV
             </a>
@@ -813,6 +938,239 @@ footer a:hover { text-shadow: 0 0 10px rgba(255,107,0,0.7); }
                         <li><span class="step-num" style="background:var(--neon-green);color:#000;">✓</span><div><strong>Leave it ON if:</strong> You're plugged into power, playing competitive games, or using wireless controllers/AirPods where latency matters.</div></li>
                         <li><span class="step-num" style="background:#cc3300;">✕</span><div><strong>Turn it OFF if:</strong> Your battery is low, you're playing passive/casual games, or you need background apps (like music from Spotify) to run smoothly.</div></li>
                     </ul>
+                </div>
+            </div>
+
+        </div><!-- /.qa-list -->
+    </section>
+
+    <hr class="guide-divider">
+
+    <!-- ── SECTION 1B: iPhone Game Mode — Deep Dive ── -->
+    <section class="guide-section reveal" id="iphone-deep-dive">
+        <div class="section-label">
+            <div class="section-label-icon"><i class="fas fa-rocket"></i></div>
+            <div class="section-label-text">
+                <h2>iPhone Game Mode — Deep Dive</h2>
+                <p>Features, benefits, tips, and everything in between</p>
+            </div>
+        </div>
+
+        <div class="qa-list">
+
+            <!-- DD-Q1: How to Enable -->
+            <div class="qa-card" id="qa-dd-1">
+                <div class="qa-question" onclick="toggleQA('qa-dd-1')" role="button" aria-expanded="false" aria-controls="qa-dd-1-answer">
+                    <span class="qa-q-text">How to Enable Game Mode on Your iPhone</span>
+                    <span class="qa-toggle"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="qa-answer" id="qa-dd-1-answer" role="region">
+                    <div class="article-prose">
+                        <p>Enabling Game Mode on your iPhone is a straightforward process. First, ensure your iPhone is updated to the <strong>latest version of iOS</strong> — Game Mode is a feature introduced in newer updates (iOS 18+).</p>
+                        <h3>Basic Activation</h3>
+                        <ul class="steps-list">
+                            <li><span class="step-num">1</span><div><strong>Update your iPhone</strong> — Go to Settings → General → Software Update and install the latest iOS version.</div></li>
+                            <li><span class="step-num">2</span><div><strong>Launch any game</strong> — Game Mode activates automatically when you open a recognized game app.</div></li>
+                            <li><span class="step-num">3</span><div><strong>Check the Dynamic Island</strong> — A Game Mode icon appears in the Dynamic Island, confirming it's active.</div></li>
+                        </ul>
+                        <h3>Customize Your Settings</h3>
+                        <p>Beyond basic activation, you can customize Game Mode to suit your preferences. Manage which notifications come through, adjust display settings for immersion, and allocate more processing power to your game.</p>
+                        <div class="answer-note"><i class="fas fa-lightbulb"></i> <strong>Quick fix:</strong> If you encounter issues enabling Game Mode, restart your device and ensure all apps are updated to their latest versions.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DD-Q2: Key Features -->
+            <div class="qa-card" id="qa-dd-2">
+                <div class="qa-question" onclick="toggleQA('qa-dd-2')" role="button" aria-expanded="false" aria-controls="qa-dd-2-answer">
+                    <span class="qa-q-text">Key Features of iPhone Game Mode</span>
+                    <span class="qa-toggle"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="qa-answer" id="qa-dd-2-answer" role="region">
+                    <div class="article-prose">
+                        <h3><i class="fas fa-microchip" style="color:var(--amber);margin-right:8px;"></i> Performance Optimization</h3>
+                        <p>Game Mode optimizes your iPhone's <strong>CPU and GPU performance</strong>, dedicating more power to the game you're playing. This results in smoother gameplay, faster load times, and reduced lag. It also adjusts thermal management to prevent overheating during extended sessions.</p>
+
+                        <h3><i class="fas fa-bell-slash" style="color:var(--amber);margin-right:8px;"></i> Notification Management</h3>
+                        <p>Block or allow specific notifications so you're not disturbed by non-essential alerts while gaming. Configure settings to allow important notifications (like calls from specific contacts) while blocking everything else — perfect for competitive gamers who need full concentration.</p>
+
+                        <h3><i class="fas fa-desktop" style="color:var(--amber);margin-right:8px;"></i> Display & Touch Enhancements</h3>
+                        <p>Game Mode adjusts screen brightness and color settings for more <strong>vibrant, immersive visuals</strong>. It can also increase touch sensitivity, making your inputs more responsive and precise — giving you the best possible visual and interactive experience.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DD-Q3: Benefits -->
+            <div class="qa-card" id="qa-dd-3">
+                <div class="qa-question" onclick="toggleQA('qa-dd-3')" role="button" aria-expanded="false" aria-controls="qa-dd-3-answer">
+                    <span class="qa-q-text">Benefits of Using Game Mode for Gamers</span>
+                    <span class="qa-toggle"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="qa-answer" id="qa-dd-3-answer" role="region">
+                    <div class="article-prose">
+                        <ul class="steps-list">
+                            <li><span class="step-num" style="background:var(--neon-green);color:#000;">✓</span><div><strong>Improved Performance</strong> — Allocates more resources to your game for smooth, uninterrupted gameplay. Especially beneficial for fast-paced games where even slight delays impact performance.</div></li>
+                            <li><span class="step-num" style="background:var(--neon-green);color:#000;">✓</span><div><strong>Minimized Distractions</strong> — Manage notifications and block unnecessary alerts to maintain full concentration during critical game moments.</div></li>
+                            <li><span class="step-num" style="background:var(--neon-green);color:#000;">✓</span><div><strong>Enhanced Visuals</strong> — Display adjustments provide more vibrant, immersive visuals. Games look better than ever on your iPhone's screen.</div></li>
+                            <li><span class="step-num" style="background:var(--neon-green);color:#000;">✓</span><div><strong>Precise Touch Controls</strong> — Increased touch sensitivity ensures your inputs are accurate and responsive, giving you a competitive edge.</div></li>
+                            <li><span class="step-num" style="background:var(--neon-green);color:#000;">✓</span><div><strong>Reduced Bluetooth Latency</strong> — AirPods and wireless controllers respond faster, keeping audio and inputs perfectly synced.</div></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DD-Q4: Game Mode vs Standard Mode -->
+            <div class="qa-card" id="qa-dd-4">
+                <div class="qa-question" onclick="toggleQA('qa-dd-4')" role="button" aria-expanded="false" aria-controls="qa-dd-4-answer">
+                    <span class="qa-q-text">Game Mode vs. Standard Mode: A Comparison</span>
+                    <span class="qa-toggle"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="qa-answer" id="qa-dd-4-answer" role="region">
+                    <div class="article-prose">
+                        <p>The differences between Game Mode and Standard Mode are immediately apparent:</p>
+                        <table class="compare-table">
+                            <thead>
+                                <tr>
+                                    <th>Feature</th>
+                                    <th>Standard Mode</th>
+                                    <th>Game Mode</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Resource Allocation</strong></td>
+                                    <td>Shared across all apps</td>
+                                    <td><span class="icon-check">✓</span> Prioritized for gaming</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Load Times</strong></td>
+                                    <td>Standard speed</td>
+                                    <td><span class="icon-check">✓</span> Faster loading</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Lag / Stutter</strong></td>
+                                    <td>Possible during heavy use</td>
+                                    <td><span class="icon-check">✓</span> Significantly reduced</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Notification Control</strong></td>
+                                    <td><span class="icon-cross">✕</span> All notifications appear</td>
+                                    <td><span class="icon-check">✓</span> Customizable blocking</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Display Enhancements</strong></td>
+                                    <td><span class="icon-cross">✕</span> Default settings</td>
+                                    <td><span class="icon-check">✓</span> Optimized brightness & color</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Touch Sensitivity</strong></td>
+                                    <td>Standard</td>
+                                    <td><span class="icon-check">✓</span> Increased precision</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Bluetooth Latency</strong></td>
+                                    <td>Standard (~30ms)</td>
+                                    <td><span class="icon-check">✓</span> Halved (~15ms)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="answer-note"><i class="fas fa-info-circle"></i> Game Mode offers a superior gaming experience by optimizing performance, managing notifications, and enhancing visuals and touch sensitivity — all areas where Standard Mode falls short.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DD-Q5: Popular Games -->
+            <div class="qa-card" id="qa-dd-5">
+                <div class="qa-question" onclick="toggleQA('qa-dd-5')" role="button" aria-expanded="false" aria-controls="qa-dd-5-answer">
+                    <span class="qa-q-text">Popular Games That Benefit from Game Mode</span>
+                    <span class="qa-toggle"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="qa-answer" id="qa-dd-5-answer" role="region">
+                    <div class="article-prose">
+                        <div class="games-grid">
+                            <span class="game-badge"><i class="fas fa-crosshairs"></i> PUBG Mobile</span>
+                            <span class="game-badge"><i class="fas fa-crosshairs"></i> Call of Duty: Mobile</span>
+                            <span class="game-badge"><i class="fas fa-hammer"></i> Fortnite</span>
+                            <span class="game-badge"><i class="fas fa-car"></i> Asphalt 9</span>
+                            <span class="game-badge"><i class="fas fa-futbol"></i> FIFA Mobile</span>
+                            <span class="game-badge"><i class="fas fa-dragon"></i> Genshin Impact</span>
+                        </div>
+                        <h3><i class="fas fa-crosshairs" style="color:var(--amber);margin-right:8px;"></i> PUBG Mobile</h3>
+                        <p>A fast-paced battle royale that requires quick reflexes and precise control. Game Mode delivers smoother gameplay with reduced lag and faster load times, plus increased touch sensitivity and improved visuals make it easier to spot enemies and navigate the map.</p>
+
+                        <h3><i class="fas fa-crosshairs" style="color:var(--amber);margin-right:8px;"></i> Call of Duty: Mobile</h3>
+                        <p>This first-person shooter relies on quick reactions and precise aiming. The performance boost and touch sensitivity from Game Mode are invaluable — smoother gameplay and faster response times are crucial in competitive matches.</p>
+
+                        <h3><i class="fas fa-hammer" style="color:var(--amber);margin-right:8px;"></i> Fortnite</h3>
+                        <p>Known for demanding graphics and fast-paced gameplay, Fortnite requires high performance to run smoothly on mobile. Game Mode ensures efficient performance with reduced lag, and the visual/touch enhancements make building structures and aiming more precise.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DD-Q6: Tips -->
+            <div class="qa-card" id="qa-dd-6">
+                <div class="qa-question" onclick="toggleQA('qa-dd-6')" role="button" aria-expanded="false" aria-controls="qa-dd-6-answer">
+                    <span class="qa-q-text">Tips for Maximizing Your Game Mode Experience</span>
+                    <span class="qa-toggle"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="qa-answer" id="qa-dd-6-answer" role="region">
+                    <div class="article-prose">
+                        <ul class="steps-list">
+                            <li><span class="step-num">1</span><div><strong>Keep Everything Updated</strong> — Regularly update your iPhone and gaming apps to the latest versions. Updates include performance improvements and bug fixes that enhance Game Mode.</div></li>
+                            <li><span class="step-num">2</span><div><strong>Customize Notifications</strong> — Carefully select which notifications to allow and block. Only receive essential alerts while gaming to stay focused, especially during competitive play.</div></li>
+                            <li><span class="step-num">3</span><div><strong>Free Up Storage</strong> — Ensure you have enough free space on your iPhone. Games require significant storage to run smoothly, and low storage can impact performance.</div></li>
+                            <li><span class="step-num">4</span><div><strong>Close Background Apps</strong> — Quit unnecessary background apps to free up system resources, allowing Game Mode to allocate maximum power to your game.</div></li>
+                            <li><span class="step-num">5</span><div><strong>Use a Charger</strong> — For extended sessions, plug in your iPhone to avoid battery anxiety and let Game Mode deliver peak performance without power-saving throttling.</div></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DD-Q7: Troubleshooting -->
+            <div class="qa-card" id="qa-dd-7">
+                <div class="qa-question" onclick="toggleQA('qa-dd-7')" role="button" aria-expanded="false" aria-controls="qa-dd-7-answer">
+                    <span class="qa-q-text">Troubleshooting Common Game Mode Issues</span>
+                    <span class="qa-toggle"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="qa-answer" id="qa-dd-7-answer" role="region">
+                    <div class="article-prose">
+                        <h3><i class="fas fa-exclamation-triangle" style="color:#cc3300;margin-right:8px;"></i> Performance Drops or Lag</h3>
+                        <ul class="steps-list">
+                            <li><span class="step-num">1</span><div>Restart your iPhone to clear temporary processes.</div></li>
+                            <li><span class="step-num">2</span><div>Close all background apps consuming system resources.</div></li>
+                            <li><span class="step-num">3</span><div>Update iOS and your gaming app to the latest versions.</div></li>
+                        </ul>
+
+                        <h3><i class="fas fa-bell" style="color:#cc3300;margin-right:8px;"></i> Notifications Not Blocking</h3>
+                        <ul class="steps-list">
+                            <li><span class="step-num">1</span><div>Double-check notification settings within Game Mode.</div></li>
+                            <li><span class="step-num">2</span><div>Reset notification settings and reconfigure which alerts to block.</div></li>
+                        </ul>
+
+                        <h3><i class="fas fa-hand-pointer" style="color:#cc3300;margin-right:8px;"></i> Touch or Display Issues</h3>
+                        <ul class="steps-list">
+                            <li><span class="step-num">1</span><div>Adjust touch sensitivity and display settings within Game Mode preferences.</div></li>
+                            <li><span class="step-num">2</span><div>If problems persist, contact <strong>Apple Support</strong> for further assistance.</div></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DD-Q8: Future -->
+            <div class="qa-card" id="qa-dd-8">
+                <div class="qa-question" onclick="toggleQA('qa-dd-8')" role="button" aria-expanded="false" aria-controls="qa-dd-8-answer">
+                    <span class="qa-q-text">Future of Game Mode: What to Expect in Updates</span>
+                    <span class="qa-toggle"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="qa-answer" id="qa-dd-8-answer" role="region">
+                    <div class="article-prose">
+                        <ul class="steps-list">
+                            <li><span class="step-num" style="background:var(--neon-cyan);color:#000;"><i class="fas fa-brain" style="font-size:0.65rem;"></i></span><div><strong>AI-Powered Optimization</strong> — Advanced machine learning algorithms could dynamically allocate resources based on the specific demands of each game in real-time, delivering even more seamless performance.</div></li>
+                            <li><span class="step-num" style="background:var(--neon-cyan);color:#000;"><i class="fas fa-sliders-h" style="font-size:0.65rem;"></i></span><div><strong>Granular Customization</strong> — Future updates may allow users to fine-tune settings to an even greater degree — advanced notification controls, additional display options, and further touch sensitivity enhancements.</div></li>
+                            <li><span class="step-num" style="background:var(--neon-cyan);color:#000;"><i class="fas fa-link" style="font-size:0.65rem;"></i></span><div><strong>Apple Ecosystem Integration</strong> — Better synchronization with Apple Arcade, seamless device switching via iCloud, and enhanced cloud gaming capabilities could create a unified gaming ecosystem.</div></li>
+                        </ul>
+                        <div class="answer-note"><i class="fas fa-rocket"></i> These potential developments highlight Apple's ongoing commitment to making Game Mode the ultimate mobile gaming tool.</div>
+                    </div>
                 </div>
             </div>
 
@@ -1053,6 +1411,7 @@ reveals.forEach(el => observer.observe(el));
 /* ── Active pill highlight on scroll ── */
 const sections = [
     { id: 'iphone-game-mode', pill: 'pill-iphone' },
+    { id: 'iphone-deep-dive', pill: 'pill-deepdive' },
     { id: 'samsung-game-mode', pill: 'pill-samsung' },
     { id: 'android-modding', pill: 'pill-android' }
 ];
