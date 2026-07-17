@@ -83,6 +83,9 @@ const PORT = process.env.PORT || 3000;
 // Enable CORS
 app.use(cors());
 
+// Parse JSON bodies (for admin API)
+app.use(express.json({ limit: '10mb' }));
+
 // Serve static files (CSS, images, JS, etc.)
 app.use(express.static(path.join(__dirname)));
 
@@ -91,6 +94,126 @@ app.get('/style.css', (req, res) => {
     res.setHeader('Content-Type', 'text/css');
     res.sendFile(path.join(__dirname, 'style.css'));
 });
+
+// ══════════════════════════════════════════════════════════════
+// ADMIN API — Password-protected game management
+// ══════════════════════════════════════════════════════════════
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'ModVault@2026!';
+
+function requireAdmin(req, res, next) {
+    const auth = req.headers['x-admin-key'];
+    if (auth !== ADMIN_PASSWORD) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    next();
+}
+
+// POST /api/admin/login — validate password, return token (same password as simple bearer)
+app.post('/api/admin/login', (req, res) => {
+    const { password } = req.body || {};
+    if (password === ADMIN_PASSWORD) {
+        return res.json({ success: true, token: ADMIN_PASSWORD });
+    }
+    return res.status(401).json({ success: false, error: 'Invalid password' });
+});
+
+// GET /api/admin/games — return full game list
+app.get('/api/admin/games', requireAdmin, (req, res) => {
+    res.json(gamesCache.data);
+});
+
+// PUT /api/admin/games/:index — update a single game by array index
+app.put('/api/admin/games/:index', requireAdmin, (req, res) => {
+    const idx = parseInt(req.params.index, 10);
+    if (isNaN(idx) || idx < 0 || idx >= gamesCache.data.length) {
+        return res.status(400).json({ error: 'Invalid index' });
+    }
+    const updated = { ...gamesCache.data[idx], ...req.body };
+    gamesCache.data[idx] = updated;
+    try {
+        fs.writeFileSync(GAMES_JSON_FILE, JSON.stringify(gamesCache.data, null, 2), 'utf8');
+        res.json({ success: true, game: updated });
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to save games.json: ' + e.message });
+    }
+});
+
+// DELETE /api/admin/games/:index — remove a game
+app.delete('/api/admin/games/:index', requireAdmin, (req, res) => {
+    const idx = parseInt(req.params.index, 10);
+    if (isNaN(idx) || idx < 0 || idx >= gamesCache.data.length) {
+        return res.status(400).json({ error: 'Invalid index' });
+    }
+    gamesCache.data.splice(idx, 1);
+    try {
+        fs.writeFileSync(GAMES_JSON_FILE, JSON.stringify(gamesCache.data, null, 2), 'utf8');
+        res.json({ success: true, remaining: gamesCache.data.length });
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to save: ' + e.message });
+    }
+});
+
+// POST /api/admin/reorder — full replace with reordered array
+app.post('/api/admin/reorder', requireAdmin, (req, res) => {
+    const { games } = req.body || {};
+    if (!Array.isArray(games)) return res.status(400).json({ error: 'games must be an array' });
+    gamesCache.data = games;
+    try {
+        fs.writeFileSync(GAMES_JSON_FILE, JSON.stringify(gamesCache.data, null, 2), 'utf8');
+        res.json({ success: true, count: gamesCache.data.length });
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to save: ' + e.message });
+    }
+});
+
+// POST /api/admin/add — add a new game manually
+app.post('/api/admin/add', requireAdmin, (req, res) => {
+    const game = req.body;
+    if (!game || !game.title) return res.status(400).json({ error: 'title is required' });
+    const newGame = {
+        id: 'g_manual_' + Date.now().toString(36),
+        title: game.title || 'Untitled',
+        version: game.version || 'v1.0',
+        size: game.size || 'N/A',
+        os: Array.isArray(game.os) ? game.os : ['android'],
+        categories: Array.isArray(game.categories) ? game.categories : (game.categories || 'General').split(',').map(s => s.trim()),
+        img: game.img || 'https://placehold.co/400x300?text=No+Image',
+        link: game.link || '#',
+        desc: game.desc || 'No description provided.'
+    };
+    gamesCache.data.unshift(newGame); // add at top
+    try {
+        fs.writeFileSync(GAMES_JSON_FILE, JSON.stringify(gamesCache.data, null, 2), 'utf8');
+        res.json({ success: true, game: newGame });
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to save: ' + e.message });
+    }
+});
+
+// POST /api/admin/sync — force refresh from Google Sheets
+app.post('/api/admin/sync', requireAdmin, async (req, res) => {
+    res.json({ status: 'Syncing from Google Sheets in background…' });
+    try {
+        await refreshFromSheets();
+    } catch (e) {
+        console.error('[ADMIN SYNC] Error:', e.message);
+    }
+});
+
+// GET /api/admin/stats — quick dashboard stats
+app.get('/api/admin/stats', requireAdmin, (req, res) => {
+    const cats = {};
+    gamesCache.data.forEach(g => {
+        (g.categories || []).forEach(c => { cats[c] = (cats[c] || 0) + 1; });
+    });
+    res.json({
+        totalGames: gamesCache.data.length,
+        lastUpdated: gamesCache.lastUpdated ? new Date(gamesCache.lastUpdated).toISOString() : 'unknown',
+        categories: cats
+    });
+});
+
+
 
 // Minified CSS (used by index.html for better SEO score)
 app.get('/style.min.css', (req, res) => {
@@ -139,6 +262,14 @@ app.get('/video/mod-vault-games.mp4', (req, res) => {
 // Serve the frontend pages
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Admin dashboard
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin.html'));
+});
+app.get('/admin.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
 app.get('/support.html', (req, res) => {
