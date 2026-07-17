@@ -145,7 +145,12 @@
     return new URLSearchParams(window.location.search).get(name);
   }
 
-  const downloadURL = getParam('url') || getParam('sub1') || '/';
+  // Get the download URL from URL params OR from localStorage
+  const downloadURL = getParam('url') || getParam('sub1') || localStorage.getItem('pendingDownload') || '/';
+  
+  // Clear it from localStorage so it doesn't get reused accidentally
+  localStorage.removeItem('pendingDownload');
+
   const dlBtn = document.getElementById('dlBtn');
   const barFill = document.getElementById('barFill');
   const countEl = document.getElementById('countNum');

@@ -165,6 +165,24 @@
                 width: 58px !important;
                 height: 58px !important;
             }
+            /* Mobile Direct Locker Button */
+            .mobile-locker-btn {
+                width: 100% !important;
+                justify-content: center !important;
+                padding: 14px 20px !important;
+                font-size: 0.95rem !important;
+                letter-spacing: 2px !important;
+                display: inline-flex !important;
+                border: 2px solid var(--amber) !important;
+                box-shadow: 0 0 15px rgba(255,107,0,0.25) !important;
+                border-radius: 8px !important;
+                white-space: normal !important;
+            }
+            .mobile-locker-btn:hover, .mobile-locker-btn:active {
+                background: rgba(255,107,0,0.18) !important;
+                box-shadow: 0 0 25px rgba(255,107,0,0.6) !important;
+                border-color: #ff8833 !important;
+            }
         }
     </style>
 </head>
@@ -554,6 +572,18 @@
                         ></iframe>
                     </div>
 
+                    <!-- ── MOBILE DIRECT LINK (Replaces iframe on mobile) ── -->
+                    <div id="mobileLockerLinkContainer" style="display:none; padding:24px 16px; text-align:center; background:rgba(0,0,0,0.2);">
+                        <div style="border: 1px solid rgba(255,107,0,0.3); border-radius: 12px; padding: 24px 16px; background: rgba(255,107,0,0.03); box-shadow: 0 0 20px rgba(255,107,0,0.1);">
+                            <p style="font-family:'Rajdhani',sans-serif; color:#ddd; font-size:13px; margin-bottom:18px; letter-spacing:1px; line-height:1.4;">
+                                YOUR DOWNLOAD IS SECURED. CLICK BELOW TO PROCEED TO THE SECURE GATEWAY:
+                            </p>
+                            <a id="mobileLockerBtn" href="#" target="_blank" class="nav-btn mobile-locker-btn">
+                                <i class="fas fa-external-link-alt" style="margin-right:8px;"></i>OPEN LINK
+                            </a>
+                        </div>
+                    </div>
+
                     <div id="tutorialSection" style="margin-top:20px; padding: 0 16px 16px 16px;">
                         <div style="color:var(--text-muted); font-size:0.8rem; margin-bottom:10px; text-align:center;">TUTORIAL: HOW TO UNLOCK</div>
                         <div style="position: relative; width: 100%; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px; border: 1px solid rgba(255,107,0,0.2);">
@@ -812,6 +842,10 @@
             if (frame) { frame.src = ''; frame.style.display = 'none'; }
             const loading = document.getElementById('ogadsLoadingMsg');
             if (loading) loading.style.display = 'flex';
+            const mobileContainer = document.getElementById('mobileLockerLinkContainer');
+            if (mobileContainer) mobileContainer.style.display = 'none';
+            const statusEl = document.getElementById('terminalStatus');
+            if (statusEl) { statusEl.innerText = '[ESTABLISHING...]'; statusEl.style.color = ''; }
         }
 
         window.switchModalView = function(v) {
@@ -821,30 +855,62 @@
 
         // Called when Download button is clicked — injects game data then shows locker
         window.initializeInjection = function() {
-            switchModalView('locker');
-            loadOgadsLocker();
+            const isMobile = window.innerWidth <= 600;
+
+            // Save the game link to localStorage so go.html can read it later
+            // This is needed because OGAds dashboard rejects {sub1} in the Redirect URL field.
+            localStorage.setItem('pendingDownload', currentGameLink || '/');
+
+            if (isMobile) {
+                // MOBILE: build the locker URL and redirect this page directly
+                // No modal, no new tab — clean full-screen experience on mobile
+                const gameImg   = document.getElementById('lockerImg').src || '';
+                const gameTitle = document.getElementById('lockerTitle').innerText || 'MOD VAULT';
+                const sub1 = encodeURIComponent(currentGameLink || '');
+                const sub2 = encodeURIComponent(gameImg);
+                const sub3 = encodeURIComponent(gameTitle.toUpperCase());
+                const lockerUrl = OGADS_LOCKER_URL + '?sub1=' + sub1 + '&sub2=' + sub2 + '&sub3=' + sub3;
+                window.location.href = lockerUrl;
+            } else {
+                // DESKTOP: open the locker inside the modal as an embedded iframe
+                switchModalView('locker');
+                loadOgadsLocker();
+            }
         }
 
         window.onclick = e => { if (e.target == viewModal) closeViewModal(); }
 
-        // Load the OGAds iframe locker (single global URL for all games)
+        // Load the OGAds iframe locker — DESKTOP ONLY
         // Passes sub1=downloadURL, sub2=imageURL, sub3=gameTitle
         // OGAds replaces {sub2} and {sub3} inside the description HTML
         function loadOgadsLocker() {
             const frame = document.getElementById('ogadsFrame');
             const loading = document.getElementById('ogadsLoadingMsg');
             const statusEl = document.getElementById('terminalStatus');
+            const iframeWrap = document.getElementById('ogadsLockerWrap');
+            const mobileWrap = document.getElementById('mobileLockerLinkContainer');
+
+            // Always hide the mobile button container on desktop
+            if (mobileWrap) mobileWrap.style.display = 'none';
+            if (iframeWrap) iframeWrap.style.display = 'block';
+
             if (!frame) return;
-            frame.style.display = 'none';
-            if (loading) loading.style.display = 'flex';
-            if (statusEl) statusEl.innerText = '[ESTABLISHING SECURE TUNNEL...]';
+
             // Grab current game image and title from the already-injected locker UI
             const gameImg   = document.getElementById('lockerImg').src || '';
             const gameTitle = document.getElementById('lockerTitle').innerText || 'MOD VAULT';
             const sub1 = encodeURIComponent(currentGameLink || '');
             const sub2 = encodeURIComponent(gameImg);
             const sub3 = encodeURIComponent(gameTitle.toUpperCase());
-            frame.src = OGADS_LOCKER_URL + '?sub1=' + sub1 + '&sub2=' + sub2 + '&sub3=' + sub3;
+            const lockerUrl = OGADS_LOCKER_URL + '?sub1=' + sub1 + '&sub2=' + sub2 + '&sub3=' + sub3;
+
+            frame.style.display = 'none';
+            if (loading) loading.style.display = 'flex';
+            if (statusEl) {
+                statusEl.innerText = '[ESTABLISHING SECURE TUNNEL...]';
+                statusEl.style.color = '';
+            }
+            frame.src = lockerUrl;
         }
 
         // Called when OGAds iframe finishes loading
