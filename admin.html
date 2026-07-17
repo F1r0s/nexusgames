@@ -538,11 +538,28 @@ const PAGE_SIZE = 30;
 let dragSrcRow = null;
 
 // ═══ AUTH ═══
+
+// Helper: build the correct backend URL regardless of which port this page is on
+function backendUrl(path) {
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    if (window.location.port !== '3000') {
+      return 'http://localhost:3000' + path;
+    }
+  } else if (window.location.protocol === 'file:') {
+    return 'http://localhost:3000' + path;
+  }
+  return path;
+}
+
 async function doLogin() {
   const pw = document.getElementById('pwInput').value.trim();
   if (!pw) return;
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+
   try {
-    const r = await fetch('/api/admin/login', {
+    const loginUrl = backendUrl('/api/admin/login');
+    const r = await fetch(loginUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password: pw })
@@ -555,10 +572,25 @@ async function doLogin() {
       loadStats();
       loadGames();
     } else {
-      document.getElementById('loginError').textContent = '✗ ' + (d.error || 'Invalid password');
+      errEl.textContent = '✗ ' + (d.error || 'Invalid password');
     }
   } catch(e) {
-    document.getElementById('loginError').textContent = '✗ Connection error';
+    // If local backend is unreachable (e.g. server not running),
+    // fall back to loading games from the live public API
+    errEl.textContent = '⚠ Cannot reach local server. Trying live site...';
+    setTimeout(async () => {
+      try {
+        adminToken = pw; // store password for any save operations later
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        await loadGamesFromLiveSite();
+        toast('Loaded from live site (read-only mode — saves require local server)', 'info');
+      } catch(e2) {
+        errEl.textContent = '✗ Could not connect. Make sure your server is running (npm start).';
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('dashboard').style.display = 'none';
+      }
+    }, 800);
   }
 }
 document.getElementById('pwInput').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
@@ -613,11 +645,30 @@ async function loadStats() {
 async function loadGames() {
   try {
     const r = await api('/api/admin/games');
+    if (!r.ok) throw new Error('API error ' + r.status);
     allGames = await r.json();
     filterGames();
     populateCatFilter();
     document.getElementById('gameCount').textContent = allGames.length.toLocaleString() + ' games total';
-  } catch(e) { toast('Could not load games', 'error'); }
+  } catch(e) {
+    toast('Could not load from local server. Loading from live site...', 'error');
+    await loadGamesFromLiveSite();
+  }
+}
+
+// Fallback: load games directly from the public /api/games endpoint (no auth required)
+async function loadGamesFromLiveSite() {
+  const publicUrl = window.location.protocol === 'file:'
+    ? 'https://www.modvault.games/api/games'
+    : (window.location.hostname === 'localhost' ? 'http://localhost:3000/api/games' : '/api/games');
+
+  const r = await fetch(publicUrl + '?t=' + Date.now());
+  if (!r.ok) throw new Error('Public API error');
+  allGames = await r.json();
+  filterGames();
+  populateCatFilter();
+  document.getElementById('gameCount').textContent = allGames.length.toLocaleString() + ' games total';
+  toast('✅ ' + allGames.length.toLocaleString() + ' games loaded!', 'success');
 }
 
 function populateCatFilter() {
