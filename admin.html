@@ -572,7 +572,17 @@ function doLogout() {
 }
 
 function api(path, opts = {}) {
-  return fetch(path, {
+  let url = path;
+  // If running locally on a different port (e.g. Live Server) or via file://, redirect to the running Node.js backend
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    if (window.location.port !== '3000') {
+      url = 'http://localhost:3000' + path;
+    }
+  } else if (window.location.protocol === 'file:') {
+    url = 'http://localhost:3000' + path;
+  }
+
+  return fetch(url, {
     ...opts,
     headers: { 'x-admin-key': adminToken, 'Content-Type': 'application/json', ...(opts.headers || {}) }
   });
