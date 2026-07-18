@@ -18,7 +18,7 @@ const { GoogleSpreadsheet } = require('google-spreadsheet');
 // CONFIGURATION
 // ─────────────────────────────────────────────────────────────
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID
-    || '1vTmd9N77OuTj1k_QFR0hyiqVjxfZvfnYUPO55kUSFN8RyW7MoZNICzc8gGYZuG0uVL_ccPXnG96ltKT';
+    || '1LSSG-LmD2QehsOB_t-I8eeUXNMTJ10neKu3X4MIX4XU';
 
 const BASE_URL      = 'https://an1.com/games/';
 const REQUEST_DELAY = 1500;   // ms between requests (be polite)
@@ -328,6 +328,22 @@ async function exportGamesJson() {
     }
 }
 
+/** Converts a Module Name into an SEO-friendly URL slug. Module Name itself is NEVER changed. */
+function toSlug(moduleName) {
+    if (!moduleName || typeof moduleName !== 'string') return 'game';
+    let name = moduleName
+        .replace(/\s*[\(\[][\s\S]*/g, '')
+        .replace(/\s*[-\u2013\u2014]\s*(mod|hack|cheat|unlimited|free|premium|unlocked)[\s\S]*/i, '')
+        .trim();
+    if (!name) name = moduleName;
+    return name
+        .replace(/[\u00e0-\u00e5]/g,'a').replace(/[\u00e8-\u00eb]/g,'e').replace(/[\u00ec-\u00ef]/g,'i')
+        .replace(/[\u00f2-\u00f6]/g,'o').replace(/[\u00f9-\u00fc]/g,'u').replace(/[\u2122\u00ae\u00a9]/g,'')
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g,' ').trim()
+        .replace(/\s+/g,'-').replace(/-+/g,'-').replace(/^-+|-+$/g,'');
+}
+
 /** Minimal CSV→JSON parser (matches server.js logic) */
 function parseCSVForJson(csvText) {
     if (!csvText) return [];
@@ -395,7 +411,12 @@ function parseCSVForJson(csvText) {
             size: colMap.size > -1 ? (cells[colMap.size] || 'N/A') : 'N/A',
             os: (colMap.os > -1 ? (cells[colMap.os] || 'android') : 'android').toLowerCase().split(',').map(s => s.trim()),
             categories: (colMap.tags > -1 ? (cells[colMap.tags] || 'General') : 'General').split(',').map(s => s.trim()),
-            img: (colMap.img > -1 && cells[colMap.img]) ? cells[colMap.img] : 'https://placehold.co/400x300?text=No+Image',
+            img: (() => {
+                const raw = colMap.img > -1 ? (cells[colMap.img] || '').trim() : '';
+                if (raw && /^https:\/\/modvault\.games\/uploads\//i.test(raw)) return raw;
+                const slug = toSlug(title);
+                return `https://modvault.games/uploads/${slug}.jpg`;
+            })(),
             link: colMap.link > -1 ? (cells[colMap.link] || '#') : '#',
             desc: colMap.desc > -1 ? (cells[colMap.desc] || 'No description provided.') : 'No description provided.'
         });

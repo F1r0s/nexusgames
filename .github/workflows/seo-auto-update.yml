@@ -1,0 +1,78 @@
+name: SEO Visual Asset Auto-Update
+
+# ── Triggers ──────────────────────────────────────────────────────
+on:
+  # 1. Runs automatically after the Daily Scraper adds new games
+  workflow_run:
+    workflows: ["Daily Game Scraper"]
+    types: [completed]
+
+  # 2. Manual trigger from the GitHub Actions tab (for immediate use)
+  workflow_dispatch:
+
+  # 3. Daily safety run at 03:00 UTC (catches any missed rows)
+  schedule:
+    - cron: '0 3 * * *'
+
+permissions:
+  contents: write
+
+# ── Job ───────────────────────────────────────────────────────────
+jobs:
+  seo-update:
+    # Only run if the triggering workflow succeeded (or if manually triggered / scheduled)
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repo with write token
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # 2. Set up Node.js (same version as daily-scraper)
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 3. Cache node_modules for speed
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: ${{ runner.os }}-node-
+
+      # 4. Install dependencies (production only)
+      - name: Install Node Dependencies
+        run: npm ci --omit=dev
+
+      # 5. Update Visual Asset + Tags in Google Sheets for ALL rows
+      #    that don't yet have a modvault.games/uploads/ URL.
+      #    Module Name is NEVER modified.
+      - name: Update SEO Visual Assets & Tags in Google Sheets
+        env:
+          GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+          GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
+          SPREADSHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+        run: node scripts/seo-update-sheets.js
+
+      # 6. Re-generate games.json from the now-updated sheet
+      #    (also auto-slugs any row that the updater skipped)
+      - name: Regenerate games.json from Google Sheets
+        env:
+          GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+          GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
+          SPREADSHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+        run: node generate-games-json.js
+
+      # 7. Commit updated games.json back to the repo
+      - name: Commit updated games.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add games.json fallback_games.csv
+          git diff --cached --quiet || git commit -m "🔍 SEO: auto-update Visual Assets & Tags [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+          git push

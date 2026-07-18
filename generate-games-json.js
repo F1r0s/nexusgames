@@ -9,6 +9,32 @@ const path = require('path');
 const FALLBACK_FILE = path.join(__dirname, 'fallback_games.csv');
 const OUTPUT_FILE   = path.join(__dirname, 'games.json');
 
+// ── SEO Slug Generator ─────────────────────────────────────
+/**
+ * Converts a Module Name into an SEO-friendly URL slug.
+ * "Rainbow Six Mobile ( Unlimited agents )" → "rainbow-six-mobile"
+ * Never modifies the Module Name itself — only used for the img URL.
+ */
+function toSlug(moduleName) {
+    if (!moduleName || typeof moduleName !== 'string') return 'game';
+    let name = moduleName
+        .replace(/\s*[\(\[][\s\S]*/g, '') // strip everything from ( or [ onwards
+        .replace(/\s*[-\u2013\u2014]\s*(mod|hack|cheat|unlimited|free|premium|unlocked)[\s\S]*/i, '')
+        .trim();
+    if (!name) name = moduleName;
+    return name
+        .replace(/[àáâãäå]/g,'a').replace(/[èéêë]/g,'e').replace(/[ìíîï]/g,'i')
+        .replace(/[òóôõö]/g,'o').replace(/[ùúûü]/g,'u').replace(/[™®©°]/g,'')
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g,' ')
+        .trim()
+        .replace(/\s+/g,'-')
+        .replace(/-+/g,'-')
+        .replace(/^-+|-+$/g,'');
+}
+
+const MODVAULT_PATTERN = /^https:\/\/modvault\.games\/uploads\//i;
+
 function parseCSV(csvText) {
     if (!csvText) return [];
     const result = [], rows = [];
@@ -75,7 +101,14 @@ function parseCSV(csvText) {
             size: colMap.size > -1 ? (cells[colMap.size] || 'N/A') : 'N/A',
             os: (colMap.os > -1 ? (cells[colMap.os] || 'android') : 'android').toLowerCase().split(',').map(s => s.trim()),
             categories: (colMap.tags > -1 ? (cells[colMap.tags] || 'General') : 'General').split(',').map(s => s.trim()),
-            img: (colMap.img > -1 && cells[colMap.img]) ? cells[colMap.img] : 'https://placehold.co/400x300?text=No+Image',
+            img: (() => {
+                const raw = colMap.img > -1 ? (cells[colMap.img] || '').trim() : '';
+                // Use stored URL only if it's already a proper modvault.games/uploads/ URL
+                if (raw && /^https:\/\/modvault\.games\/uploads\//i.test(raw)) return raw;
+                // Otherwise auto-generate the SEO slug URL from the Module Name
+                const slug = toSlug(title);
+                return `https://modvault.games/uploads/${slug}.jpg`;
+            })(),
             link: colMap.link > -1 ? (cells[colMap.link] || '#') : '#',
             desc: colMap.desc > -1 ? (cells[colMap.desc] || 'No description provided.') : 'No description provided.'
         });
