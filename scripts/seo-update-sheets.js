@@ -3,12 +3,13 @@
  * ──────────────────────────────────────────────────────────────────
  * Updates ALL rows in the Google Sheet:
  *   • Visual Asset → https://modvault.games/uploads/<seo-slug>.jpg
- *   • Tags         → enriched with SEO keywords from Module Name
+ *   • Tags         → keeps original game-type tags EXACTLY,
+ *                    appends ONLY 3 generic mod keywords at the end:
+ *                    "mod apk", "mod menu", "hack"
  *
  * ✅ Module Name is NEVER modified.
- * ✅ Rows already having a modvault.games/uploads/ URL are skipped.
- * ✅ Uses loadCells + saveUpdatedCells → ONE batchUpdate API call for
- *    ALL 2500+ changes. No quota issues.
+ * ✅ Original tags (Action, RPG, etc.) are preserved exactly.
+ * ✅ Uses loadCells + saveUpdatedCells → ONE batchUpdate API call.
  *
  * Usage (local):  node scripts/seo-update-sheets.js
  * Usage (CI):     GOOGLE_SERVICE_ACCOUNT_EMAIL=... GOOGLE_PRIVATE_KEY=... node scripts/seo-update-sheets.js
@@ -27,6 +28,9 @@ const SPREADSHEET_ID =
 const BASE_IMG_URL     = 'https://modvault.games/uploads/';
 const MODVAULT_PATTERN = /^https:\/\/modvault\.games\/uploads\//i;
 
+// The ONLY 3 SEO mod-keywords we append — nothing game-name specific
+const MOD_KEYWORDS = ['mod apk', 'mod menu', 'hack'];
+
 // ── Credentials ────────────────────────────────────────────────────
 function loadCredentials() {
     if (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY) {
@@ -38,88 +42,69 @@ function loadCredentials() {
     try {
         return require(path.join(__dirname, '..', 'google-credentials.json'));
     } catch {
-        console.error('❌ No credentials found. Provide GOOGLE_SERVICE_ACCOUNT_EMAIL + GOOGLE_PRIVATE_KEY env vars, or place google-credentials.json in the project root.');
+        console.error('❌ No credentials found.');
         process.exit(1);
     }
 }
 
 // ── Slug Generator ─────────────────────────────────────────────────
 /**
- * Converts a Module Name to an SEO-friendly URL slug.
- * "Rainbow Six Mobile ( Unlimited agents , Unlimited money )" → "rainbow-six-mobile"
- * "Clash of Clans [Unlimited Money, Unlimited Gems]"          → "clash-of-clans"
- * Module Name itself is NEVER modified — slug is ONLY used for the img URL.
+ * Converts Module Name to SEO URL slug.
+ * "Rainbow Six Mobile ( Unlimited agents )" → "rainbow-six-mobile"
+ * Module Name itself is NEVER changed.
  */
 function toSlug(moduleName) {
     if (!moduleName || typeof moduleName !== 'string') return 'game';
-    // Extract core game name before mod descriptor
     let name = moduleName
-        .replace(/\s*[\(\[][\s\S]*/g, '')   // strip everything from ( or [ onwards
+        .replace(/\s*[\(\[][\s\S]*/g, '')
         .replace(/\s*[-–—]\s*(mod|hack|cheat|unlimited|free|premium|unlocked)[\s\S]*/i, '')
         .trim();
     if (!name) name = moduleName;
-
     return name
-        // Transliterate accented chars
         .replace(/[àáâãäå]/g, 'a').replace(/[èéêë]/g, 'e').replace(/[ìíîï]/g, 'i')
         .replace(/[òóôõö]/g, 'o').replace(/[ùúûü]/g, 'u').replace(/[ýÿ]/g, 'y')
         .replace(/[ñ]/g, 'n').replace(/[ç]/g, 'c').replace(/[™®©°]/g, '')
         .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, ' ')   // special chars → space
-        .trim()
-        .replace(/\s+/g, '-')             // spaces → hyphens
-        .replace(/-+/g, '-')              // collapse repeated hyphens
-        .replace(/^-+|-+$/g, '');         // trim edge hyphens
+        .replace(/[^a-z0-9\s-]/g, ' ').trim()
+        .replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-+|-+$/g, '');
 }
 
-// ── SEO Tags Builder ───────────────────────────────────────────────
-function extractModFeatures(moduleName) {
-    const patterns = [
-        /unlimited\s+[\w\/&+]+(?:\s*[,\/]\s*[\w\/&+]+)*/gi,
-        /mod\s+menu/gi, /god\s+mode/gi, /all\s+unlocked/gi,
-        /max\s+level/gi, /free\s+purchase/gi, /anti[-\s]ban/gi,
-        /vip\s+unlocked/gi, /premium\s+unlocked/gi, /infinite\s+\w+/gi,
-        /aimbot/gi, /teleport/gi, /joystick/gi, /one[-\s]hit\s+kill/gi,
-        /damage\s+multiplier/gi, /speed\s+hack/gi, /menu\s+mod/gi,
-    ];
-    const found = new Set();
-    for (const p of patterns) {
-        (moduleName.match(p) || []).forEach(m => found.add(m.toLowerCase().trim()));
+// ── Tags Builder ───────────────────────────────────────────────────
+// Recognized game-type category words (case-insensitive)
+const VALID_CATEGORIES = new Set([
+    'action','adventure','rpg','role-playing','role playing','strategy','puzzle',
+    'simulation','racing','sport','sports','horror','shooter','arcade','fighting',
+    'casual','survival','mmorpg','moba','jrpg','gacha','creator','sandbox',
+    'hack and slash','multiplayer','new','hot','legendary','match-3','platformer',
+    'card','board','trivia','music','educational','stealth','open world',
+    'battle royale','tower defense','idle','clicker','farming','cooking','dating sim',
+    'vr','augmented reality','word','kids','football','basketball','soccer'
+]);
+
+/**
+ * Keeps ONLY recognized game-type category tags (Action, RPG etc.).
+ * Strips game names, mod keywords, and any injected SEO junk from before.
+ * Appends exactly: "mod apk", "mod menu", "hack"
+ */
+function buildSeoTags(existingTags) {
+    const original = (existingTags || '')
+        .split(',')
+        .map(t => t.trim())
+        .filter(t => t && VALID_CATEGORIES.has(t.toLowerCase()));
+
+    const seen  = new Set(original.map(t => t.toLowerCase()));
+    const final = [...original];
+    for (const kw of MOD_KEYWORDS) {
+        if (!seen.has(kw)) { seen.add(kw); final.push(kw); }
     }
-    return [...found];
-}
-
-function buildSeoTags(moduleName, existingTags) {
-    const coreName = moduleName
-        .replace(/\s*[\(\[].*/g, '')
-        .replace(/\s*[-–—]\s*(mod|hack|cheat|unlimited)[\s\S]*/i, '')
-        .trim().toLowerCase();
-
-    const features = extractModFeatures(moduleName);
-    const existing = (existingTags || '').split(',').map(t => t.trim()).filter(Boolean);
-    const seen     = new Set(existing.map(t => t.toLowerCase()));
-    const final    = [...existing];
-
-    function add(tag) {
-        const low = tag.toLowerCase().trim();
-        if (!low || low.length > 80 || seen.has(low)) return;
-        seen.add(low); final.push(tag.trim());
-    }
-
-    add(coreName);
-    add(`${coreName} mod`);
-    add(`${coreName} mod apk`);
-    for (const f of features) add(f);
-    add('mod apk'); add('mobile game mod'); add('android mod');
-
-    return final.slice(0, 12).join(', ');
+    return final.join(', ');
 }
 
 // ── Main ───────────────────────────────────────────────────────────
 async function main() {
     console.log('╔══════════════════════════════════════════════════════╗');
-    console.log('║   ModVault — SEO Visual Asset & Tags Updater         ║');
-    console.log('║   Strategy: loadCells → batchUpdate (1 API call)     ║');
+    console.log('║   ModVault — SEO Visual Asset & Tags Updater v2      ║');
+    console.log('║   Tags: keep originals + append 3 mod keywords only  ║');
     console.log('╚══════════════════════════════════════════════════════╝\n');
 
     // 1. Connect
@@ -129,32 +114,30 @@ async function main() {
     await doc.useServiceAccountAuth(creds);
     await doc.loadInfo();
 
-    const sheet = doc.sheetsByIndex[0];
+    const sheet    = doc.sheetsByIndex[0];
     const rowCount = sheet.rowCount;
     const colCount = sheet.columnCount;
     console.log(`📊 Sheet: "${sheet.title}" — ${rowCount} rows × ${colCount} cols\n`);
 
-    // 2. Load ALL cells in one request
-    //    (1 read API call, no quota issues for reads)
-    console.log('📦 Loading all cells (one read request)…');
+    // 2. Load ALL cells in one read request
+    console.log('📦 Loading all cells…');
     await sheet.loadCells(`A1:${colIndexToLetter(colCount)}${rowCount}`);
     console.log('   ✓ All cells loaded\n');
 
-    // 3. Find column indices from header row (row 0)
+    // 3. Detect column positions from header row
     let nameCol = -1, imgCol = -1, tagsCol = -1;
     for (let c = 0; c < colCount; c++) {
-        const header = (sheet.getCell(0, c).value || '').toString().toUpperCase().trim();
-        if (header.includes('MODULE') || header.includes('NAME'))  nameCol  = c;
-        if (header.includes('VISUAL') || header.includes('ASSET') || header.includes('IMAGE')) imgCol = c;
-        if (header.includes('TAG')   || header.includes('CATEG'))  tagsCol  = c;
+        const h = (sheet.getCell(0, c).value || '').toString().toUpperCase().trim();
+        if (h.includes('MODULE') || h.includes('NAME'))              nameCol = c;
+        if (h.includes('VISUAL') || h.includes('ASSET') || h.includes('IMAGE')) imgCol  = c;
+        if (h.includes('TAG')   || h.includes('CATEG'))              tagsCol = c;
     }
 
     if (nameCol === -1 || imgCol === -1) {
-        console.error('❌ Could not locate required columns in header row!');
-        // Print header for debugging
-        const headers = [];
-        for (let c = 0; c < colCount; c++) headers.push(sheet.getCell(0, c).value);
-        console.error('   Headers found:', headers.join(' | '));
+        console.error('❌ Could not locate required columns!');
+        const hdrs = [];
+        for (let c = 0; c < colCount; c++) hdrs.push(sheet.getCell(0, c).value);
+        console.error('   Headers:', hdrs.join(' | '));
         process.exit(1);
     }
 
@@ -163,82 +146,69 @@ async function main() {
     console.log(`   Visual Asset → col ${imgCol}  (${colIndexToLetter(imgCol + 1)})`);
     console.log(`   Tags         → col ${tagsCol === -1 ? 'N/A' : tagsCol + ' (' + colIndexToLetter(tagsCol + 1) + ')'}\n`);
 
-    // 4. Iterate rows, update cell values IN MEMORY (no API calls yet)
-    let updated = 0, skipped = 0;
+    // 4. Update cells in memory — zero API calls per cell
+    let updated = 0, skippedImg = 0, skippedBlank = 0;
 
-    for (let r = 1; r < rowCount; r++) {  // r=0 is the header
-        const nameCell = sheet.getCell(r, nameCol);
-        const moduleName = (nameCell.value || '').toString().trim();
+    for (let r = 1; r < rowCount; r++) {
+        const moduleName = (sheet.getCell(r, nameCol).value || '').toString().trim();
 
-        // Skip blank rows or header-like rows
         if (!moduleName || /^module\s*name$/i.test(moduleName)) {
-            skipped++;
+            skippedBlank++;
             continue;
         }
 
-        const imgCell  = sheet.getCell(r, imgCol);
+        // --- Visual Asset ---
+        const imgCell    = sheet.getCell(r, imgCol);
         const currentImg = (imgCell.value || '').toString().trim();
 
-        // Skip rows already using the correct modvault.games URL
-        if (MODVAULT_PATTERN.test(currentImg)) {
-            skipped++;
-            continue;
+        let imgUpdated = false;
+        if (!MODVAULT_PATTERN.test(currentImg)) {
+            imgCell.value = `${BASE_IMG_URL}${toSlug(moduleName)}.jpg`;
+            imgUpdated    = true;
+        } else {
+            skippedImg++;
         }
 
-        // Generate values
-        const slug   = toSlug(moduleName);
-        const newImg = `${BASE_IMG_URL}${slug}.jpg`;
-
-        // Update Visual Asset cell in memory
-        imgCell.value = newImg;
-
-        // Update Tags cell in memory (if column exists)
+        // --- Tags: keep originals + append 3 mod keywords ONLY ---
         if (tagsCol !== -1) {
             const tagsCell    = sheet.getCell(r, tagsCol);
-            const existingTag = (tagsCell.value || '').toString().trim();
-            tagsCell.value    = buildSeoTags(moduleName, existingTag);
+            const currentTags = (tagsCell.value || '').toString().trim();
+            tagsCell.value    = buildSeoTags(currentTags);
         }
 
         updated++;
 
-        if (updated % 500 === 0) {
-            console.log(`   ↳ Prepared ${updated} rows…`);
-        }
+        if (updated % 500 === 0) process.stdout.write(`   ↳ Prepared ${updated} rows…\n`);
     }
 
     console.log(`\n📊 Summary:`);
-    console.log(`   Cells to update : ${updated} rows × ${tagsCol !== -1 ? 2 : 1} cols = ${updated * (tagsCol !== -1 ? 2 : 1)} cells`);
-    console.log(`   Already correct : ${skipped}`);
+    console.log(`   Rows processed  : ${updated}`);
+    console.log(`   Img already set : ${skippedImg}`);
+    console.log(`   Blank rows      : ${skippedBlank}\n`);
 
     if (updated === 0) {
-        console.log('\n🎉 All rows already have modvault.games URLs! Nothing to save.');
+        console.log('🎉 Nothing to update!');
         return;
     }
 
     // 5. Save ALL changes in ONE batchUpdate API call
-    console.log('\n💾 Sending ONE batchUpdate to Google Sheets (all cells at once)…');
+    console.log('💾 Sending batchUpdate to Google Sheets (single API call)…');
     await sheet.saveUpdatedCells();
     console.log('   ✓ Done!\n');
 
     console.log('╔══════════════════════════════════════════════════════╗');
-    console.log(`║  ✅ SUCCESS — ${String(updated).padEnd(6)} rows updated in Google Sheets  ║`);
-    console.log('╚══════════════════════════════════════════════════════╝');
-    console.log('\n📌 Next: run  node generate-games-json.js  to sync games.json\n');
+    console.log(`║  ✅ SUCCESS — ${String(updated).padEnd(6)} rows updated                   ║`);
+    console.log('╚══════════════════════════════════════════════════════╝\n');
+    console.log('📌 Next: run  node generate-games-json.js  to sync games.json\n');
 }
 
-/** Convert 0-based column index to A1 column letter (0→A, 25→Z, 26→AA…) */
 function colIndexToLetter(n) {
     let result = '';
-    while (n > 0) {
-        n--;
-        result = String.fromCharCode(65 + (n % 26)) + result;
-        n = Math.floor(n / 26);
-    }
+    while (n > 0) { n--; result = String.fromCharCode(65 + (n % 26)) + result; n = Math.floor(n / 26); }
     return result || 'A';
 }
 
 main().catch(err => {
     console.error('\n❌ Fatal error:', err.message || err);
-    if (err.stack) console.error(err.stack);
     process.exit(1);
 });

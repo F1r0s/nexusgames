@@ -37,41 +37,38 @@ function toSlug(moduleName) {
 }
 
 // ── SEO Tags builder ───────────────────────────────────────────────
-function extractModFeatures(title) {
-    const patterns = [
-        /unlimited\s+[\w\/&+]+(?:\s*[,\/]\s*[\w\/&+]+)*/gi,
-        /mod\s+menu/gi, /god\s+mode/gi, /all\s+unlocked/gi,
-        /max\s+level/gi, /free\s+purchase/gi, /anti[-\s]ban/gi,
-        /vip\s+unlocked/gi, /premium\s+unlocked/gi, /infinite\s+\w+/gi,
-        /aimbot/gi, /teleport/gi, /one[-\s]hit\s+kill/gi,
-    ];
-    const found = new Set();
-    for (const p of patterns) {
-        (title.match(p) || []).forEach(m => found.add(m.toLowerCase().trim()));
+// The ONLY 3 SEO keywords we append — nothing game-name specific
+const MOD_KEYWORDS = ['mod apk', 'mod menu', 'hack'];
+
+// Recognized game-type category words (case-insensitive match)
+const VALID_CATEGORIES = new Set([
+    'action','adventure','rpg','role-playing','role playing','strategy','puzzle',
+    'simulation','racing','sport','sports','horror','shooter','arcade','fighting',
+    'casual','survival','mmorpg','moba','jrpg','gacha','creator','sandbox',
+    'hack and slash','multiplayer','new','hot','legendary','match-3','platformer',
+    'card','board','trivia','music','educational','stealth','open world',
+    'battle royale','tower defense','idle','clicker','farming','cooking','dating sim',
+    'vr','augmented reality','word','kids','football','basketball','soccer'
+]);
+
+/**
+ * Keeps ONLY recognized game-type category tags.
+ * Strips game names, mod keywords, and any injected SEO junk.
+ * Appends exactly 3 mod keywords: mod apk, mod menu, hack.
+ */
+function buildSeoTags(existingCategories) {
+    // Keep only tags that match known category words
+    const original = (existingCategories || [])
+        .map(t => (t || '').trim())
+        .filter(t => t && VALID_CATEGORIES.has(t.toLowerCase()));
+
+    // Append 3 mod keywords
+    const seen  = new Set(original.map(t => t.toLowerCase()));
+    const final = [...original];
+    for (const kw of MOD_KEYWORDS) {
+        if (!seen.has(kw)) { seen.add(kw); final.push(kw); }
     }
-    return [...found];
-}
-
-function buildSeoTags(title, existingCategories) {
-    const coreName   = title.replace(/\s*[\(\[].*/g, '').replace(/\s*[-\u2013\u2014]\s*(mod|hack|cheat|unlimited)[\s\S]*/i,'').trim().toLowerCase();
-    const features   = extractModFeatures(title);
-    const existing   = (existingCategories || []).map(c => c.trim()).filter(Boolean);
-    const seen       = new Set(existing.map(t => t.toLowerCase()));
-    const final      = [...existing];
-
-    function add(tag) {
-        const low = tag.toLowerCase().trim();
-        if (!low || low.length > 80 || seen.has(low)) return;
-        seen.add(low); final.push(tag.trim());
-    }
-
-    add(coreName);
-    add(`${coreName} mod`);
-    add(`${coreName} mod apk`);
-    for (const f of features) add(f);
-    add('mod apk'); add('mobile game mod'); add('android mod');
-
-    return final.slice(0, 12);
+    return final;
 }
 
 // ── Main ───────────────────────────────────────────────────────────
@@ -96,8 +93,8 @@ function run() {
             skipped++;
         }
 
-        // Enrich categories/tags with SEO keywords
-        game.categories = buildSeoTags(title, game.categories || []);
+        // Enrich categories with SEO keywords (keep originals, add 3 mod words)
+        game.categories = buildSeoTags(game.categories || []);
     }
 
     fs.writeFileSync(GAMES_FILE, JSON.stringify(games, null, 2), 'utf8');
