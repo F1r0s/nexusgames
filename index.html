@@ -10,7 +10,8 @@
     <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
     <link rel="dns-prefetch" href="https://is1-ssl.mzstatic.com">
     <!-- ═══ PRELOAD — LCP hero background image ═══ -->
-    <link rel="preload" as="image" href="https://i.postimg.cc/Znt8nSBW/Background-photo.png" fetchpriority="high">
+    <link rel="preload" as="image" href="/hero-bg-mobile.webp" media="(max-width: 768px)" fetchpriority="high">
+    <link rel="preload" as="image" href="/hero-bg.webp" media="(min-width: 769px)" fetchpriority="high">
     <!-- ═══ ANALYTICS — Deferred to avoid render-blocking ═══ -->
     <!-- GA and Clarity load AFTER the page paints, not before -->
     <meta charset="UTF-8">
