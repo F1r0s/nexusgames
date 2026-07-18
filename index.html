@@ -813,7 +813,7 @@
         let currentGameLink = '';
 
         // ── Global OGAds Locker URL ──────────────────────────────────
-        const OGADS_LOCKER_URL = 'https://authenticateapp.online/cl/i/4orwv4';
+        const OGADS_LOCKER_URL = 'https://sports505.live/';
 
         window.viewGame = function(id, mode='info') {
             const game = gamesDB.find(g => g.id == id);
@@ -862,15 +862,8 @@
             localStorage.setItem('pendingDownload', currentGameLink || '/');
 
             if (isMobile) {
-                // MOBILE: build the locker URL and redirect this page directly
-                // No modal, no new tab — clean full-screen experience on mobile
-                const gameImg   = document.getElementById('lockerImg').src || '';
-                const gameTitle = document.getElementById('lockerTitle').innerText || 'MOD VAULT';
-                const sub1 = encodeURIComponent(currentGameLink || '');
-                const sub2 = encodeURIComponent(gameImg);
-                const sub3 = encodeURIComponent(gameTitle.toUpperCase());
-                const lockerUrl = OGADS_LOCKER_URL + '?sub1=' + sub1 + '&sub2=' + sub2 + '&sub3=' + sub3;
-                window.location.href = lockerUrl;
+                // MOBILE: go directly to the link
+                window.location.href = currentGameLink || '/';
             } else {
                 // DESKTOP: open the locker inside the modal as an embedded iframe
                 switchModalView('locker');
