@@ -23,40 +23,34 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      # 2. Set up Python 3.11
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      # 3. Cache pip to speed up future runs
-      - name: Cache pip dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-          restore-keys: ${{ runner.os }}-pip-
-
-      # 4. Install Python dependencies
-      - name: Install Dependencies
-        run: pip install -r requirements.txt
-
-      # 5. Run the scraper — credentials are passed as env vars (no file needed)
-      - name: Run Scraper
-        env:
-          GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
-          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
-        run: python scraper.py
-
-      # 6. Set up Node.js and export games.json from the updated sheet
+      # 2. Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
+      # 3. Cache node_modules to speed up runs
+      - name: Cache Node dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # 4. Install Node Dependencies
       - name: Install Node Dependencies
         run: npm ci --omit=dev
 
+      # 5. Run the scraper using Node.js
+      - name: Run Scraper
+        env:
+          GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+          GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
+          SPREADSHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+        run: node auto-fetcher.js
+
+      # 6. Export games.json from Google Sheets
       - name: Export games.json from Google Sheets
         env:
           GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
