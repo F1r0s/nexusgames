@@ -820,8 +820,18 @@
         searchInput.addEventListener('input', e => {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
-                currentFilterText = e.target.value;
+                const query = e.target.value.trim();
+                currentFilterText = query;
                 renderGames();
+
+                // Log search query in the background if it's 3+ characters long
+                if (query.length >= 3) {
+                    fetch('/api/log-search', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: query })
+                    }).catch(err => console.error('Failed to log search:', err));
+                }
             }, 300);
         });
 

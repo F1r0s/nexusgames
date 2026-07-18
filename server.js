@@ -4,6 +4,18 @@ const cors = require('cors');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const { GoogleSpreadsheet } = require('google-spreadsheet');
+
+// Resolve path to credentials file
+let googleCreds = null;
+try {
+    const credsPath = path.join(__dirname, 'google-credentials.json');
+    if (fs.existsSync(credsPath)) {
+        googleCreds = require(credsPath);
+    }
+} catch (e) {
+    console.log('ℹ️ No local google-credentials.json found. Relying on env vars for search logging.');
+}
 
 // --- STATIC JSON DATABASE (Primary — instant, no latency) ---
 const GAMES_JSON_FILE = resolveDataFile('games.json');
@@ -371,6 +383,70 @@ app.get('/api/games', async (req, res) => {
     res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
     res.json(gamesCache.data);
 });
+
+// POST /api/log-search — tracks search terms and user country in Google Sheets
+app.post('/api/log-search', async (req, res) => {
+    const { query } = req.body || {};
+    if (!query || typeof query !== 'string' || query.trim() === '') {
+        return res.status(400).json({ error: 'Query is required' });
+    }
+
+    // Detect user country from headers (e.g. Vercel, Cloudflare, or local header)
+    const country = req.headers['x-vercel-ip-country']
+        || req.headers['cf-ipcountry']
+        || req.headers['x-country-code']
+        || 'Unknown';
+
+    res.json({ success: true, message: 'Logging search query in background' });
+
+    // Handle the sheet update asynchronously in the background so request latency is unaffected
+    logSearchToSheets(query.trim(), country).catch(err => {
+        console.error('[SEARCH LOG ERROR]', err.message);
+    });
+});
+
+async function logSearchToSheets(query, country) {
+    const spreadsheetId = process.env.SEARCH_TRACKING_SPREADSHEET_ID || '1Yqyi32SFUBUhT1xGJMseAv8q5ygtqhpREA7yz6ktlb8';
+    const doc = new GoogleSpreadsheet(spreadsheetId);
+
+    if (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY) {
+        await doc.useServiceAccountAuth({
+            client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+            private_key:  process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
+        });
+    } else if (googleCreds) {
+        await doc.useServiceAccountAuth(googleCreds);
+    } else {
+        throw new Error('Google credentials not available for search logging');
+    }
+
+    await doc.loadInfo();
+
+    // Use sheet named "Searches", fallback to first sheet if it doesn't exist
+    let sheet = doc.sheetsByTitle['Searches'];
+    if (!sheet) {
+        sheet = doc.sheetsByIndex[0];
+    }
+
+    // Initialize headers if sheet is empty
+    try {
+        await sheet.loadHeaderRow();
+    } catch (e) {
+        await sheet.setHeaderRow(['Timestamp', 'Search Query', 'Country']);
+    }
+
+    if (!sheet.headerValues || sheet.headerValues.length === 0) {
+        await sheet.setHeaderRow(['Timestamp', 'Search Query', 'Country']);
+    }
+
+    // Format local timestamp
+    const timestamp = new Date().toLocaleString('en-US', { timeZone: 'UTC' }) + ' UTC';
+    await sheet.addRow({
+        'Timestamp': timestamp,
+        'Search Query': query,
+        'Country': country
+    });
+}
 
 // Background refresh from Google Sheets (only for manual sync)
 async function refreshFromSheets() {
