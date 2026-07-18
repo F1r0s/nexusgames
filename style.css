@@ -44,7 +44,7 @@ body {
 /* ---- HEADER ---- */
 header {
     position:fixed; top:0; width:100%; z-index:1000;
-    background:rgba(8,8,8,0.97); backdrop-filter:blur(20px);
+    background:rgba(8,8,8,0.97); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
     border-bottom:1px solid rgba(255,107,0,0.25);
     padding:10px 20px; display:flex; justify-content:center; align-items:center; height:70px;
 }
@@ -220,6 +220,7 @@ header a[href*="youtube"]:hover { transform:scale(1.12); filter:drop-shadow(0 0 
     background:#111111; border:1px solid rgba(255,255,255,0.07); border-radius:8px; 
     overflow:hidden; position:relative; transition:transform 0.25s, border-color 0.25s, box-shadow 0.25s; 
     cursor:pointer; display:flex; flex-direction:column; min-height:260px;
+    contain:layout style paint;
 }
 .game-card:active { transform:scale(0.97); }
 @media (min-width:768px) {
@@ -498,7 +499,7 @@ footer { padding:30px; text-align:center; color:#444; font-size:0.8rem; margin-t
 .vault-choice span { display:block; padding:12px; color:#fff; font-family:var(--font-head); font-size:0.9rem; }
 
 /* ---- REVEAL ---- */
-.reveal { opacity:0; transform:translateY(24px); transition:opacity 0.7s ease, transform 0.7s ease; will-change:opacity,transform; }
+.reveal { opacity:0; transform:translateY(24px); transition:opacity 0.7s ease, transform 0.7s ease; }
 .reveal.visible { opacity:1; transform:translateY(0); }
 
 /* ---- KEYFRAMES ---- */
@@ -722,4 +723,113 @@ footer { padding:30px; text-align:center; color:#444; font-size:0.8rem; margin-t
     .hud-panel { flex-direction:row; align-items:center; }
     .search-box { flex:1; }
     .hero h1 { font-size:4rem; }
+}
+
+/* =============================================================
+   MOBILE PERFORMANCE OVERRIDES
+   Disables GPU-heavy effects that cause jank and slow LCP/FCP
+============================================================= */
+@media (max-width:768px) {
+    /* ── Kill backdrop-filter on header ──
+       backdrop-filter:blur() triggers a GPU compositing layer
+       on EVERY scroll frame on mobile = major jank source      */
+    header {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(6,6,6,0.99) !important;
+    }
+
+    /* ── Disable vault logo breath/spin animations ──
+       These run 60fps forever, burning battery & CPU          */
+    .vault-svg-wrap {
+        animation: none !important;
+        filter: drop-shadow(0 0 7px rgba(255,107,0,0.4));
+    }
+    .vault-wheel {
+        animation: none !important;
+    }
+
+    /* ── Disable card glow-pulse animations on mobile ──
+       box-shadow animations force GPU repaints every frame   */
+    .game-card.legendary.in-view {
+        animation: none !important;
+        box-shadow: 0 0 25px rgba(255,195,0,0.3) !important;
+    }
+    .game-card.legendary::after {
+        animation: none !important;
+    }
+    .game-card.legendary::before {
+        animation: none !important;
+        background: linear-gradient(90deg,#ffc200,#ffd700) !important;
+    }
+    .game-card.hot-tag.in-view {
+        animation: none !important;
+        box-shadow: 0 0 18px rgba(255,0,85,0.3) !important;
+    }
+    .game-card.hot-tag::before {
+        animation: none !important;
+    }
+    .game-card.new-tag.in-view {
+        animation: none !important;
+        box-shadow: 0 0 15px rgba(10,255,0,0.2) !important;
+    }
+    .game-card.new-tag::before {
+        animation: none !important;
+    }
+
+    /* ── Kill cat-btn border pulse animation ── */
+    .cat-btn.active {
+        animation: none !important;
+        box-shadow: 0 0 14px rgba(255,107,0,0.5) !important;
+    }
+
+    /* ── Simplify hero ── */
+    .hero-content {
+        animation: none !important;
+    }
+
+    /* ── Disable init-btn glitch animation ── */
+    .init-btn::before {
+        animation: none !important;
+    }
+
+    /* ── Disable pack title pulse ── */
+    .pack-header h2 {
+        animation: none !important;
+        text-shadow: 0 0 20px rgba(255,107,0,0.7) !important;
+    }
+
+    /* ── Simplify modal overlay blur ── */
+    .modal-overlay {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(0,0,0,0.96) !important;
+    }
+
+    /* ── Improve touch scroll on category bar ── */
+    .categories {
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+    }
+    .cat-btn {
+        scroll-snap-align: start;
+    }
+
+    /* ── Disable reveal transition on mobile for instant paint ── */
+    .reveal {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
+}
+
+/* Respect prefers-reduced-motion for ALL users */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }

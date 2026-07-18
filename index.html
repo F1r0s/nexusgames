@@ -6,13 +6,16 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://i.postimg.cc" crossorigin>
     <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
     <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
     <link rel="dns-prefetch" href="https://is1-ssl.mzstatic.com">
+    <!-- ═══ PRELOAD — LCP hero background image ═══ -->
+    <link rel="preload" as="image" href="https://i.postimg.cc/Znt8nSBW/Background-photo.png" fetchpriority="high">
     <!-- ═══ ANALYTICS — Deferred to avoid render-blocking ═══ -->
     <!-- GA and Clarity load AFTER the page paints, not before -->
     <meta charset="UTF-8">
     <meta name="google-site-verification" content="ylkEz-PhzT_epqyvhBmZBmTZLCn2FOQcD7U9fu0xhdg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mod Vault - Premium Mobile Game Mods &amp; Unlocked Features</title>
     <meta name="description" content="Discover and download premium mobile game mods, unlocked features, and exclusive game enhancements. The ultimate underground library for mobile gamers. Safe, fast, and secure.">
     <meta name="keywords" content="mobile game mods, game enhancements, unlocked features, premium mods, mobile gaming, android mods, ios mods, game hacks, secure game mods">
@@ -61,13 +64,25 @@
       "description": "Premium mobile game mods, unlocked features, and exclusive game enhancements for mobile gamers."
     }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts — non-blocking load to avoid render-blocking (saves FCP) -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet"></noscript>
     <!-- Font Awesome — loaded async to avoid render-blocking (80KB saved from critical path) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
 
     <link rel="stylesheet" href="/style.min.css">
     <!-- Styles loaded from /style.min.css (minified) -->
     <style>
+        /* Critical path: ensure fonts render immediately with system fallback */
+        @font-face {
+            font-family: 'Orbitron';
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Rajdhani';
+            font-display: swap;
+        }
         html { scroll-behavior: smooth; }
         /* ── HEADER REDESIGN ── */
         header { display:flex; align-items:center; justify-content:space-between; padding:0 28px; height:68px; }
@@ -446,7 +461,7 @@
 
 
 
-    <section class="community-section reveal" style="border-top:none; padding-top:0;">
+    <section class="community-section reveal" style="border-top:none; padding-top:0; content-visibility:auto; contain-intrinsic-size:0 320px;">
         <h2 class="section-title">SYSTEM <span>FEATURES</span></h2>
         <div class="comm-grid">
             <div class="comm-card"><i class="fas fa-shield-alt"></i><h3>Secure Access</h3><p style="color:#888; font-size:0.9rem;">Verified mods and safe downloads only.</p></div>
@@ -455,7 +470,7 @@
         </div>
     </section>
 
-    <section class="seo-section reveal">
+    <section class="seo-section reveal" style="content-visibility:auto; contain-intrinsic-size:0 600px;">
         <div class="seo-intro">
             <h1>The New Era of <span class="keyword-bold">Mobile Games</span></h1>
             <p>Welcome to the ultimate hub for <span class="keyword-bold">Mobile Phone Mobile Games</span>. In today's digital landscape, <span class="keyword-bold">Gaming on mobile</span> has evolved from simple time-wasters into high-fidelity entertainment powerhouses. Whether you are looking for an <span class="keyword-bold">Online free game</span> to play during a quick break or looking for <span class="keyword-bold">popular Mobile Games</span> with deep <span class="keyword-bold">gameplay</span> mechanics, our library offers something for every type of player.</p>
@@ -472,7 +487,7 @@
         </div>
     </section>
 
-    <footer style="background:var(--bg-deep); border-top:1px solid rgba(255,255,255,0.05); padding:50px 20px; text-align:left;">
+    <footer style="background:var(--bg-deep); border-top:1px solid rgba(255,255,255,0.05); padding:50px 20px; text-align:left; content-visibility:auto; contain-intrinsic-size:0 300px;">
         <div style="max-width:1200px; margin:0 auto; display:flex; flex-wrap:wrap; gap:40px; justify-content:space-between;">
             <div style="flex:1; min-width:250px;">
                 <h3 style="font-family:var(--font-head); color:#ffffff; margin-bottom:20px; text-shadow:0 0 15px rgba(255,255,255,0.2);">MOD VAULT</h3>
@@ -1006,7 +1021,8 @@
             // Only eject when we have real game images from the DB. 
             // Skip or reduce frequency on mobile to avoid scroll lag.
             if(!layer||gamesDB.length===0||document.hidden) return;
-            if(isMobile && Math.random() > 0.3) return; // Only 30% chance on mobile
+            if(isMobile && Math.random() > 0.3) return; // Only 30% chance on mobile — skip on very low-end devices too
+            if(isMobile && !('requestIdleCallback' in window)) return; // Skip entirely on devices without rIC support
 
             const logo=document.getElementById('vaultLogo'); if(!logo) return;
             const lr=logo.getBoundingClientRect(), ox=lr.left+lr.width/2, oy=lr.top+lr.height/2;
@@ -1027,6 +1043,11 @@
             });
         }
         setInterval(lightEject, 7000); // Increased interval from 5s to 7s
+
+        /* Add passive touch/scroll listeners for smoother mobile scroll */
+        document.addEventListener('touchstart', function(){}, {passive: true});
+        document.addEventListener('touchmove', function(){}, {passive: true});
+        document.addEventListener('wheel', function(){}, {passive: true});
 
         /* IntersectionObserver for .reveal */
         const revealObserver = new IntersectionObserver(entries=>{
