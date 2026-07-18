@@ -84,7 +84,6 @@ const VALID_CATEGORIES = new Set([
 /**
  * Keeps ONLY recognized game-type category tags (Action, RPG etc.).
  * Strips game names, mod keywords, and any injected SEO junk from before.
- * Appends exactly: "mod apk", "mod menu", "hack"
  */
 function buildSeoTags(existingTags) {
     const original = (existingTags || '')
@@ -92,12 +91,7 @@ function buildSeoTags(existingTags) {
         .map(t => t.trim())
         .filter(t => t && VALID_CATEGORIES.has(t.toLowerCase()));
 
-    const seen  = new Set(original.map(t => t.toLowerCase()));
-    const final = [...original];
-    for (const kw of MOD_KEYWORDS) {
-        if (!seen.has(kw)) { seen.add(kw); final.push(kw); }
-    }
-    return final.join(', ');
+    return original.join(', ');
 }
 
 // ── Main ───────────────────────────────────────────────────────────
@@ -157,28 +151,18 @@ async function main() {
             continue;
         }
 
-        // --- Visual Asset ---
-        const imgCell    = sheet.getCell(r, imgCol);
-        const currentImg = (imgCell.value || '').toString().trim();
-
-        let imgUpdated = false;
-        if (!MODVAULT_PATTERN.test(currentImg)) {
-            imgCell.value = `${BASE_IMG_URL}${toSlug(moduleName)}.jpg`;
-            imgUpdated    = true;
-        } else {
-            skippedImg++;
-        }
-
-        // --- Tags: keep originals + append 3 mod keywords ONLY ---
+        // --- Tags: keep ONLY recognized categories/genres (remove mod/hack/etc) ---
         if (tagsCol !== -1) {
             const tagsCell    = sheet.getCell(r, tagsCol);
             const currentTags = (tagsCell.value || '').toString().trim();
-            tagsCell.value    = buildSeoTags(currentTags);
+            const newTags = buildSeoTags(currentTags);
+            if (newTags !== currentTags) {
+                tagsCell.value = newTags;
+                updated++;
+            } else {
+                skippedImg++; // Reuse counter as general skip counter
+            }
         }
-
-        updated++;
-
-        if (updated % 500 === 0) process.stdout.write(`   ↳ Prepared ${updated} rows…\n`);
     }
 
     console.log(`\n📊 Summary:`);

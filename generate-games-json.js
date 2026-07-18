@@ -1,40 +1,36 @@
 /**
  * generate-games-json.js
- * Reads fallback_games.csv and generates games.json (static database).
+ * Reads Google Sheets directly using API to generate games.json (static database).
+ * Falls back to local fallback_games.csv if Google Sheets API fails.
  * Run: node generate-games-json.js
  */
 const fs = require('fs');
 const path = require('path');
+const { GoogleSpreadsheet } = require('google-spreadsheet');
 
 const FALLBACK_FILE = path.join(__dirname, 'fallback_games.csv');
 const OUTPUT_FILE   = path.join(__dirname, 'games.json');
 
-// ── SEO Slug Generator ─────────────────────────────────────
-/**
- * Converts a Module Name into an SEO-friendly URL slug.
- * "Rainbow Six Mobile ( Unlimited agents )" → "rainbow-six-mobile"
- * Never modifies the Module Name itself — only used for the img URL.
- */
-function toSlug(moduleName) {
-    if (!moduleName || typeof moduleName !== 'string') return 'game';
-    let name = moduleName
-        .replace(/\s*[\(\[][\s\S]*/g, '') // strip everything from ( or [ onwards
-        .replace(/\s*[-\u2013\u2014]\s*(mod|hack|cheat|unlimited|free|premium|unlocked)[\s\S]*/i, '')
-        .trim();
-    if (!name) name = moduleName;
-    return name
-        .replace(/[àáâãäå]/g,'a').replace(/[èéêë]/g,'e').replace(/[ìíîï]/g,'i')
-        .replace(/[òóôõö]/g,'o').replace(/[ùúûü]/g,'u').replace(/[™®©°]/g,'')
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g,' ')
-        .trim()
-        .replace(/\s+/g,'-')
-        .replace(/-+/g,'-')
-        .replace(/^-+|-+$/g,'');
+const SPREADSHEET_ID =
+    process.env.SPREADSHEET_ID ||
+    '1LSSG-LmD2QehsOB_t-I8eeUXNMTJ10neKu3X4MIX4XU';
+
+// ── Credentials Loader ─────────────────────────────────────────────
+function loadCredentials() {
+    if (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY) {
+        return {
+            client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+            private_key:  process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
+        };
+    }
+    try {
+        return require(path.join(__dirname, 'google-credentials.json'));
+    } catch {
+        return null;
+    }
 }
 
-const MODVAULT_PATTERN = /^https:\/\/modvault\.games\/uploads\//i;
-
+// ── Minimal CSV Parser for Fallback ────────────────────────────────
 function parseCSV(csvText) {
     if (!csvText) return [];
     const result = [], rows = [];
@@ -101,14 +97,7 @@ function parseCSV(csvText) {
             size: colMap.size > -1 ? (cells[colMap.size] || 'N/A') : 'N/A',
             os: (colMap.os > -1 ? (cells[colMap.os] || 'android') : 'android').toLowerCase().split(',').map(s => s.trim()),
             categories: (colMap.tags > -1 ? (cells[colMap.tags] || 'General') : 'General').split(',').map(s => s.trim()),
-            img: (() => {
-                const raw = colMap.img > -1 ? (cells[colMap.img] || '').trim() : '';
-                // Use stored URL only if it's already a proper modvault.games/uploads/ URL
-                if (raw && /^https:\/\/modvault\.games\/uploads\//i.test(raw)) return raw;
-                // Otherwise auto-generate the SEO slug URL from the Module Name
-                const slug = toSlug(title);
-                return `https://modvault.games/uploads/${slug}.jpg`;
-            })(),
+            img: (colMap.img > -1 && cells[colMap.img]) ? cells[colMap.img] : 'https://placehold.co/400x300?text=No+Image',
             link: colMap.link > -1 ? (cells[colMap.link] || '#') : '#',
             desc: colMap.desc > -1 ? (cells[colMap.desc] || 'No description provided.') : 'No description provided.'
         });
@@ -116,30 +105,80 @@ function parseCSV(csvText) {
     return result;
 }
 
-// Generate from Google Sheets instead of a static local file
+// ── Google Sheets API Loader ───────────────────────────────────────
+async function fetchFromSheetsDirect() {
+    const creds = loadCredentials();
+    if (!creds) {
+        throw new Error('No Google service account credentials found.');
+    }
+
+    const doc = new GoogleSpreadsheet(SPREADSHEET_ID);
+    await doc.useServiceAccountAuth(creds);
+    await doc.loadInfo();
+
+    const sheet = doc.sheetsByIndex[0];
+    const rows = await sheet.getRows();
+
+    // Map columns dynamically
+    const headers = sheet.headerValues;
+    const nameKey = headers.find(h => /module|name/i.test(h)) || 'Module Name';
+    const verKey  = headers.find(h => /version|ver/i.test(h)) || 'Version';
+    const sizeKey = headers.find(h => /size|mb|gb/i.test(h)) || 'Size';
+    const osKey   = headers.find(h => /os|system/i.test(h)) || 'OS';
+    const tagsKey = headers.find(h => /tag|categor/i.test(h)) || 'Tags';
+    const imgKey  = headers.find(h => /visual|asset|image/i.test(h)) || 'Visual Asset';
+    const linkKey = headers.find(h => /link|access|download/i.test(h)) || 'Access Link';
+    const descKey = headers.find(h => /log|desc|info/i.test(h)) || 'Data Log';
+
+    const timestamp = Date.now().toString(36);
+
+    return rows
+        .map((row, i) => {
+            const title = (row[nameKey] || '').toString().trim();
+            if (!title || title.toUpperCase() === 'MODULE NAME' || title.toUpperCase() === 'NAME') return null;
+
+            return {
+                id: `g${i + 1}_${timestamp}`,
+                title: title,
+                version: row[verKey] ? row[verKey].toString().trim() : 'v1.0',
+                size: row[sizeKey] ? row[sizeKey].toString().trim() : 'N/A',
+                os: (row[osKey] ? row[osKey].toString() : 'android').toLowerCase().split(',').map(s => s.trim()),
+                categories: (row[tagsKey] ? row[tagsKey].toString() : 'General').split(',').map(s => s.trim()),
+                img: (row[imgKey] ? row[imgKey].toString().trim() : 'https://placehold.co/400x300?text=No+Image'),
+                link: row[linkKey] ? row[linkKey].toString().trim() : '#',
+                desc: row[descKey] ? row[descKey].toString().trim() : 'No description provided.'
+            };
+        })
+        .filter(Boolean);
+}
+
+// ── Generate Main Function ─────────────────────────────────────────
 async function generate() {
     try {
-        console.log('Fetching latest data from Google Sheets...');
-        // We use the same public CSV link that the server uses
-        const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTmd9N77OuTj1k_QFR0hyiqVjxfZvfnYUPO55kUSFN8RyW7MoZNICzc8gGYZuG0uVL_ccPXnG96ltKT/pub?output=csv";
-        const fetchUrl = `${SHEET_URL}&t=${Date.now()}`;
-        
-        const response = await fetch(fetchUrl);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        
-        const csvText = await response.text();
-        if (!csvText || csvText.length < 100) throw new Error("Invalid CSV data received");
-        
-        const games = parseCSV(csvText);
-        
+        console.log('Fetching latest data directly from Google Sheets API...');
+        let games = [];
+        try {
+            games = await fetchFromSheetsDirect();
+            console.log(`✅ Loaded ${games.length} games directly from Google Sheets API.`);
+        } catch (apiErr) {
+            console.warn(`⚠️  Google Sheets API load failed (${apiErr.message}). Falling back to cached CSV/web-published CSV...`);
+            // Web-published CSV fallback
+            const SHEET_URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vTmd9N77OuTj1k_QFR0hyiqVjxfZvfnYUPO55kUSFN8RyW7MoZNICzc8gGYZuG0uVL_ccPXnG96ltKT/pub?output=csv&t=${Date.now()}`;
+            const response = await fetch(SHEET_URL);
+            if (!response.ok) throw new Error(`Web-published CSV returned HTTP ${response.status}`);
+            const csvText = await response.text();
+            games = parseCSV(csvText);
+            
+            // Save CSV to fallback file
+            fs.writeFileSync(FALLBACK_FILE, csvText, 'utf8');
+            console.log(`✅ Updated fallback_games.csv from web-published CSV`);
+        }
+
         if (games.length > 0) {
             fs.writeFileSync(OUTPUT_FILE, JSON.stringify(games, null, 2), 'utf8');
             console.log(`✅ Generated games.json with ${games.length} games (${(fs.statSync(OUTPUT_FILE).size / 1024).toFixed(1)} KB)`);
-            
-            fs.writeFileSync(FALLBACK_FILE, csvText, 'utf8');
-            console.log(`✅ Updated fallback_games.csv`);
         } else {
-            console.error("❌ No games parsed from CSV. Aborting update.");
+            console.error("❌ No games loaded. Aborting update.");
         }
     } catch (err) {
         console.error("❌ Error generating games.json:", err.message);

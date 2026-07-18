@@ -52,23 +52,13 @@ const VALID_CATEGORIES = new Set([
 ]);
 
 /**
- * Keeps ONLY recognized game-type category tags.
- * Strips game names, mod keywords, and any injected SEO junk.
- * Appends exactly 3 mod keywords: mod apk, mod menu, hack.
+ * Keeps ONLY recognized genre/category tags.
+ * Removes mod apk, mod menu, hack and any other injected keywords.
  */
 function buildSeoTags(existingCategories) {
-    // Keep only tags that match known category words
-    const original = (existingCategories || [])
+    return (existingCategories || [])
         .map(t => (t || '').trim())
         .filter(t => t && VALID_CATEGORIES.has(t.toLowerCase()));
-
-    // Append 3 mod keywords
-    const seen  = new Set(original.map(t => t.toLowerCase()));
-    const final = [...original];
-    for (const kw of MOD_KEYWORDS) {
-        if (!seen.has(kw)) { seen.add(kw); final.push(kw); }
-    }
-    return final;
 }
 
 // ── Main ───────────────────────────────────────────────────────────
@@ -78,35 +68,29 @@ function run() {
     const games = JSON.parse(raw);
     console.log(`   Found ${games.length} games\n`);
 
-    let updated = 0, skipped = 0;
+    let tagFixed = 0;
 
     for (const game of games) {
         const title = game.title || '';
-        if (!title) { skipped++; continue; }
+        if (!title) continue;
 
-        // Update img if not already a modvault.games URL
-        if (!MODVAULT_PAT.test(game.img || '')) {
-            const slug   = toSlug(title);
-            game.img     = `${BASE_IMG_URL}${slug}.jpg`;
-            updated++;
-        } else {
-            skipped++;
+        // Fix categories — keep only genre tags
+        const cleaned = buildSeoTags(game.categories || []);
+        if (JSON.stringify(cleaned) !== JSON.stringify(game.categories)) {
+            game.categories = cleaned;
+            tagFixed++;
         }
-
-        // Enrich categories with SEO keywords (keep originals, add 3 mod words)
-        game.categories = buildSeoTags(game.categories || []);
     }
 
     fs.writeFileSync(GAMES_FILE, JSON.stringify(games, null, 2), 'utf8');
 
-    console.log(`✅ games.json updated:`);
-    console.log(`   • ${updated} img fields updated to modvault.games/uploads/ URLs`);
-    console.log(`   • ${skipped} already correct or empty`);
+    console.log(`✅ games.json tags cleaned:`);
+    console.log(`   • ${tagFixed} games had tags stripped to genre-only`);
     console.log(`\n📄 Sample outputs:`);
     games.slice(0, 5).forEach(g => {
         console.log(`   "${g.title}"`);
-        console.log(`     img: ${g.img}`);
-        console.log(`     tags: ${g.categories.slice(0,4).join(', ')}\n`);
+        console.log(`     img:  ${g.img}`);
+        console.log(`     tags: ${g.categories.join(', ')}\n`);
     });
 }
 
