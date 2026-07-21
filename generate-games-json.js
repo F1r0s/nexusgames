@@ -59,47 +59,61 @@ function parseCSV(csvText) {
     }
     if (rows.length === 0) return [];
 
-    let headerRowIndex = -1;
-    let colMap = { name: -1, ver: -1, size: -1, os: -1, tags: -1, img: -1, link: -1, desc: -1 };
-
-    for (let i = 0; i < Math.min(rows.length, 10); i++) {
-        const row = rows[i].map(h => (h || '').trim().toUpperCase());
-        const rowStr = row.join('|');
-        if (rowStr.includes('NAME') || rowStr.includes('MODULE') || rowStr.includes('VISUAL')) {
-            headerRowIndex = i;
-            row.forEach((h, index) => {
-                if (h.includes('NAME') || h.includes('MODULE')) colMap.name = index;
-                else if (h.includes('VER') || h.includes('BUILD')) colMap.ver = index;
-                else if (h.includes('SIZE') || h.includes('MB') || h.includes('GB')) colMap.size = index;
-                else if (h.includes('OS') || h.includes('ARCH') || h.includes('SYSTEM')) colMap.os = index;
-                else if (h.includes('TAG') || h.includes('CAT')) colMap.tags = index;
-                else if (h.includes('VISUAL') || h.includes('IMAGE') || h.includes('ASSET')) colMap.img = index;
-                else if (h.includes('LINK') || h.includes('ACCESS') || h.includes('DOWNLOAD')) colMap.link = index;
-                else if (h.includes('LOG') || h.includes('DESC') || h.includes('INFO')) colMap.desc = index;
-            });
-            break;
-        }
-    }
-
-    if (headerRowIndex === -1) {
-        colMap = { name: 0, ver: 1, size: 2, os: 3, tags: 4, img: 5, link: 6, desc: 7 };
-    }
-
-    for (let i = headerRowIndex + 1; i < rows.length; i++) {
+    for (let i = 1; i < rows.length; i++) {
         const cells = rows[i].map(val => (val || '').trim());
-        const title = colMap.name > -1 ? cells[colMap.name] : '';
+        const title = cells[0] || '';
         if (!title || title.toUpperCase() === 'MODULE NAME' || title.toUpperCase() === 'NAME') continue;
+
+        let version = cells[1] || 'v1.0';
+        let size = 'N/A', osStr = 'android', tagsStr = 'General', img = '', link = '#', desc = '';
+
+        if (cells.length >= 9 || (cells[7] && cells[7].startsWith('http'))) {
+            size    = cells[3] || cells[2] || 'N/A';
+            osStr   = cells[4] || 'android';
+            tagsStr = cells[6] || 'General';
+            img     = cells[7] || 'https://placehold.co/400x300?text=No+Image';
+            link    = cells[8] || '#';
+            desc    = cells[9] || 'No description provided.';
+        } else {
+            size    = cells[2] || 'N/A';
+            osStr   = cells[3] || 'android';
+            tagsStr = cells[4] || 'General';
+            img     = cells[5] || 'https://placehold.co/400x300?text=No+Image';
+            link    = cells[6] || '#';
+            desc    = cells[7] || 'No description provided.';
+        }
+
+        const osArr = [];
+        const lowerOs = osStr.toLowerCase();
+        if (lowerOs.includes('ios') || lowerOs.includes('apple')) osArr.push('ios');
+        if (lowerOs.includes('android') || lowerOs.includes('apk') || osArr.length === 0) osArr.push('android');
+
+        let categories = tagsStr
+            .split(',')
+            .map(s => s.trim())
+            .filter(c => c && !/^android/i.test(c) && !/^\d+\.?\d*/.test(c) && !/^arm/i.test(c));
+
+        if (categories.length === 0) categories = ['General'];
+
+        const slug = toSlug(title);
+        const screenshots = [
+            img,
+            `https://picsum.photos/seed/${slug}-gameplay1/600/350`,
+            `https://picsum.photos/seed/${slug}-gameplay2/600/350`
+        ];
 
         result.push({
             id: 'g' + i + '_' + Date.now().toString(36),
             title: title,
-            version: colMap.ver > -1 ? (cells[colMap.ver] || 'v1.0') : 'v1.0',
-            size: colMap.size > -1 ? (cells[colMap.size] || 'N/A') : 'N/A',
-            os: (colMap.os > -1 ? (cells[colMap.os] || 'android') : 'android').toLowerCase().split(',').map(s => s.trim()),
-            categories: (colMap.tags > -1 ? (cells[colMap.tags] || 'General') : 'General').split(',').map(s => s.trim()),
-            img: (colMap.img > -1 && cells[colMap.img]) ? cells[colMap.img] : 'https://placehold.co/400x300?text=No+Image',
-            link: colMap.link > -1 ? (cells[colMap.link] || '#') : '#',
-            desc: colMap.desc > -1 ? (cells[colMap.desc] || 'No description provided.') : 'No description provided.'
+            slug: slug,
+            version: version,
+            size: size,
+            os: osArr,
+            categories: categories,
+            img: img,
+            screenshots: screenshots,
+            link: link,
+            desc: desc
         });
     }
     return result;
@@ -119,37 +133,87 @@ async function fetchFromSheetsDirect() {
     const sheet = doc.sheetsByIndex[0];
     const rows = await sheet.getRows();
 
-    // Map columns dynamically
-    const headers = sheet.headerValues;
-    const nameKey = headers.find(h => /module|name/i.test(h)) || 'Module Name';
-    const verKey  = headers.find(h => /version|ver/i.test(h)) || 'Version';
-    const sizeKey = headers.find(h => /size|mb|gb/i.test(h)) || 'Size';
-    const osKey   = headers.find(h => /os|system/i.test(h)) || 'OS';
-    const tagsKey = headers.find(h => /tag|categor/i.test(h)) || 'Tags';
-    const imgKey  = headers.find(h => /visual|asset|image/i.test(h)) || 'Visual Asset';
-    const linkKey = headers.find(h => /link|access|download/i.test(h)) || 'Access Link';
-    const descKey = headers.find(h => /log|desc|info/i.test(h)) || 'Data Log';
-
     const timestamp = Date.now().toString(36);
 
     return rows
         .map((row, i) => {
-            const title = (row[nameKey] || '').toString().trim();
+            const raw = row._rawData || [];
+            const title = (raw[0] || '').toString().trim();
             if (!title || title.toUpperCase() === 'MODULE NAME' || title.toUpperCase() === 'NAME') return null;
+
+            let version = raw[1] ? raw[1].toString().trim() : 'v1.0';
+            let size = 'N/A', osStr = 'android', tagsStr = 'General', img = '', link = '#', desc = '';
+
+            // Detect 10-column layout vs 8-column layout
+            if (raw.length >= 9 || (raw[7] && raw[7].toString().startsWith('http'))) {
+                // 10-col: Title, Version, BuildData, Size, OS, Arch, Tags, Image, Link, Desc
+                size    = raw[3] || raw[2] || 'N/A';
+                osStr   = raw[4] || 'android';
+                tagsStr = raw[6] || 'General';
+                img     = raw[7] || 'https://placehold.co/400x300?text=No+Image';
+                link    = raw[8] || '#';
+                desc    = raw[9] || 'No description provided.';
+            } else {
+                // 8-col: Title, Version, Size, OS, Tags, Image, Link, Desc
+                size    = raw[2] || 'N/A';
+                osStr   = raw[3] || 'android';
+                tagsStr = raw[4] || 'General';
+                img     = raw[5] || 'https://placehold.co/400x300?text=No+Image';
+                link    = raw[6] || '#';
+                desc    = raw[7] || 'No description provided.';
+            }
+
+            // Build clean OS array
+            const osArr = [];
+            const lowerOs = osStr.toLowerCase();
+            if (lowerOs.includes('ios') || lowerOs.includes('apple')) osArr.push('ios');
+            if (lowerOs.includes('android') || lowerOs.includes('apk') || osArr.length === 0) osArr.push('android');
+
+            // Clean Categories: filter out OS version junk like "Android 7.0", "Android 6.0 Games", etc.
+            let categories = tagsStr
+                .split(',')
+                .map(s => s.trim())
+                .filter(c => c && !/^android/i.test(c) && !/^\d+\.?\d*/.test(c) && !/^arm/i.test(c));
+
+            if (categories.length === 0) categories = ['General'];
+
+            const slug = toSlug(title);
+            const screenshots = [
+                img,
+                `https://picsum.photos/seed/${slug}-gameplay1/600/350`,
+                `https://picsum.photos/seed/${slug}-gameplay2/600/350`
+            ];
 
             return {
                 id: `g${i + 1}_${timestamp}`,
                 title: title,
-                version: row[verKey] ? row[verKey].toString().trim() : 'v1.0',
-                size: row[sizeKey] ? row[sizeKey].toString().trim() : 'N/A',
-                os: (row[osKey] ? row[osKey].toString() : 'android').toLowerCase().split(',').map(s => s.trim()),
-                categories: (row[tagsKey] ? row[tagsKey].toString() : 'General').split(',').map(s => s.trim()),
-                img: (row[imgKey] ? row[imgKey].toString().trim() : 'https://placehold.co/400x300?text=No+Image'),
-                link: row[linkKey] ? row[linkKey].toString().trim() : '#',
-                desc: row[descKey] ? row[descKey].toString().trim() : 'No description provided.'
+                slug: slug,
+                version: version,
+                size: size,
+                os: osArr,
+                categories: categories,
+                img: img,
+                screenshots: screenshots,
+                link: link,
+                desc: desc
             };
         })
         .filter(Boolean);
+}
+
+function toSlug(title) {
+    if (!title || typeof title !== 'string') return 'game';
+    let name = title
+        .replace(/\s*[\(\[][\s\S]*/g, '')
+        .replace(/\s*[-–—]\s*(mod|hack|cheat|unlimited|free|premium|unlocked)[\s\S]*/i, '')
+        .trim();
+    if (!name) name = title;
+    return name
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
 }
 
 // ── Generate Main Function ─────────────────────────────────────────

@@ -356,31 +356,8 @@ function parseCSVForJson(csvText) {
     }
     if (rows.length === 0) return [];
 
-    let headerRowIndex = -1;
-    let colMap = { name: -1, ver: -1, size: -1, os: -1, tags: -1, img: -1, link: -1, desc: -1 };
-
-    for (let i = 0; i < Math.min(rows.length, 10); i++) {
-        const row = rows[i].map(h => (h || '').trim().toUpperCase());
-        const rowStr = row.join('|');
-        if (rowStr.includes('NAME') || rowStr.includes('MODULE') || rowStr.includes('VISUAL')) {
-            headerRowIndex = i;
-            row.forEach((h, index) => {
-                if (h.includes('NAME') || h.includes('MODULE')) colMap.name = index;
-                else if (h.includes('VER') || h.includes('BUILD')) colMap.ver = index;
-                else if (h.includes('SIZE') || h.includes('MB') || h.includes('GB')) colMap.size = index;
-                else if (h.includes('OS') || h.includes('ARCH') || h.includes('SYSTEM')) colMap.os = index;
-                else if (h.includes('TAG') || h.includes('CAT')) colMap.tags = index;
-                else if (h.includes('VISUAL') || h.includes('IMAGE') || h.includes('ASSET')) colMap.img = index;
-                else if (h.includes('LINK') || h.includes('ACCESS') || h.includes('DOWNLOAD')) colMap.link = index;
-                else if (h.includes('LOG') || h.includes('DESC') || h.includes('INFO')) colMap.desc = index;
-            });
-            break;
-        }
-    }
-
-    if (headerRowIndex === -1) {
-        colMap = { name: 0, ver: 1, size: 2, os: 3, tags: 4, img: 5, link: 6, desc: 7 };
-    }
+    const colMap = { name: 0, ver: 1, size: 2, os: 3, tags: 4, img: 5, link: 6, desc: 7 };
+    const headerRowIndex = 0;
 
     for (let i = headerRowIndex + 1; i < rows.length; i++) {
         const cells = rows[i].map(val => (val || '').trim());

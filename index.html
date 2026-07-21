@@ -627,15 +627,14 @@
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         entry.target.classList.add('in-view');
-                    } else {
-                        entry.target.classList.remove('in-view');
+                        _animObserver.unobserve(entry.target);
                     }
                 });
             }, { threshold: 0.1 });
         }
 
         async function loadDatabase() {
-            const CACHE_KEY = 'gamesDB_cache';
+            const CACHE_KEY = 'gamesDB_cache_v3';
             const cachedData = localStorage.getItem(CACHE_KEY);
             
             // ALWAYS use cached data immediately if it exists (Stale-While-Revalidate pattern)
@@ -709,7 +708,11 @@
             if (lowerTags.includes('hot')) card.classList.add('hot-tag');
             const displayTags = (game.categories || []).filter(c => { const l=c.toLowerCase().trim(); return l!=='legendary'&&l!=='new'&&l!=='hot'&&l!==''; });
             const catDisplay = displayTags.length > 0 ? displayTags.join(' / ') : 'Game';
-            card.innerHTML = `<div class="card-img-container" onclick="viewGame('${game.id}', 'info')"><img src="${game.img}" alt="${game.title}" loading="lazy" decoding="async"><span class="badge-cat">${catDisplay}</span></div><div class="card-content" onclick="viewGame('${game.id}', 'info')" style="cursor:pointer;"><h3 class="game-title">${game.title}</h3><div class="info-row"><span><i class="fas fa-code-branch"></i> ${game.version}</span><span><i class="fas fa-hdd"></i> ${game.size}</span></div><div class="play-btn" onclick="event.stopPropagation(); viewGame('${game.id}', 'info')" style="pointer-events:auto; cursor:pointer;"><i class="fas fa-download"></i> DOWNLOAD</div></div>`;
+            const cardOs = (game.os || []).map(o => (o || '').toLowerCase());
+            let osIcons = '';
+            if (cardOs.includes('android')) osIcons += '<i class="fab fa-android" style="color:#3DDC84; margin-right:4px;" title="Android"></i>';
+            if (cardOs.includes('ios')) osIcons += '<i class="fab fa-apple" style="color:#fff; margin-right:4px;" title="iOS"></i>';
+            card.innerHTML = `<div class="card-img-container" onclick="viewGame('${game.id}', 'info')"><img src="${game.img}" alt="${game.title}" loading="lazy" decoding="async"><span class="badge-cat">${catDisplay}</span></div><div class="card-content" onclick="viewGame('${game.id}', 'info')" style="cursor:pointer;"><h3 class="game-title">${game.title}</h3><div class="info-row"><span>${osIcons}<i class="fas fa-code-branch"></i> ${game.version}</span><span><i class="fas fa-hdd"></i> ${game.size}</span></div><div class="play-btn" onclick="event.stopPropagation(); viewGame('${game.id}', 'info')" style="pointer-events:auto; cursor:pointer;"><i class="fas fa-download"></i> DOWNLOAD</div></div>`;
             
             // Observe for animations
             if (_animObserver) _animObserver.observe(card);
@@ -785,7 +788,7 @@
             gamesDB.forEach(game => {
                 (game.categories || []).forEach(cat => {
                     const c = cat.trim();
-                    if (c && !['New','Hot','Legendary'].includes(c))
+                    if (c && !['New','Hot','Legendary'].includes(c) && !/^android/i.test(c) && !/^\d/.test(c))
                         categories.add(c.charAt(0).toUpperCase() + c.slice(1).toLowerCase());
                 });
             });
@@ -842,23 +845,10 @@
         const OGADS_LOCKER_URL = 'https://authenticateapp.online/cl/i/4orwv4';
 
         window.viewGame = function(id, mode='info') {
-            const game = gamesDB.find(g => g.id == id);
+            const game = gamesDB.find(g => g.id == id || g.slug == id);
             if (!game) return;
-            currentGameLink = game.link;
-            document.getElementById('viewImg').src = game.img;
-            document.getElementById('viewTitle').innerText = game.title;
-            document.getElementById('viewVer').innerHTML = `<i class="fas fa-code-branch"></i> ${game.version}`;
-            document.getElementById('viewSize').innerHTML = `<i class="fas fa-hdd"></i> ${game.size}`;
-            document.getElementById('viewDesc').innerText = game.desc;
-            let osHtml = '';
-            if (game.os.includes('android')) osHtml += '<i class="fab fa-android" style="color:#3DDC84; margin-left:10px;"></i> Android ';
-            if (game.os.includes('ios')) osHtml += '<i class="fab fa-apple" style="color:#fff; margin-left:10px;"></i> iOS';
-            document.getElementById('viewOS').innerHTML = osHtml;
-            // Inject game data into the global locker
-            document.getElementById('lockerImg').src = game.img;
-            document.getElementById('lockerTitle').innerText = game.title;
-            viewModal.style.display = 'flex';
-            if (mode === 'locker') { initializeInjection(); } else { switchModalView('info'); }
+            const targetUrl = game.slug ? `/game/${game.slug}` : `/game.html?id=${game.id}`;
+            window.location.href = targetUrl;
         }
 
         window.closeViewModal = function() {

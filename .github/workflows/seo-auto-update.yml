@@ -68,11 +68,19 @@ jobs:
           SPREADSHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
         run: node generate-games-json.js
 
-      # 7. Commit updated games.json back to the repo
-      - name: Commit updated games.json
+      # 7. Scrape real Google Play Store gameplay screenshots for games
+      - name: Fetch Google Play Store Screenshots
+        run: node scripts/fetch-playstore-screenshots.js
+
+      # 8. Generate fresh sitemap.xml for SEO indexing
+      - name: Generate sitemap.xml
+        run: node scripts/generate-sitemap.js
+
+      # 8. Commit updated games.json & sitemap.xml back to the repo
+      - name: Commit updated games.json & sitemap.xml
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add games.json fallback_games.csv
-          git diff --cached --quiet || git commit -m "🔍 SEO: auto-update Visual Assets & Tags [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+          git add games.json fallback_games.csv sitemap.xml
+          git diff --cached --quiet || git commit -m "🔍 SEO: auto-update Visual Assets, Tags & Sitemap [$(date -u '+%Y-%m-%d %H:%M UTC')]"
           git push
