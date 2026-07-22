@@ -94,6 +94,26 @@ function buildSeoTags(existingTags) {
     return original.join(', ');
 }
 
+// Helper: Retries a promise-returning function with exponential backoff
+async function withRetry(fn, retries = 5, initialDelay = 2000) {
+    let attempt = 0;
+    while (true) {
+        try {
+            return await fn();
+        } catch (err) {
+            attempt++;
+            const status = err.response ? err.response.status : null;
+            const isRetryable = !status || status === 503 || status === 500 || status === 429 || status === 502 || status === 504 || err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT';
+            if (attempt > retries || !isRetryable) {
+                throw err;
+            }
+            const delay = initialDelay * Math.pow(2, attempt - 1);
+            console.warn(`  ⚠️ Google API network blip (attempt ${attempt}/${retries}): ${err.message}. Retrying in ${delay}ms...`);
+            await new Promise(r => setTimeout(r, delay));
+        }
+    }
+}
+
 // ── Main ───────────────────────────────────────────────────────────
 async function main() {
     console.log('╔══════════════════════════════════════════════════════╗');
@@ -106,7 +126,7 @@ async function main() {
     console.log('🔌 Connecting to Google Sheets…');
     const doc = new GoogleSpreadsheet(SPREADSHEET_ID);
     await doc.useServiceAccountAuth(creds);
-    await doc.loadInfo();
+    await withRetry(() => doc.loadInfo());
 
     const sheet    = doc.sheetsByIndex[0];
     const rowCount = sheet.rowCount;
@@ -115,7 +135,7 @@ async function main() {
 
     // 2. Load ALL cells in one read request
     console.log('📦 Loading all cells…');
-    await sheet.loadCells(`A1:${colIndexToLetter(colCount)}${rowCount}`);
+    await withRetry(() => sheet.loadCells(`A1:${colIndexToLetter(colCount)}${rowCount}`));
     console.log('   ✓ All cells loaded\n');
 
     // 3. Detect column positions from header row
@@ -177,7 +197,7 @@ async function main() {
 
     // 5. Save ALL changes in ONE batchUpdate API call
     console.log('💾 Sending batchUpdate to Google Sheets (single API call)…');
-    await sheet.saveUpdatedCells();
+    await withRetry(() => sheet.saveUpdatedCells());
     console.log('   ✓ Done!\n');
 
     console.log('╔══════════════════════════════════════════════════════╗');

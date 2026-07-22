@@ -30,6 +30,7 @@
     <meta property="twitter:image" content="https://modvault.games/image.png">
 
     <!-- Favicons -->
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="icon" type="image/png" href="/favicon-512.png" sizes="512x512">
     <link rel="icon" type="image/png" href="/favicon-32.png" sizes="32x32">
@@ -57,6 +58,7 @@
     </script>
 
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
@@ -548,66 +550,49 @@ footer a:hover { text-shadow: 0 0 10px rgba(255,107,0,0.7); }
 
 <!-- ═══ HEADER ═══ -->
 <header>
-    <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; width:100%; max-width:1200px; margin:0 auto;">
-        <div></div>
-        <a href="/" class="logo" style="text-decoration:none; justify-self:center;">
-            <span class="brand-word">Mod</span>
-            <span class="vault-svg-wrap" aria-hidden="true">
-                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <radialGradient id="vb2" cx="38%" cy="28%" r="72%">
-                            <stop offset="0%" stop-color="#3d3d3d"/>
-                            <stop offset="55%" stop-color="#1c1c1c"/>
-                            <stop offset="100%" stop-color="#060606"/>
-                        </radialGradient>
-                        <radialGradient id="vr2" cx="28%" cy="22%" r="65%">
-                            <stop offset="0%" stop-color="rgba(255,255,255,0.14)"/>
-                            <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
-                        </radialGradient>
-                        <radialGradient id="vh2" cx="32%" cy="28%" r="70%">
-                            <stop offset="0%" stop-color="#ffffff"/>
-                            <stop offset="45%" stop-color="#d4d4d4"/>
-                            <stop offset="100%" stop-color="#888"/>
-                        </radialGradient>
-                        <radialGradient id="vab2" cx="30%" cy="25%" r="75%">
-                            <stop offset="0%" stop-color="rgba(255,107,0,0.35)"/>
-                            <stop offset="100%" stop-color="rgba(255,107,0,0)"/>
-                        </radialGradient>
-                    </defs>
-                    <circle cx="24" cy="24" r="22" fill="url(#vb2)"/>
-                    <circle cx="24" cy="24" r="22" fill="url(#vab2)"/>
-                    <circle cx="24" cy="24" r="22" fill="url(#vr2)"/>
-                    <circle cx="24" cy="24" r="22" stroke="rgba(255,255,255,0.5)" stroke-width="1.2"/>
-                    <circle cx="24" cy="24" r="17.5" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
-                    <circle cx="24" cy="24" r="14" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+    <div class="header-inner">
+        <a href="/" class="logo" style="text-decoration:none;">
+            <span class="brand-word">MOD</span>
+            <span class="vault-svg-wrap">
+                <svg viewBox="0 0 48 48" fill="none">
+                    <circle cx="24" cy="24" r="21" stroke="#FF6B00" stroke-width="2"/>
+                    <circle cx="24" cy="24" r="14" stroke="rgba(255,107,0,0.5)" stroke-width="1.5"/>
                     <g class="vault-wheel">
-                        <line x1="24" y1="10" x2="24" y2="14.5" stroke="rgba(255,107,0,0.9)" stroke-width="2.2" stroke-linecap="round"/>
-                        <line x1="24" y1="33.5" x2="24" y2="38" stroke="rgba(255,107,0,0.9)" stroke-width="2.2" stroke-linecap="round"/>
-                        <line x1="10" y1="24" x2="14.5" y2="24" stroke="rgba(255,107,0,0.9)" stroke-width="2.2" stroke-linecap="round"/>
-                        <line x1="33.5" y1="24" x2="38" y2="24" stroke="rgba(255,107,0,0.9)" stroke-width="2.2" stroke-linecap="round"/>
-                        <line x1="14.5" y1="14.5" x2="17.8" y2="17.8" stroke="rgba(255,200,100,0.5)" stroke-width="1.4" stroke-linecap="round"/>
-                        <line x1="30.2" y1="30.2" x2="33.5" y2="33.5" stroke="rgba(255,200,100,0.5)" stroke-width="1.4" stroke-linecap="round"/>
-                        <line x1="33.5" y1="14.5" x2="30.2" y2="17.8" stroke="rgba(255,200,100,0.5)" stroke-width="1.4" stroke-linecap="round"/>
-                        <line x1="17.8" y1="30.2" x2="14.5" y2="33.5" stroke="rgba(255,200,100,0.5)" stroke-width="1.4" stroke-linecap="round"/>
+                        <rect x="22" y="5" width="4" height="6" rx="2" fill="#FF6B00"/>
+                        <rect x="22" y="37" width="4" height="6" rx="2" fill="#FF6B00"/>
+                        <rect x="5" y="22" width="6" height="4" rx="2" fill="#FF6B00"/>
+                        <rect x="37" y="22" width="6" height="4" rx="2" fill="#FF6B00"/>
                     </g>
-                    <circle cx="24" cy="24" r="4.2" fill="url(#vh2)"/>
-                    <circle cx="24" cy="24" r="1.8" fill="rgba(0,0,0,0.7)"/>
-                    <ellipse cx="17" cy="15.5" rx="4.5" ry="3" fill="rgba(255,255,255,0.07)" transform="rotate(-30 17 15.5)"/>
-                    <circle cx="24" cy="2.5" r="1.6" fill="rgba(255,107,0,0.5)"/>
-                    <circle cx="24" cy="45.5" r="1.6" fill="rgba(255,107,0,0.5)"/>
-                    <circle cx="2.5" cy="24" r="1.6" fill="rgba(255,107,0,0.5)"/>
-                    <circle cx="45.5" cy="24" r="1.6" fill="rgba(255,107,0,0.5)"/>
+                    <circle cx="24" cy="24" r="3" fill="#FF6B00"/>
                 </svg>
             </span>
-            <span class="brand-word">Vault</span>
+            <span class="brand-word" style="color:var(--amber);">VAULT</span>
         </a>
-        <div style="justify-self:end; display:flex; gap:8px; align-items:center; flex-wrap:nowrap;">
-            <a href="/" class="nav-btn"><i class="fas fa-home"></i><span class="nav-label">Home</span></a>
-            <a href="/best-games.html" class="nav-btn active-nav"><i class="fas fa-trophy"></i><span class="nav-label">Best Games</span></a>
+
+        <!-- DESKTOP NAV -->
+        <nav class="desktop-nav">
+            <a href="/news.html" class="nav-btn"><i class="fas fa-newspaper"></i><span class="nav-label">News</span></a>
+            <a href="/best-games.html" class="nav-btn active-nav"><i class="fas fa-trophy"></i><span class="nav-label">Top Games in 2026</span></a>
             <a href="/game-mode-guide.html" class="nav-btn"><i class="fas fa-question-circle"></i><span class="nav-label">Guide</span></a>
-        </div>
+            <a href="/support.html" class="nav-btn"><i class="fas fa-headset"></i><span class="nav-label">Support</span></a>
+            <a href="/privacy.html" class="nav-btn"><i class="fas fa-shield-alt"></i><span class="nav-label">Privacy</span></a>
+        </nav>
+
+        <!-- HAMBURGER (mobile only) -->
+        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" onclick="toggleMobileMenu()">
+            <span></span><span></span><span></span>
+        </button>
     </div>
 </header>
+
+<!-- MOBILE MENU DRAWER -->
+<div id="mobileMenu">
+    <a href="/news.html" onclick="toggleMobileMenu()"><i class="fas fa-newspaper" style="margin-right:10px;color:var(--amber);"></i>News</a>
+    <a href="/best-games.html" onclick="toggleMobileMenu()"><i class="fas fa-trophy" style="margin-right:10px;color:var(--amber);"></i>Top Games in 2026</a>
+    <a href="/game-mode-guide.html" onclick="toggleMobileMenu()"><i class="fas fa-question-circle" style="margin-right:10px;color:var(--amber);"></i>Guide</a>
+    <a href="/support.html" onclick="toggleMobileMenu()"><i class="fas fa-headset" style="margin-right:10px;color:var(--amber);"></i>Support</a>
+    <a href="/privacy.html" onclick="toggleMobileMenu()"><i class="fas fa-shield-alt" style="margin-right:10px;color:var(--amber);"></i>Privacy</a>
+</div>
 
 <!-- ═══ HERO ═══ -->
 <section class="page-hero">
@@ -925,6 +910,15 @@ function initPillHighlight(sectionIds) {
         const el = document.getElementById(id);
         if (el) pillObserver.observe(el);
     });
+}
+
+function toggleMobileMenu() {
+    const btn = document.getElementById('hamburgerBtn');
+    const menu = document.getElementById('mobileMenu');
+    if (btn && menu) {
+        btn.classList.toggle('open');
+        menu.classList.toggle('open');
+    }
 }
 
 // Initialize

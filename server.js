@@ -467,6 +467,24 @@ app.get('/api/games', async (req, res) => {
     res.json(gamesCache.data);
 });
 
+// ══════════════════════════════════════════════════════════════
+// NEWS API — Serves scraped mobile gaming news (news.json)
+// ══════════════════════════════════════════════════════════════
+app.get('/api/news', (req, res) => {
+    const newsPath = path.join(__dirname, 'news.json');
+    if (fs.existsSync(newsPath)) {
+        try {
+            const data = fs.readFileSync(newsPath, 'utf8');
+            res.setHeader('Content-Type', 'application/json');
+            res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=1200');
+            return res.send(data);
+        } catch (e) {
+            console.error('[NEWS API ERROR]', e.message);
+        }
+    }
+    res.json([]);
+});
+
 // POST /api/log-search — tracks search terms and user country in Google Sheets
 app.post('/api/log-search', async (req, res) => {
     const { query } = req.body || {};
@@ -488,6 +506,26 @@ app.post('/api/log-search', async (req, res) => {
     });
 });
 
+// Helper: Retries a promise-returning function with exponential backoff
+async function withRetry(fn, retries = 5, initialDelay = 2000) {
+    let attempt = 0;
+    while (true) {
+        try {
+            return await fn();
+        } catch (err) {
+            attempt++;
+            const status = err.response ? err.response.status : null;
+            const isRetryable = !status || status === 503 || status === 500 || status === 429 || status === 502 || status === 504 || err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT';
+            if (attempt > retries || !isRetryable) {
+                throw err;
+            }
+            const delay = initialDelay * Math.pow(2, attempt - 1);
+            console.warn(`[RETRY] Google API call failed (attempt ${attempt}/${retries}): ${err.message}. Retrying in ${delay}ms...`);
+            await new Promise(r => setTimeout(r, delay));
+        }
+    }
+}
+
 async function logSearchToSheets(query, country) {
     const spreadsheetId = process.env.SEARCH_TRACKING_SPREADSHEET_ID || '1Yqyi32SFUBUhT1xGJMseAv8q5ygtqhpREA7yz6ktlb8';
     const doc = new GoogleSpreadsheet(spreadsheetId);
@@ -503,7 +541,7 @@ async function logSearchToSheets(query, country) {
         throw new Error('Google credentials not available for search logging');
     }
 
-    await doc.loadInfo();
+    await withRetry(() => doc.loadInfo());
 
     // Use sheet named "Searches", fallback to first sheet if it doesn't exist
     let sheet = doc.sheetsByTitle['Searches'];
@@ -513,22 +551,23 @@ async function logSearchToSheets(query, country) {
 
     // Initialize headers if sheet is empty
     try {
-        await sheet.loadHeaderRow();
+        await withRetry(() => sheet.loadHeaderRow());
     } catch (e) {
-        await sheet.setHeaderRow(['Timestamp', 'Search Query', 'Country']);
+        await withRetry(() => sheet.setHeaderRow(['Timestamp', 'Search Query', 'Country']));
     }
 
     if (!sheet.headerValues || sheet.headerValues.length === 0) {
-        await sheet.setHeaderRow(['Timestamp', 'Search Query', 'Country']);
+        await withRetry(() => sheet.setHeaderRow(['Timestamp', 'Search Query', 'Country']));
     }
 
     // Format local timestamp
     const timestamp = new Date().toLocaleString('en-US', { timeZone: 'UTC' }) + ' UTC';
-    await sheet.addRow({
+    await withRetry(() => sheet.addRow({
         'Timestamp': timestamp,
         'Search Query': query,
         'Country': country
-    });
+    }));
+    console.log(`[SEARCH LOG] Logged search query "${query}" from ${country} to Google Sheets.`);
 }
 
 // Background refresh from Google Sheets (only for manual sync)
@@ -635,20 +674,40 @@ function parseCSV(csvText) {
         // Skip empty or header-copy rows
         if (!title || title.toUpperCase() === "MODULE NAME" || title.toUpperCase() === "NAME") continue;
 
+        const osStr = colMap.os > -1 ? (cells[colMap.os] || "android") : "android";
+        const tagsStr = colMap.tags > -1 ? (cells[colMap.tags] || "General") : "General";
+        const img = (colMap.img > -1 && cells[colMap.img]) ? cells[colMap.img] : "https://placehold.co/400x300?text=No+Image";
+
+        // Filter out Android 8.0, 8.1, 9.0, 9 glitch games and missing photos
+        if (!img || img.includes('placehold.co') || img.includes('placeholder')) continue;
+        const combined = `${osStr} ${tagsStr} ${title}`.toLowerCase();
+        if (/\bandroid\s*(8\.0|8\.1|9\.0|9)\b/i.test(combined) || /\b(8\.0|8\.1|9\.0)\b/i.test(String(osStr))) {
+            continue;
+        }
+
         result.push({
             id: 'g' + i + '_' + Date.now().toString(36),
             title: title,
             version: colMap.ver > -1 ? (cells[colMap.ver] || "v1.0") : "v1.0",
             size: colMap.size > -1 ? (cells[colMap.size] || "N/A") : "N/A",
-            os: (colMap.os > -1 ? (cells[colMap.os] || "android") : "android").toLowerCase().split(',').map(s=>s.trim()),
-            categories: (colMap.tags > -1 ? (cells[colMap.tags] || "General") : "General").split(',').map(s=>s.trim()),
-            img: (colMap.img > -1 && cells[colMap.img]) ? cells[colMap.img] : "https://placehold.co/400x300?text=No+Image",
+            os: osStr.toLowerCase().split(',').map(s=>s.trim()),
+            categories: tagsStr.split(',').map(s=>s.trim()),
+            img: img,
             link: colMap.link > -1 ? (cells[colMap.link] || "#") : "#",
             desc: colMap.desc > -1 ? (cells[colMap.desc] || "No description provided.") : "No description provided."
         });
     }
 
-    return result;
+    // Deduplicate games by cleaned title
+    const seen = new Map();
+    for (const g of result) {
+        const slug = g.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-');
+        if (!seen.has(slug)) {
+            seen.set(slug, g);
+        }
+    }
+
+    return Array.from(seen.values());
 }
 
 

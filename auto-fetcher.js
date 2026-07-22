@@ -217,9 +217,45 @@ async function scrapeAllGames() {
     return games;
 }
 
-// ─────────────────────────────────────────────────────────────
-// GOOGLE SHEETS  → connect, deduplicate, append
-// ─────────────────────────────────────────────────────────────
+// Helper: Retries a promise-returning function with exponential backoff
+async function withRetry(fn, retries = 5, initialDelay = 2000) {
+    let attempt = 0;
+    while (true) {
+        try {
+            return await fn();
+        } catch (err) {
+            attempt++;
+            const status = err.response ? err.response.status : null;
+            const isRetryable = !status || status === 503 || status === 500 || status === 429 || status === 502 || status === 504 || err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT';
+            if (attempt > retries || !isRetryable) {
+                throw err;
+            }
+            const delay = initialDelay * Math.pow(2, attempt - 1);
+            console.warn(`  ⚠️ Google API network blip (attempt ${attempt}/${retries}): ${err.message}. Retrying in ${delay}ms...`);
+            await sleep(delay);
+        }
+    }
+}
+
+/** Filter out glitch games (e.g. Android 8.0, 8.1, 9.0, 9 requirements or missing images) */
+function isJunkGame(game) {
+    if (!game) return true;
+    const name = game['Module Name'] || game.title || '';
+    const os = game['OS'] || game.os || '';
+    const tags = game['Tags'] || game.categories || '';
+    const img = game['Visual Asset'] || game.img || '';
+
+    if (!name || name === 'Unknown') return true;
+    // Missing or placeholder image
+    if (!img || img.includes('placehold.co') || img.includes('placeholder')) return true;
+
+    // Check for Android 8.0, 8.1, 9.0, 9 glitch entries
+    const combined = `${os} ${tags} ${name}`.toLowerCase();
+    if (/\bandroid\s*(8\.0|8\.1|9\.0|9)\b/i.test(combined) || /\b(8\.0|8\.1|9\.0)\b/i.test(String(os))) {
+        return true;
+    }
+    return false;
+}
 
 /** Unique dedup key for a game row (case-insensitive). */
 const dedupKey = (name, version) =>
@@ -246,29 +282,33 @@ async function pushToSheets(games) {
         throw new Error('No Google Sheets credentials available!');
     }
 
-    await doc.loadInfo();
+    await withRetry(() => doc.loadInfo());
     const sheet = doc.sheetsByIndex[0];
 
     // Ensure header row
-    const headerRow = await sheet.headerValues;
+    const headerRow = await withRetry(() => sheet.headerValues);
     if (!headerRow || !headerRow.length) {
-        await sheet.setHeaderRow([
+        await withRetry(() => sheet.setHeaderRow([
             'Module Name', 'Version', 'Build Data', 'Size',
             'OS', 'Architecture', 'Tags', 'Visual Asset', 'Access Link', 'Data Log'
-        ]);
+        ]));
         console.log('Header row created.');
     }
 
     // Build dedup set from existing rows
-    const existing = await sheet.getRows();
+    const existing = await withRetry(() => sheet.getRows());
     const existingKeys = new Set(
         existing.map(r => dedupKey(r['Module Name'], r['Version']))
     );
     console.log(`Sheet has ${existingKeys.size} existing entries.`);
 
-    // Filter out duplicates
+    // Filter out duplicates and junk games (Android 8/9 glitch games)
     const newGames = [];
     for (const g of games) {
+        if (isJunkGame(g)) {
+            console.log(`  SKIP (glitch/junk game): ${g['Module Name'] || g.title}`);
+            continue;
+        }
         const key = dedupKey(g['Module Name'], g['Version']);
         if (!existingKeys.has(key)) {
             newGames.push(g);
@@ -283,8 +323,20 @@ async function pushToSheets(games) {
         return;
     }
 
-    await sheet.addRows(newGames);
-    console.log(`🎉 Added ${newGames.length} new game(s) to Google Sheets!`);
+    // Batch insertion to avoid 503 Google API limits
+    const BATCH_SIZE = 50;
+    const totalBatches = Math.ceil(newGames.length / BATCH_SIZE);
+    console.log(`Sending ${newGames.length} new game(s) to Google Sheets in ${totalBatches} batch(es)...`);
+
+    for (let i = 0; i < newGames.length; i += BATCH_SIZE) {
+        const batch = newGames.slice(i, i + BATCH_SIZE);
+        const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+        await withRetry(() => sheet.addRows(batch));
+        console.log(`  ✓ Batch ${batchNum}/${totalBatches} (${batch.length} rows) pushed successfully.`);
+        await sleep(1000);
+    }
+
+    console.log(`🎉 Successfully added ${newGames.length} new game(s) to Google Sheets!`);
 }
 
 // ─────────────────────────────────────────────────────────────

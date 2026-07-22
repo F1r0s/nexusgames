@@ -30,6 +30,72 @@ function loadCredentials() {
     }
 }
 
+// Helper: Retries a promise-returning function with exponential backoff
+async function withRetry(fn, retries = 5, initialDelay = 2000) {
+    let attempt = 0;
+    while (true) {
+        try {
+            return await fn();
+        } catch (err) {
+            attempt++;
+            const status = err.response ? err.response.status : null;
+            const isRetryable = !status || status === 503 || status === 500 || status === 429 || status === 502 || status === 504 || err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT';
+            if (attempt > retries || !isRetryable) {
+                throw err;
+            }
+            const delay = initialDelay * Math.pow(2, attempt - 1);
+            console.warn(`⚠️ Google API/Network call failed (attempt ${attempt}/${retries}): ${err.message}. Retrying in ${delay}ms...`);
+            await new Promise(r => setTimeout(r, delay));
+        }
+    }
+}
+
+/** Check if a row is a glitch/junk game (Android 8.0, 8.1, 9.0, 9 requirements or missing images) */
+function isJunkGameRow(title, osStr, tagsStr, img) {
+    if (!title || title.toUpperCase() === 'MODULE NAME' || title.toUpperCase() === 'NAME') return true;
+    if (!img || img.includes('placehold.co') || img.includes('placeholder')) return true;
+    const combined = `${osStr} ${tagsStr} ${title}`.toLowerCase();
+    if (/\bandroid\s*(8\.0|8\.1|9\.0|9)\b/i.test(combined) || /\b(8\.0|8\.1|9\.0)\b/i.test(String(osStr))) {
+        return true;
+    }
+    return false;
+}
+
+/** Deduplicate games array keeping the cleanest/newest entry per slug/title */
+function deduplicateGames(games) {
+    const seen = new Map();
+    for (const g of games) {
+        if (!g || !g.title) continue;
+        const key = g.slug || toSlug(g.title);
+        if (!seen.has(key)) {
+            seen.set(key, g);
+        } else {
+            const existing = seen.get(key);
+            const existingIsPlaceholder = !existing.img || existing.img.includes('placehold.co');
+            const newIsPlaceholder = !g.img || g.img.includes('placehold.co');
+            if (existingIsPlaceholder && !newIsPlaceholder) {
+                seen.set(key, g);
+            }
+        }
+    }
+    return Array.from(seen.values());
+}
+
+function toSlug(title) {
+    if (!title || typeof title !== 'string') return 'game';
+    let name = title
+        .replace(/\s*[\(\[][\s\S]*/g, '')
+        .replace(/\s*[-–—]\s*(mod|hack|cheat|unlimited|free|premium|unlocked)[\s\S]*/i, '')
+        .trim();
+    if (!name) name = title;
+    return name
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+}
+
 // ── Minimal CSV Parser for Fallback ────────────────────────────────
 function parseCSV(csvText) {
     if (!csvText) return [];
@@ -82,6 +148,7 @@ function parseCSV(csvText) {
             link    = cells[6] || '#';
             desc    = cells[7] || 'No description provided.';
         }
+        if (isJunkGameRow(title, osStr, tagsStr, img)) continue;
 
         const osArr = [];
         const lowerOs = osStr.toLowerCase();
@@ -128,25 +195,23 @@ async function fetchFromSheetsDirect() {
 
     const doc = new GoogleSpreadsheet(SPREADSHEET_ID);
     await doc.useServiceAccountAuth(creds);
-    await doc.loadInfo();
+    await withRetry(() => doc.loadInfo());
 
     const sheet = doc.sheetsByIndex[0];
-    const rows = await sheet.getRows();
+    const rows = await withRetry(() => sheet.getRows());
 
     const timestamp = Date.now().toString(36);
 
-    return rows
+    const parsed = rows
         .map((row, i) => {
             const raw = row._rawData || [];
             const title = (raw[0] || '').toString().trim();
-            if (!title || title.toUpperCase() === 'MODULE NAME' || title.toUpperCase() === 'NAME') return null;
 
             let version = raw[1] ? raw[1].toString().trim() : 'v1.0';
             let size = 'N/A', osStr = 'android', tagsStr = 'General', img = '', link = '#', desc = '';
 
             // Detect 10-column layout vs 8-column layout
             if (raw.length >= 9 || (raw[7] && raw[7].toString().startsWith('http'))) {
-                // 10-col: Title, Version, BuildData, Size, OS, Arch, Tags, Image, Link, Desc
                 size    = raw[3] || raw[2] || 'N/A';
                 osStr   = raw[4] || 'android';
                 tagsStr = raw[6] || 'General';
@@ -154,7 +219,6 @@ async function fetchFromSheetsDirect() {
                 link    = raw[8] || '#';
                 desc    = raw[9] || 'No description provided.';
             } else {
-                // 8-col: Title, Version, Size, OS, Tags, Image, Link, Desc
                 size    = raw[2] || 'N/A';
                 osStr   = raw[3] || 'android';
                 tagsStr = raw[4] || 'General';
@@ -163,13 +227,15 @@ async function fetchFromSheetsDirect() {
                 desc    = raw[7] || 'No description provided.';
             }
 
+            if (isJunkGameRow(title, osStr, tagsStr, img)) return null;
+
             // Build clean OS array
             const osArr = [];
             const lowerOs = osStr.toLowerCase();
             if (lowerOs.includes('ios') || lowerOs.includes('apple')) osArr.push('ios');
             if (lowerOs.includes('android') || lowerOs.includes('apk') || osArr.length === 0) osArr.push('android');
 
-            // Clean Categories: filter out OS version junk like "Android 7.0", "Android 6.0 Games", etc.
+            // Clean Categories
             let categories = tagsStr
                 .split(',')
                 .map(s => s.trim())
@@ -199,21 +265,8 @@ async function fetchFromSheetsDirect() {
             };
         })
         .filter(Boolean);
-}
 
-function toSlug(title) {
-    if (!title || typeof title !== 'string') return 'game';
-    let name = title
-        .replace(/\s*[\(\[][\s\S]*/g, '')
-        .replace(/\s*[-–—]\s*(mod|hack|cheat|unlimited|free|premium|unlocked)[\s\S]*/i, '')
-        .trim();
-    if (!name) name = title;
-    return name
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .trim()
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-');
+    return deduplicateGames(parsed);
 }
 
 // ── Generate Main Function ─────────────────────────────────────────
@@ -226,12 +279,12 @@ async function generate() {
             console.log(`✅ Loaded ${games.length} games directly from Google Sheets API.`);
         } catch (apiErr) {
             console.warn(`⚠️  Google Sheets API load failed (${apiErr.message}). Falling back to cached CSV/web-published CSV...`);
-            // Web-published CSV fallback
+            // Web-published CSV fallback with retry
             const SHEET_URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vTmd9N77OuTj1k_QFR0hyiqVjxfZvfnYUPO55kUSFN8RyW7MoZNICzc8gGYZuG0uVL_ccPXnG96ltKT/pub?output=csv&t=${Date.now()}`;
-            const response = await fetch(SHEET_URL);
+            const response = await withRetry(() => fetch(SHEET_URL));
             if (!response.ok) throw new Error(`Web-published CSV returned HTTP ${response.status}`);
             const csvText = await response.text();
-            games = parseCSV(csvText);
+            games = deduplicateGames(parseCSV(csvText));
             
             // Save CSV to fallback file
             fs.writeFileSync(FALLBACK_FILE, csvText, 'utf8');

@@ -85,6 +85,25 @@
             font-display: swap;
         }
         html { scroll-behavior: smooth; }
+        /* ── SEARCH BOX & ROBOTIC SEARCH BUTTON ── */
+        .search-box { display:flex !important; gap:10px !important; align-items:center !important; width:100% !important; position:relative !important; }
+        .search-input-wrap { position:relative !important; flex:1 !important; min-width:0 !important; }
+        .search-input-wrap i { position:absolute !important; left:20px !important; top:50% !important; transform:translateY(-50%) !important; color:rgba(255,255,255,0.45) !important; font-size:1.2rem !important; pointer-events:none !important; }
+        .search-input { width:100% !important; background:rgba(0,0,0,0.55) !important; border:2px solid rgba(255,255,255,0.1) !important; padding:16px 16px 16px 55px !important; color:#ffffff !important; font-family:var(--font-body) !important; font-size:1.2rem !important; border-radius:8px !important; transition:0.3s !important; box-shadow:inset 0 2px 10px rgba(0,0,0,0.3) !important; }
+        .search-input::placeholder { color:rgba(255,255,255,0.3) !important; }
+        .search-input:focus { border-color:var(--amber) !important; background:rgba(0,0,0,0.72) !important; box-shadow:0 0 22px rgba(255,107,0,0.18) !important; }
+        .search-btn, .search-btn.robotic-btn { display:inline-flex !important; align-items:center !important; justify-content:center !important; gap:8px !important; background:linear-gradient(135deg, #FF6B00 0%, #d95700 100%) !important; color:#000000 !important; font-family:var(--font-head) !important; font-weight:900 !important; font-size:0.9rem !important; letter-spacing:2px !important; text-transform:uppercase !important; border:1px solid #ff944d !important; border-radius:4px !important; padding:0 22px !important; height:58px !important; cursor:pointer !important; white-space:nowrap !important; position:relative !important; overflow:hidden !important; transition:all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important; box-shadow:0 0 20px rgba(255,107,0,0.5), inset 0 1px 0 rgba(255,255,255,0.4) !important; clip-path:polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px)) !important; flex-shrink:0 !important; }
+        .search-btn.robotic-btn::before { content:'' !important; position:absolute !important; top:0 !important; left:-100% !important; width:100% !important; height:100% !important; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent) !important; transition:0.5s !important; }
+        .search-btn:hover, .search-btn.robotic-btn:hover { background:linear-gradient(135deg, #ff8533 0%, #FF6B00 100%) !important; box-shadow:0 0 35px rgba(255,107,0,0.9), 0 0 15px rgba(255,255,255,0.5) !important; transform:translateY(-2px) scale(1.02) !important; color:#000000 !important; }
+        .search-btn.robotic-btn:hover::before { left:100% !important; }
+        .search-btn:active, .search-btn.robotic-btn:active { transform:translateY(0) scale(0.97) !important; box-shadow:0 0 15px rgba(255,107,0,0.6) !important; }
+        .search-btn .search-icon, .search-btn.robotic-btn .search-icon { font-size:1.0rem !important; transition:transform 0.3s !important; }
+        .search-btn:hover .search-icon, .search-btn.robotic-btn:hover .search-icon { transform:rotate(90deg) !important; }
+        @media (max-width:900px) {
+            .search-input { padding:12px 12px 12px 40px !important; font-size:1rem !important; }
+            .search-input-wrap i { left:14px !important; font-size:1rem !important; }
+            .search-btn, .search-btn.robotic-btn { height:46px !important; padding:0 14px !important; font-size:0.75rem !important; letter-spacing:1px !important; }
+        }
         /* ── HEADER REDESIGN ── */
         header { display:flex; align-items:center; justify-content:space-between; padding:0 28px; height:68px; }
         .header-inner { display:flex; align-items:center; justify-content:space-between; width:100%; max-width:1400px; margin:0 auto; }
@@ -110,7 +129,7 @@
         @media (max-width:768px) {
             .desktop-nav { display:none; }
             .hamburger-btn { display:flex; }
-            header .logo { position:absolute; left:50%; transform:translateX(-50%); }
+            header .logo { position:static !important; transform:none !important; margin-right:auto !important; }
             header { position:fixed; }
         }
         @media (min-width:769px) {
@@ -206,63 +225,31 @@
 
     <header>
         <div class="header-inner">
-            <!-- LOGO — left on desktop, centred on mobile via CSS -->
-            <a href="#" class="logo" id="vaultLogo"
-               onclick="triggerVaultBurst(); window.scrollTo({top:0,behavior:'smooth'}); return false;"
+            <!-- LOGO — always in top-left -->
+            <a href="/" class="logo" id="vaultLogo"
+               onclick="if(window.location.pathname === '/' || window.location.pathname === '/index.html') { triggerVaultBurst(); window.scrollTo({top:0,behavior:'smooth'}); return false; }"
                style="text-decoration:none; flex-shrink:0;">
-                <span class="brand-word">Mod</span>
-                <span class="vault-svg-wrap" id="vaultSvgWrap" aria-hidden="true">
-                    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <radialGradient id="vb" cx="38%" cy="28%" r="72%">
-                                <stop offset="0%" stop-color="#3d3d3d"/>
-                                <stop offset="55%" stop-color="#1c1c1c"/>
-                                <stop offset="100%" stop-color="#060606"/>
-                            </radialGradient>
-                            <radialGradient id="vr" cx="28%" cy="22%" r="65%">
-                                <stop offset="0%" stop-color="rgba(255,255,255,0.14)"/>
-                                <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
-                            </radialGradient>
-                            <radialGradient id="vh" cx="32%" cy="28%" r="70%">
-                                <stop offset="0%" stop-color="#ffffff"/>
-                                <stop offset="45%" stop-color="#d4d4d4"/>
-                                <stop offset="100%" stop-color="#888"/>
-                            </radialGradient>
-                            <radialGradient id="vab" cx="30%" cy="25%" r="75%">
-                                <stop offset="0%" stop-color="rgba(255,107,0,0.35)"/>
-                                <stop offset="100%" stop-color="rgba(255,107,0,0)"/>
-                            </radialGradient>
-                        </defs>
-                        <circle cx="24" cy="24" r="22" fill="url(#vb)"/>
-                        <circle cx="24" cy="24" r="22" fill="url(#vab)"/>
-                        <circle cx="24" cy="24" r="22" fill="url(#vr)"/>
-                        <circle cx="24" cy="24" r="22" stroke="rgba(255,255,255,0.5)" stroke-width="1.2"/>
-                        <circle cx="24" cy="24" r="17.5" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
-                        <circle cx="24" cy="24" r="14" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+                <span class="brand-word">MOD</span>
+                <span class="vault-svg-wrap" id="vaultSvgWrap">
+                    <svg viewBox="0 0 48 48" fill="none">
+                        <circle cx="24" cy="24" r="21" stroke="#FF6B00" stroke-width="2"/>
+                        <circle cx="24" cy="24" r="14" stroke="rgba(255,107,0,0.5)" stroke-width="1.5"/>
                         <g class="vault-wheel">
-                            <line x1="24" y1="10" x2="24" y2="14.5" stroke="rgba(255,107,0,0.9)" stroke-width="2.2" stroke-linecap="round"/>
-                            <line x1="24" y1="33.5" x2="24" y2="38" stroke="rgba(255,107,0,0.9)" stroke-width="2.2" stroke-linecap="round"/>
-                            <line x1="10" y1="24" x2="14.5" y2="24" stroke="rgba(255,107,0,0.9)" stroke-width="2.2" stroke-linecap="round"/>
-                            <line x1="33.5" y1="24" x2="38" y2="24" stroke="rgba(255,107,0,0.9)" stroke-width="2.2" stroke-linecap="round"/>
-                            <line x1="14.5" y1="14.5" x2="17.8" y2="17.8" stroke="rgba(255,200,100,0.5)" stroke-width="1.4" stroke-linecap="round"/>
-                            <line x1="30.2" y1="30.2" x2="33.5" y2="33.5" stroke="rgba(255,200,100,0.5)" stroke-width="1.4" stroke-linecap="round"/>
-                            <line x1="33.5" y1="14.5" x2="30.2" y2="17.8" stroke="rgba(255,200,100,0.5)" stroke-width="1.4" stroke-linecap="round"/>
-                            <line x1="17.8" y1="30.2" x2="14.5" y2="33.5" stroke="rgba(255,200,100,0.5)" stroke-width="1.4" stroke-linecap="round"/>
+                            <rect x="22" y="5" width="4" height="6" rx="2" fill="#FF6B00"/>
+                            <rect x="22" y="37" width="4" height="6" rx="2" fill="#FF6B00"/>
+                            <rect x="5" y="22" width="6" height="4" rx="2" fill="#FF6B00"/>
+                            <rect x="37" y="22" width="6" height="4" rx="2" fill="#FF6B00"/>
                         </g>
-                        <circle cx="24" cy="24" r="4.2" fill="url(#vh)"/>
-                        <circle cx="24" cy="24" r="1.8" fill="rgba(0,0,0,0.7)"/>
-                        <ellipse cx="17" cy="15.5" rx="4.5" ry="3" fill="rgba(255,255,255,0.07)" transform="rotate(-30 17 15.5)"/>
-                        <circle cx="24" cy="2.5" r="1.6" fill="rgba(255,107,0,0.5)"/>
-                        <circle cx="24" cy="45.5" r="1.6" fill="rgba(255,107,0,0.5)"/>
-                        <circle cx="2.5" cy="24" r="1.6" fill="rgba(255,107,0,0.5)"/>
-                        <circle cx="45.5" cy="24" r="1.6" fill="rgba(255,107,0,0.5)"/>
+                        <circle cx="24" cy="24" r="3" fill="#FF6B00"/>
                     </svg>
                 </span>
+                <span class="brand-word" style="color:var(--amber);">VAULT</span>
             </a>
 
             <!-- DESKTOP NAV -->
             <nav class="desktop-nav">
-                <a href="/best-games.html" class="nav-btn"><i class="fas fa-trophy"></i><span class="nav-label">Best Games</span></a>
+                <a href="/news.html" class="nav-btn"><i class="fas fa-newspaper"></i><span class="nav-label">News</span></a>
+                <a href="/best-games.html" class="nav-btn"><i class="fas fa-trophy"></i><span class="nav-label">Top Games in 2026</span></a>
                 <a href="/game-mode-guide.html" class="nav-btn"><i class="fas fa-question-circle"></i><span class="nav-label">Guide</span></a>
                 <a href="/support.html" class="nav-btn"><i class="fas fa-headset"></i><span class="nav-label">Support</span></a>
                 <a href="/privacy.html" class="nav-btn"><i class="fas fa-shield-alt"></i><span class="nav-label">Privacy</span></a>
@@ -277,7 +264,8 @@
 
     <!-- MOBILE MENU DRAWER -->
     <div id="mobileMenu">
-        <a href="/best-games.html" onclick="toggleMobileMenu()"><i class="fas fa-trophy" style="margin-right:10px;color:var(--amber);"></i>Best Games</a>
+        <a href="/news.html" onclick="toggleMobileMenu()"><i class="fas fa-newspaper" style="margin-right:10px;color:var(--amber);"></i>News</a>
+        <a href="/best-games.html" onclick="toggleMobileMenu()"><i class="fas fa-trophy" style="margin-right:10px;color:var(--amber);"></i>Top Games in 2026</a>
         <a href="/game-mode-guide.html" onclick="toggleMobileMenu()"><i class="fas fa-question-circle" style="margin-right:10px;color:var(--amber);"></i>Guide</a>
         <a href="/support.html" onclick="toggleMobileMenu()"><i class="fas fa-headset" style="margin-right:10px;color:var(--amber);"></i>Support</a>
         <a href="/privacy.html" onclick="toggleMobileMenu()"><i class="fas fa-shield-alt" style="margin-right:10px;color:var(--amber);"></i>Privacy</a>
@@ -421,8 +409,14 @@
         <div class="hud-panel">
             <div class="hud-left">
                 <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Search for games...">
+                    <div class="search-input-wrap">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" class="search-input" placeholder="Search for games..." onkeydown="if(event.key==='Enter') executeSearch()">
+                    </div>
+                    <button type="button" id="searchBtn" class="search-btn robotic-btn" onclick="executeSearch()">
+                        <i class="fas fa-crosshair search-icon"></i>
+                        <span class="search-btn-label">SEARCH</span>
+                    </button>
                 </div>
                 <div class="categories" id="categoryContainer">
                     <div class="spinner" style="border-width:2px; width:15px; height:15px; margin:0 10px;"></div>
@@ -819,24 +813,24 @@
             });
         }
 
-        let searchTimeout;
-        searchInput.addEventListener('input', e => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                const query = e.target.value.trim();
-                currentFilterText = query;
-                renderGames();
+        window.executeSearch = function() {
+            const query = searchInput.value.trim();
+            currentFilterText = query;
+            renderGames();
 
-                // Log search query in the background if it's 3+ characters long
-                if (query.length >= 3) {
-                    fetch('/api/log-search', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ query: query })
-                    }).catch(err => console.error('Failed to log search:', err));
-                }
-            }, 300);
-        });
+            const gamesSection = document.querySelector('.main-container');
+            if (gamesSection) gamesSection.scrollIntoView({ behavior: 'smooth' });
+
+            if (query.length > 0) {
+                fetch('/api/log-search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query })
+                }).catch(err => console.error('Failed to log search:', err));
+            }
+        };
+
+        // Search only triggers when clicking SEARCH or pressing Enter
 
         const viewModal = document.getElementById('viewGameModal');
         let currentGameLink = '';

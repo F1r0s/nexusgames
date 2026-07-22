@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ═══ PRECONNECT — DNS & Fonts ═══ -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Gaming News — Patch Notes, Releases &amp; Industry Updates | Mod Vault</title>
+    <meta name="description" content="Stay updated with the latest mobile gaming news, game patch notes, new releases, and hardware benchmarks. Powered by Mod Vault underground news scraper.">
+    <meta name="keywords" content="mobile gaming news, android game news, ios game news, patch notes, mobile game releases, gaming news 2026">
+    <link rel="canonical" href="https://www.modvault.games/news.html" />
+    
+    <!-- Favicon -->
+    <!-- ═══ FAVICON — All Browsers & Search Engines ═══ -->
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/png" href="/favicon-512.png" sizes="512x512">
+    <link rel="icon" type="image/png" href="/favicon-32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="/favicon-16.png" sizes="16x16">
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon-512.png">
+    <meta name="msapplication-TileImage" content="/favicon-512.png">
+    <meta name="msapplication-TileColor" content="#0a0a0a">
+    <meta name="theme-color" content="#FF6B00">
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Main Styles -->
+    <link rel="stylesheet" href="/style.min.css">
+
+    <style>
+        html { scroll-behavior: smooth; }
+        
+        /* News Page Custom Cyberpunk HUD Styles */
+        .news-hero {
+            padding: 110px 20px 40px;
+            text-align: center;
+            background: radial-gradient(circle at 50% 20%, rgba(255,107,0,0.12) 0%, rgba(10,10,10,0.98) 70%);
+            border-bottom: 1px solid rgba(255,107,0,0.2);
+            position: relative;
+        }
+
+        .news-hero h1 {
+            font-family: var(--font-head);
+            font-size: clamp(2.2rem, 6vw, 3.8rem);
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 12px;
+            text-shadow: 0 0 25px rgba(255,107,0,0.4);
+        }
+
+        .news-hero p {
+            max-width: 750px;
+            margin: 0 auto;
+            color: var(--text-muted);
+            font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+            line-height: 1.6;
+        }
+
+        .news-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        /* Search & Filter Bar */
+        .news-hud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: space-between;
+            background: #111111;
+            border: 1px solid rgba(255,255,255,0.09);
+            padding: 20px 24px;
+            border-radius: 12px;
+            margin-bottom: 35px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            position: relative;
+        }
+
+        .news-hud::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            width: 16px;
+            height: 16px;
+            border-top: 2px solid var(--amber);
+            border-left: 2px solid var(--amber);
+        }
+
+        .news-search-box {
+            position: relative;
+            flex: 1;
+            min-width: 260px;
+        }
+
+        .news-search-box i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.4);
+        }
+
+        .news-search-input {
+            width: 100%;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.12);
+            padding: 12px 16px 12px 46px;
+            color: #fff;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            border-radius: 6px;
+            transition: 0.3s;
+        }
+
+        .news-search-input:focus {
+            border-color: var(--amber);
+            box-shadow: 0 0 18px rgba(255,107,0,0.2);
+            outline: none;
+        }
+
+        .news-cats {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .news-cat-btn {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: var(--font-head);
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            transition: 0.3s;
+        }
+
+        .news-cat-btn:hover, .news-cat-btn.active {
+            background: var(--amber);
+            color: #000;
+            border-color: var(--amber);
+            box-shadow: 0 0 15px rgba(255,107,0,0.4);
+            font-weight: 700;
+        }
+
+        /* News Grid Layout */
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+        }
+
+        /* News Card styling */
+        .news-card {
+            background: #111111;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s, box-shadow 0.3s;
+            position: relative;
+        }
+
+        .news-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(255,107,0,0.6);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.7), 0 0 20px rgba(255,107,0,0.25);
+        }
+
+        .news-card-img-wrap {
+            height: 200px;
+            position: relative;
+            overflow: hidden;
+            background: #0a0a0a;
+        }
+
+        .news-card-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .news-card:hover .news-card-img-wrap img {
+            transform: scale(1.08);
+        }
+
+        .news-badge-cat {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: var(--amber);
+            color: #000;
+            font-family: var(--font-head);
+            font-size: 0.65rem;
+            font-weight: 900;
+            padding: 4px 10px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .news-date {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            color: rgba(255,255,255,0.85);
+            font-family: var(--font-head);
+            font-size: 0.65rem;
+            padding: 4px 10px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .news-card-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .news-title {
+            font-family: var(--font-head);
+            font-size: 1.15rem;
+            color: #ffffff;
+            line-height: 1.4;
+            margin-bottom: 12px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .news-excerpt {
+            color: var(--text-muted);
+            font-size: 0.92rem;
+            line-height: 1.55;
+            margin-bottom: 20px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .news-read-btn {
+            margin-top: auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: rgba(255,107,0,0.1);
+            border: 1px solid var(--amber);
+            color: var(--amber);
+            font-family: var(--font-head);
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+        .news-read-btn:hover {
+            background: var(--amber);
+            color: #000;
+            box-shadow: 0 0 20px rgba(255,107,0,0.5);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 600px) {
+            .news-grid {
+                grid-template-columns: 1fr;
+                gap: 18px;
+            }
+            .news-card-img-wrap {
+                height: 170px;
+            }
+            .news-hud {
+                padding: 15px;
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ═══ HEADER NAVIGATION ═══ -->
+    <header>
+        <div class="header-inner">
+            <a href="/" class="logo">
+                <span class="brand-word">MOD</span>
+                <span class="vault-svg-wrap">
+                    <svg viewBox="0 0 48 48" fill="none">
+                        <circle cx="24" cy="24" r="21" stroke="#FF6B00" stroke-width="2"/>
+                        <circle cx="24" cy="24" r="14" stroke="rgba(255,107,0,0.5)" stroke-width="1.5"/>
+                        <g class="vault-wheel">
+                            <rect x="22" y="5" width="4" height="6" rx="2" fill="#FF6B00"/>
+                            <rect x="22" y="37" width="4" height="6" rx="2" fill="#FF6B00"/>
+                            <rect x="5" y="22" width="6" height="4" rx="2" fill="#FF6B00"/>
+                            <rect x="37" y="22" width="6" height="4" rx="2" fill="#FF6B00"/>
+                        </g>
+                        <circle cx="24" cy="24" r="3" fill="#FF6B00"/>
+                    </svg>
+                </span>
+                <span class="brand-word" style="color:var(--amber);">VAULT</span>
+            </a>
+
+            <!-- DESKTOP NAV -->
+            <nav class="desktop-nav">
+                <a href="/news.html" class="nav-btn active-nav"><i class="fas fa-newspaper"></i><span class="nav-label">News</span></a>
+                <a href="/best-games.html" class="nav-btn"><i class="fas fa-trophy"></i><span class="nav-label">Top Games in 2026</span></a>
+                <a href="/game-mode-guide.html" class="nav-btn"><i class="fas fa-question-circle"></i><span class="nav-label">Guide</span></a>
+                <a href="/support.html" class="nav-btn"><i class="fas fa-headset"></i><span class="nav-label">Support</span></a>
+                <a href="/privacy.html" class="nav-btn"><i class="fas fa-shield-alt"></i><span class="nav-label">Privacy</span></a>
+            </nav>
+
+            <!-- HAMBURGER (mobile only) -->
+            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" onclick="toggleMobileMenu()">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MOBILE MENU DRAWER -->
+    <div id="mobileMenu">
+        <a href="/news.html" onclick="toggleMobileMenu()"><i class="fas fa-newspaper" style="margin-right:10px;color:var(--amber);"></i>News</a>
+        <a href="/best-games.html" onclick="toggleMobileMenu()"><i class="fas fa-trophy" style="margin-right:10px;color:var(--amber);"></i>Top Games in 2026</a>
+        <a href="/game-mode-guide.html" onclick="toggleMobileMenu()"><i class="fas fa-question-circle" style="margin-right:10px;color:var(--amber);"></i>Guide</a>
+        <a href="/support.html" onclick="toggleMobileMenu()"><i class="fas fa-headset" style="margin-right:10px;color:var(--amber);"></i>Support</a>
+        <a href="/privacy.html" onclick="toggleMobileMenu()"><i class="fas fa-shield-alt" style="margin-right:10px;color:var(--amber);"></i>Privacy</a>
+    </div>
+
+    <!-- ═══ HERO SECTION ═══ -->
+    <section class="news-hero">
+        <h1>Mobile Gaming <span style="color:var(--amber);">News</span></h1>
+        <p>Live news, patch notes, upcoming mobile game releases &amp; industry analysis scraped monthly.</p>
+    </section>
+
+    <!-- ═══ NEWS CONTENT CONTAINER ═══ -->
+    <div class="news-container">
+
+        <!-- HUD Filter & Search -->
+        <div class="news-hud">
+            <div class="news-search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="newsSearch" class="news-search-input" placeholder="Search news articles..." oninput="filterNews()">
+            </div>
+            <div class="news-cats" id="newsCatContainer">
+                <button type="button" class="news-cat-btn active" onclick="setNewsCategory('ALL', this)">ALL</button>
+                <button type="button" class="news-cat-btn" onclick="setNewsCategory('Mobile News', this)">Mobile News</button>
+                <button type="button" class="news-cat-btn" onclick="setNewsCategory('New Releases', this)">Releases</button>
+                <button type="button" class="news-cat-btn" onclick="setNewsCategory('Updates', this)">Updates</button>
+                <button type="button" class="news-cat-btn" onclick="setNewsCategory('Industry', this)">Industry</button>
+            </div>
+        </div>
+
+        <!-- News Cards Grid -->
+        <div class="news-grid" id="newsGrid">
+            <div style="grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--text-muted); font-family:var(--font-head); letter-spacing:2px;">
+                <div class="spinner" style="margin-bottom:15px;"></div>
+                FETCHING LATEST MOBILE GAMING NEWS...
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ═══ FOOTER ═══ -->
+    <footer>
+        <p>&copy; 2026 Mod Vault. All rights reserved. Source news scraped monthly from mobilegamer.biz.</p>
+    </footer>
+
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            const btn = document.getElementById('hamburgerBtn');
+            if (menu && btn) {
+                menu.classList.toggle('open');
+                btn.classList.toggle('open');
+            }
+        }
+
+        let allNewsArticles = [];
+        let currentCategory = 'ALL';
+
+        async function loadNews() {
+            const grid = document.getElementById('newsGrid');
+            try {
+                const res = await fetch('/api/news');
+                if (!res.ok) throw new Error('Failed to load news dataset');
+                allNewsArticles = await res.json();
+
+                if (!allNewsArticles || allNewsArticles.length === 0) {
+                    grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#666;">No news articles available.</div>`;
+                    return;
+                }
+
+                renderNews();
+            } catch (err) {
+                console.error('News load error:', err);
+                grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#ff4d4d;">⚠️ Failed to load news articles. Please refresh.</div>`;
+            }
+        }
+
+        function setNewsCategory(cat, btn) {
+            currentCategory = cat;
+            document.querySelectorAll('.news-cat-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            renderNews();
+        }
+
+        function filterNews() {
+            renderNews();
+        }
+
+        function renderNews() {
+            const grid = document.getElementById('newsGrid');
+            const searchVal = (document.getElementById('newsSearch').value || '').toLowerCase().trim();
+
+            const filtered = allNewsArticles.filter(art => {
+                const matchesCat = currentCategory === 'ALL' || (art.category && art.category.toLowerCase().includes(currentCategory.toLowerCase())) || (currentCategory === 'Mobile News');
+                const matchesSearch = !searchVal || (art.title && art.title.toLowerCase().includes(searchVal)) || (art.excerpt && art.excerpt.toLowerCase().includes(searchVal));
+                return matchesCat && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:50px 20px; color:var(--text-muted); font-family:var(--font-head); letter-spacing:1.5px;">
+                    NO NEWS ARTICLES FOUND MATCHING "${searchVal || currentCategory}"
+                </div>`;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(art => `
+                <article class="news-card">
+                    <div class="news-card-img-wrap">
+                        <img src="${art.img}" alt="${art.title}" loading="lazy" onerror="this.src='https://picsum.photos/seed/mobilegame/600/380'">
+                        <span class="news-badge-cat">${art.category || 'Mobile News'}</span>
+                        <span class="news-date">${art.date || 'Jul 2026'}</span>
+                    </div>
+                    <div class="news-card-body">
+                        <h2 class="news-title">${art.title}</h2>
+                        <p class="news-excerpt">${art.excerpt}</p>
+                        <a href="${art.link}" target="_blank" rel="noopener noreferrer" class="news-read-btn">
+                            <span>READ FULL ARTICLE</span>
+                            <i class="fas fa-external-link-alt" style="font-size:0.75rem;"></i>
+                        </a>
+                    </div>
+                </article>
+            `).join('');
+        function toggleMobileMenu() {
+            const btn = document.getElementById('hamburgerBtn');
+            const menu = document.getElementById('mobileMenu');
+            if (btn && menu) {
+                btn.classList.toggle('open');
+                menu.classList.toggle('open');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadNews);
+    </script>
+</body>
+</html>
