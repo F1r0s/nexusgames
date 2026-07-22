@@ -844,11 +844,16 @@
         // ── Global OGAds Locker URL ──────────────────────────────────
         const OGADS_LOCKER_URL = 'https://authenticateapp.online/cl/i/4orwv4';
 
+        function cleanToSlug(title) {
+            if (!title) return 'game';
+            return title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-');
+        }
+
         window.viewGame = function(id, mode='info') {
             const game = gamesDB.find(g => g.id === id || g.slug === id || g.title === id);
             if (!game) return;
-            const targetUrl = game.slug ? `/${game.slug}` : `/game.html?id=${game.id}`;
-            window.location.href = targetUrl;
+            const slug = game.slug || cleanToSlug(game.title);
+            window.location.href = `/${slug}`;
         }
 
         window.closeViewModal = function() {
