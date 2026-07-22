@@ -639,32 +639,20 @@
 
             document.getElementById('gameDescription').innerText = game.desc || 'No detailed description provided.';
 
-            // Populate Screenshots Gallery (3 distinct visuals)
+            // Populate Screenshots Gallery (Only the official game image)
             const shotsContainer = document.getElementById('screenshotsContainer');
             shotsContainer.innerHTML = '';
 
-            const mainImg = game.img || 'https://placehold.co/600x350?text=Gameplay+Screenshot';
-
-            let screenshots = [];
-            if (game.screenshots && Array.isArray(game.screenshots) && game.screenshots.length >= 3 && game.screenshots[0] !== game.screenshots[1]) {
-                screenshots = game.screenshots;
-            } else {
-                screenshots = [
-                    mainImg,
-                    `https://picsum.photos/seed/${slug}-gameplay1/600/350`,
-                    `https://picsum.photos/seed/${slug}-gameplay2/600/350`
-                ];
-            }
-
-            screenshots.forEach((src, idx) => {
-                const img = document.createElement('img');
-                img.src = src;
-                img.alt = `${game.title} Screenshot ${idx + 1}`;
-                img.className = 'screenshot-item';
-                img.loading = 'lazy';
-                img.decoding = 'async';
-                shotsContainer.appendChild(img);
-            });
+            const img = document.createElement('img');
+            img.src = game.img || 'https://placehold.co/600x350?text=Official+Showcase';
+            img.alt = `${game.title} Official Showcase`;
+            img.className = 'screenshot-item';
+            img.style.gridColumn = '1 / -1';
+            img.style.maxHeight = '380px';
+            img.style.objectFit = 'contain';
+            img.loading = 'lazy';
+            img.decoding = 'async';
+            shotsContainer.appendChild(img);
 
             // Populate Schema JSON-LD
             const schema = {
