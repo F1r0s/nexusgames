@@ -300,10 +300,10 @@ app.get('/best-games.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'best-games.html'));
 });
 
-// Dedicated SEO Game Page
-app.get('/game/:slug', (req, res) => {
+// Dedicated SEO Game Page (supports both /game/:slug and /:slug)
+function serveGamePage(req, res) {
     const slug = req.params.slug;
-    const game = (gamesCache.data || []).find(g => g.slug === slug || g.id === slug);
+    const game = (gamesCache.data || []).find(g => g.slug === slug || g.id === slug || toSlug(g.title) === slug);
     const templatePath = path.join(__dirname, 'game.html');
 
     if (!fs.existsSync(templatePath)) {
@@ -326,6 +326,40 @@ app.get('/game/:slug', (req, res) => {
         .replace(/id="ogImage" property="og:image" content=".*?"/i, `id="ogImage" property="og:image" content="${game.img}"`);
 
     res.send(html);
+}
+
+function toSlug(title) {
+    if (!title || typeof title !== 'string') return 'game';
+    let name = title
+        .replace(/\s*[\(\[][\s\S]*/g, '')
+        .replace(/\s*[-–—]\s*(mod|hack|cheat|unlimited|free|premium|unlocked)[\s\S]*/i, '')
+        .trim();
+    if (!name) name = title;
+    return name
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+}
+
+app.get('/game/:slug', serveGamePage);
+
+// Clean SEO Game URLs e.g. modvault.games/roblox or modvault.games/one-state-rp-mod
+app.get('/:slug', (req, res, next) => {
+    const slug = req.params.slug;
+    if (!slug) return next();
+    
+    // Skip static files/pages
+    if (slug.includes('.') || ['api', 'game', 'video', 'best-games', 'game-mode-guide', 'support', 'privacy', 'admin', 'go'].includes(slug.toLowerCase())) {
+        return next();
+    }
+    
+    const game = (gamesCache.data || []).find(g => g.slug === slug || g.id === slug || toSlug(g.title) === slug);
+    if (game) {
+        return serveGamePage(req, res);
+    }
+    next();
 });
 
 app.get('/game.html', (req, res) => {

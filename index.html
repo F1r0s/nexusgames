@@ -845,9 +845,9 @@
         const OGADS_LOCKER_URL = 'https://authenticateapp.online/cl/i/4orwv4';
 
         window.viewGame = function(id, mode='info') {
-            const game = gamesDB.find(g => g.id == id || g.slug == id);
+            const game = gamesDB.find(g => g.id === id || g.slug === id || g.title === id);
             if (!game) return;
-            const targetUrl = game.slug ? `/game/${game.slug}` : `/game.html?id=${game.id}`;
+            const targetUrl = game.slug ? `/${game.slug}` : `/game.html?id=${game.id}`;
             window.location.href = targetUrl;
         }
 
@@ -1092,7 +1092,7 @@
             pool.forEach((game, i) => {
                 const card = document.createElement('div');
                 card.className = 'trending-card';
-                card.onclick = () => viewGame(game.id, 'info');
+                card.onclick = () => viewGame(game.slug || game.id, 'info');
                 card.innerHTML = `
                     <img src="${game.img}" alt="${game.title}" loading="lazy" decoding="async">
                     <div class="tc-rank">#${i + 1}</div>
