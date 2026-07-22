@@ -52,7 +52,7 @@ function generateSitemap() {
         if (!slug) continue;
 
         xml += `  <url>\n`;
-        xml += `    <loc>${DOMAIN}/game/${slug}</loc>\n`;
+        xml += `    <loc>${DOMAIN}/${slug}</loc>\n`;
         xml += `    <lastmod>${today}</lastmod>\n`;
         xml += `    <changefreq>weekly</changefreq>\n`;
         xml += `    <priority>0.8</priority>\n`;
