@@ -300,6 +300,29 @@ app.get('/best-games.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'best-games.html'));
 });
 
+// ═══ NEWS ROUTES ═══
+const NEWS_JSON_FILE = resolveDataFile('news.json');
+
+app.get('/api/news', (req, res) => {
+    try {
+        if (fs.existsSync(NEWS_JSON_FILE)) {
+            const newsData = JSON.parse(fs.readFileSync(NEWS_JSON_FILE, 'utf8'));
+            return res.json(newsData);
+        }
+    } catch (e) {
+        console.error('[API NEWS] Error loading news.json:', e.message);
+    }
+    res.json([]);
+});
+
+app.get('/news', (req, res) => {
+    res.sendFile(path.join(__dirname, 'news.html'));
+});
+
+app.get('/news.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'news.html'));
+});
+
 // Dedicated SEO Game Page (supports both /game/:slug and /:slug)
 function serveGamePage(req, res) {
     const slug = req.params.slug;

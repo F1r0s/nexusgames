@@ -5,7 +5,7 @@
       "src": "server.js",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": "games.json,fallback_games.csv"
+        "includeFiles": "games.json,news.json,fallback_games.csv"
       }
     }
   ],
