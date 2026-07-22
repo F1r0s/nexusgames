@@ -583,19 +583,19 @@
 
         async function initGamePage() {
             const params = new URLSearchParams(window.location.search);
-            const gameId = params.get('id');
+            const queryParam = params.get('id') || params.get('slug');
             
             const pathParts = window.location.pathname.split('/').filter(Boolean);
-            const gameSlug = pathParts[pathParts.length - 1] || params.get('slug');
+            const pathSlug = pathParts[pathParts.length - 1];
+            
+            const targetSlug = (queryParam && queryParam !== 'game.html') ? queryParam : (pathSlug !== 'game.html' ? pathSlug : null);
 
             try {
                 const res = await fetch('/api/games');
                 const games = await res.json();
 
-                if (gameId) {
-                    currentGame = games.find(g => g.id === gameId);
-                } else if (gameSlug && gameSlug !== 'game.html') {
-                    const cleanSlug = gameSlug.toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (targetSlug) {
+                    const cleanSlug = targetSlug.toLowerCase().replace(/[^a-z0-9]/g, '');
                     currentGame = games.find(g => {
                         const s1 = (g.slug || '').toLowerCase().replace(/[^a-z0-9]/g, '');
                         const s2 = toSlug(g.title).replace(/[^a-z0-9]/g, '');
