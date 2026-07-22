@@ -584,7 +584,9 @@
         async function initGamePage() {
             const params = new URLSearchParams(window.location.search);
             const gameId = params.get('id');
-            const gameSlug = window.location.pathname.split('/game/')[1] || params.get('slug');
+            
+            const pathParts = window.location.pathname.split('/').filter(Boolean);
+            const gameSlug = pathParts[pathParts.length - 1] || params.get('slug');
 
             try {
                 const res = await fetch('/api/games');
@@ -592,8 +594,15 @@
 
                 if (gameId) {
                     currentGame = games.find(g => g.id === gameId);
-                } else if (gameSlug) {
-                    currentGame = games.find(g => g.slug === gameSlug || toSlug(g.title) === gameSlug);
+                } else if (gameSlug && gameSlug !== 'game.html') {
+                    const cleanSlug = gameSlug.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    currentGame = games.find(g => {
+                        const s1 = (g.slug || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                        const s2 = toSlug(g.title).replace(/[^a-z0-9]/g, '');
+                        const s3 = g.id.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        const s4 = g.title.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        return s1 === cleanSlug || s2 === cleanSlug || s3 === cleanSlug || s4 === cleanSlug;
+                    });
                 }
 
                 if (!currentGame && games.length > 0) {

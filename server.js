@@ -303,7 +303,16 @@ app.get('/best-games.html', (req, res) => {
 // Dedicated SEO Game Page (supports both /game/:slug and /:slug)
 function serveGamePage(req, res) {
     const slug = req.params.slug;
-    const game = (gamesCache.data || []).find(g => g.slug === slug || g.id === slug || toSlug(g.title) === slug);
+    const cleanParam = (slug || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    const game = (gamesCache.data || []).find(g => {
+        const s1 = (g.slug || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const s2 = toSlug(g.title).replace(/[^a-z0-9]/g, '');
+        const s3 = g.id.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const s4 = g.title.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return s1 === cleanParam || s2 === cleanParam || s3 === cleanParam || s4 === cleanParam;
+    });
+
     const templatePath = path.join(__dirname, 'game.html');
 
     if (!fs.existsSync(templatePath)) {
@@ -355,7 +364,15 @@ app.get('/:slug', (req, res, next) => {
         return next();
     }
     
-    const game = (gamesCache.data || []).find(g => g.slug === slug || g.id === slug || toSlug(g.title) === slug);
+    const cleanParam = slug.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const game = (gamesCache.data || []).find(g => {
+        const s1 = (g.slug || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const s2 = toSlug(g.title).replace(/[^a-z0-9]/g, '');
+        const s3 = g.id.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const s4 = g.title.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return s1 === cleanParam || s2 === cleanParam || s3 === cleanParam || s4 === cleanParam;
+    });
+
     if (game) {
         return serveGamePage(req, res);
     }
