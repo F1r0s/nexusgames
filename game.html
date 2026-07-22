@@ -644,7 +644,6 @@
             shotsContainer.innerHTML = '';
 
             const mainImg = game.img || 'https://placehold.co/600x350?text=Gameplay+Screenshot';
-            const slug = game.slug || toSlug(game.title);
 
             let screenshots = [];
             if (game.screenshots && Array.isArray(game.screenshots) && game.screenshots.length >= 3 && game.screenshots[0] !== game.screenshots[1]) {
