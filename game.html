@@ -629,7 +629,7 @@
             document.getElementById('ogTitle').setAttribute('content', `${game.title} Mod APK Download`);
             document.getElementById('ogDesc').setAttribute('content', game.desc || `Download ${game.title} Mod APK for Android & iOS.`);
             const slug = game.slug || toSlug(game.title);
-            document.getElementById('canonicalUrl').setAttribute('href', `https://www.modvault.games/${slug}`);
+            document.getElementById('canonicalUrl').setAttribute('href', `https://www.modvault.games/game.html?id=${slug}`);
 
             document.getElementById('heroImg').src = game.img;
             document.getElementById('gameTitle').innerText = game.title;

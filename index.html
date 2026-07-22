@@ -853,7 +853,7 @@
             const game = gamesDB.find(g => g.id === id || g.slug === id || g.title === id);
             if (!game) return;
             const slug = game.slug || cleanToSlug(game.title);
-            window.location.href = `/${slug}`;
+            window.location.href = `/game.html?id=${slug}`;
         }
 
         window.closeViewModal = function() {
