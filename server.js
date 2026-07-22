@@ -8,13 +8,19 @@ const { GoogleSpreadsheet } = require('google-spreadsheet');
 
 // Resolve path to credentials file
 let googleCreds = null;
-try {
-    const credsPath = path.join(__dirname, 'google-credentials.json');
-    if (fs.existsSync(credsPath)) {
-        googleCreds = require(credsPath);
+function loadGoogleCreds() {
+    if (googleCreds) return googleCreds;
+    try {
+        const credsPath = resolveDataFile('google-credentials.json');
+        if (fs.existsSync(credsPath)) {
+            googleCreds = JSON.parse(fs.readFileSync(credsPath, 'utf8'));
+            console.log('[INIT] ✅ Loaded google-credentials.json for search logging.');
+            return googleCreds;
+        }
+    } catch (e) {
+        console.warn('[INIT] google-credentials.json load warning:', e.message);
     }
-} catch (e) {
-    console.log('ℹ️ No local google-credentials.json found. Relying on env vars for search logging.');
+    return null;
 }
 
 // --- STATIC JSON DATABASE (Primary — instant, no latency) ---
@@ -521,12 +527,13 @@ app.post('/api/log-search', async (req, res) => {
         || req.headers['x-country-code']
         || 'Unknown';
 
-    res.json({ success: true, message: 'Logging search query in background' });
-
-    // Handle the sheet update asynchronously in the background so request latency is unaffected
-    logSearchToSheets(query.trim(), country).catch(err => {
+    try {
+        await logSearchToSheets(query.trim(), country);
+        res.json({ success: true, message: 'Search query logged in Google Sheets' });
+    } catch (err) {
         console.error('[SEARCH LOG ERROR]', err.message);
-    });
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 // Helper: Retries a promise-returning function with exponential backoff
@@ -553,13 +560,13 @@ async function logSearchToSheets(query, country) {
     const spreadsheetId = process.env.SEARCH_TRACKING_SPREADSHEET_ID || '1Yqyi32SFUBUhT1xGJMseAv8q5ygtqhpREA7yz6ktlb8';
     const doc = new GoogleSpreadsheet(spreadsheetId);
 
-    if (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY) {
-        await doc.useServiceAccountAuth({
-            client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-            private_key:  process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
-        });
-    } else if (googleCreds) {
-        await doc.useServiceAccountAuth(googleCreds);
+    const creds = (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY) ? {
+        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+        private_key:  process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
+    } : loadGoogleCreds();
+
+    if (creds) {
+        await doc.useServiceAccountAuth(creds);
     } else {
         throw new Error('Google credentials not available for search logging');
     }
