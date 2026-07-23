@@ -830,7 +830,24 @@
             }
         };
 
-        // Search only triggers when clicking SEARCH or pressing Enter
+        // Instantly reset filter and restore all games when search input is cleared
+        if (searchInput) {
+            let searchDebounceTimer = null;
+            searchInput.addEventListener('input', function() {
+                const query = this.value.trim();
+                if (query === '') {
+                    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+                    currentFilterText = '';
+                    renderGames();
+                } else {
+                    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+                    searchDebounceTimer = setTimeout(() => {
+                        currentFilterText = query;
+                        renderGames();
+                    }, 250);
+                }
+            });
+        }
 
         const viewModal = document.getElementById('viewGameModal');
         let currentGameLink = '';
