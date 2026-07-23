@@ -116,6 +116,11 @@ async function withRetry(fn, retries = 5, initialDelay = 2000) {
 
 // ── Main ───────────────────────────────────────────────────────────
 async function main() {
+    if (process.env.WRITE_TO_GOOGLE_SHEETS !== 'true') {
+        console.log('🔒 Google Sheets write mode is disabled (WRITE_TO_GOOGLE_SHEETS !== "true"). Preserving existing Google Sheet database.');
+        return;
+    }
+
     console.log('╔══════════════════════════════════════════════════════╗');
     console.log('║   ModVault — SEO Visual Asset & Tags Updater v2      ║');
     console.log('║   Tags: keep originals + append 3 mod keywords only  ║');

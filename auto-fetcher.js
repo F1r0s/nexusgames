@@ -22,7 +22,7 @@ const SPREADSHEET_ID = process.env.SPREADSHEET_ID
 
 const BASE_URL      = 'https://an1.com/games/';
 const REQUEST_DELAY = 1500;   // ms between requests (be polite)
-const MAX_PAGES     = 999;    // safety cap
+const MAX_PAGES     = parseInt(process.env.MAX_PAGES, 10) || 3;    // Safe page cap to prevent long timeouts
 
 // Load local credentials file (local dev)
 let localCreds;
@@ -262,6 +262,11 @@ const dedupKey = (name, version) =>
     `${String(name).toLowerCase().trim()}|${String(version).toLowerCase().trim()}`;
 
 async function pushToSheets(games) {
+    if (process.env.WRITE_TO_GOOGLE_SHEETS !== 'true') {
+        console.log('\n🔒 Google Sheets write mode is disabled (WRITE_TO_GOOGLE_SHEETS !== "true"). Preserving existing Google Sheet database.');
+        return;
+    }
+
     if (!SPREADSHEET_ID || SPREADSHEET_ID === 'YOUR_SHEET_ID_HERE') {
         console.error('\n❌ ERROR: Please set a valid SPREADSHEET_ID.');
         return;

@@ -1,12 +1,9 @@
-name: Daily Game Scraper
+name: Daily Game Scraper & Database Sync
 
 on:
   schedule:
     # Runs every 6 hours (00:00, 06:00, 12:00, 18:00 UTC)
-    # This is the optimal schedule to keep the site updated quickly
-    # while completely avoiding IP bans/rate limits from the source site.
     - cron: '0 */6 * * *'
-  # Allows manual trigger from the Actions tab
   workflow_dispatch:
 
 permissions:
@@ -17,19 +14,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Check out the repo (with token for pushing back)
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      # 2. Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # 3. Cache node_modules to speed up runs
       - name: Cache Node dependencies
         uses: actions/cache@v4
         with:
@@ -38,31 +32,28 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      # 4. Install Node Dependencies
       - name: Install Node Dependencies
-        run: npm ci --omit=dev
+        run: npm ci --omit=dev || npm install
 
-      # 5. Run the scraper using Node.js
-      - name: Run Scraper
-        env:
-          GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
-          GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
-          SPREADSHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
-        run: node auto-fetcher.js
-
-      # 6. Export games.json from Google Sheets
-      - name: Export games.json from Google Sheets
-        env:
-          GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
-          GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
-          SPREADSHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+      # 1. Sync database from user's Google Sheet into games.json & fallback_games.csv
+      - name: Sync games.json from Google Sheets
         run: node generate-games-json.js
 
-      # 7. Commit updated games.json + fallback CSV back to the repo
-      - name: Commit games.json
+      # 2. Check AN1 for fresh releases (safe 3-page scan, preserves Google Sheet)
+      - name: Run AN1 Scraper for Fresh Releases
+        run: node auto-fetcher.js
+        env:
+          MAX_PAGES: "3"
+
+      # 3. Generate updated sitemap.xml
+      - name: Generate sitemap.xml
+        run: node scripts/generate-sitemap.js
+
+      # 4. Commit updated games.json, fallback_games.csv, and sitemap.xml
+      - name: Commit and Push Updated Data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add games.json fallback_games.csv
-          git diff --cached --quiet || git commit -m "🔄 Auto-update games.json [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+          git add games.json fallback_games.csv sitemap.xml
+          git diff --cached --quiet || git commit -m "🔄 Auto-sync database & games.json [$(date -u '+%Y-%m-%d %H:%M UTC')]"
           git push
