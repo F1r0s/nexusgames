@@ -557,6 +557,26 @@ async function withRetry(fn, retries = 5, initialDelay = 2000) {
 }
 
 async function logSearchToSheets(query, country) {
+    const webAppUrl = process.env.SEARCH_LOG_WEBAPP_URL || process.env.SEARCH_TRACKING_WEBAPP_URL;
+    if (webAppUrl) {
+        try {
+            await axios.post(webAppUrl, JSON.stringify({ query, country }), {
+                headers: { 'Content-Type': 'text/plain' },
+                timeout: 6000,
+                maxRedirects: 5
+            });
+            console.log(`[SEARCH LOG] Logged search query "${query}" from ${country} via Google Apps Script Web App.`);
+            return;
+        } catch (e) {
+            console.warn('[SEARCH LOG APPS SCRIPT POST FAILED, RETRYING GET]', e.message);
+            // Fallback: send via GET parameter (Apps Script redirects POST sometimes)
+            const getUrl = `${webAppUrl}${webAppUrl.includes('?') ? '&' : '?'}query=${encodeURIComponent(query)}&country=${encodeURIComponent(country)}`;
+            await axios.get(getUrl, { timeout: 6000, maxRedirects: 5 });
+            console.log(`[SEARCH LOG] Logged search query "${query}" from ${country} via GET fallback.`);
+            return;
+        }
+    }
+
     const spreadsheetId = process.env.SEARCH_TRACKING_SPREADSHEET_ID || '1Yqyi32SFUBUhT1xGJMseAv8q5ygtqhpREA7yz6ktlb8';
     const doc = new GoogleSpreadsheet(spreadsheetId);
 
@@ -568,7 +588,7 @@ async function logSearchToSheets(query, country) {
     if (creds) {
         await doc.useServiceAccountAuth(creds);
     } else {
-        throw new Error('Google credentials not available for search logging');
+        throw new Error('Google credentials not available for search logging. Please set SEARCH_LOG_WEBAPP_URL or provide service account credentials.');
     }
 
     await withRetry(() => doc.loadInfo());
