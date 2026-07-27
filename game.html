@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="pageTitle">Game Mod Download — Mod Vault</title>
-    <meta id="metaDesc" name="description" content="Download verified mobile game mods, unlocked features, unlimited money, and APKs for Android and iOS safely on Mod Vault.">
+    <title id="pageTitle">Free Game Mod APK Download — Mod Vault</title>
+    <meta id="metaDesc" name="description" content="Download this game's mod APK free. Unlimited money, unlocked features for Android &amp; iOS. Safe, verified &amp; no-root required.">
     <meta id="metaKeywords" name="keywords" content="mod apk, mod menu, game mod, free download, android, ios">
     <link rel="canonical" id="canonicalUrl" href="https://www.modvault.games/game.html">
 
@@ -438,11 +438,12 @@
 
             <!-- DESKTOP NAV -->
             <nav class="desktop-nav">
-                <a href="/best-games.html" class="nav-btn"><i class="fas fa-trophy"></i><span class="nav-label">Top Games in 2026</span></a>
+                <a href="/best-games.html" class="nav-btn"><i class="fas fa-trophy"></i><span class="nav-label">Best Mods 2026</span></a>
                 <a href="/news.html" class="nav-btn"><i class="fas fa-newspaper"></i><span class="nav-label">News</span></a>
-                <a href="/game-mode-guide.html" class="nav-btn"><i class="fas fa-question-circle"></i><span class="nav-label">Guide</span></a>
-                <a href="/support.html" class="nav-btn"><i class="fas fa-headset"></i><span class="nav-label">Support</span></a>
+                <a href="/game-mode-guide.html" class="nav-btn"><i class="fas fa-question-circle"></i><span class="nav-label">How to Install</span></a>
+                <a href="/support.html" class="nav-btn"><i class="fas fa-headset"></i><span class="nav-label">Help Center</span></a>
                 <a href="/privacy.html" class="nav-btn"><i class="fas fa-shield-alt"></i><span class="nav-label">Privacy</span></a>
+                <a href="/dmca.html" class="nav-btn"><i class="fas fa-balance-scale"></i><span class="nav-label">DMCA</span></a>
             </nav>
 
             <!-- HAMBURGER (mobile only) -->
@@ -454,11 +455,12 @@
 
     <!-- MOBILE MENU DRAWER -->
     <div id="mobileMenu">
-        <a href="/best-games.html" onclick="toggleMobileMenu()"><i class="fas fa-trophy" style="margin-right:10px;color:var(--amber);"></i>Top Games in 2026</a>
+        <a href="/best-games.html" onclick="toggleMobileMenu()"><i class="fas fa-trophy" style="margin-right:10px;color:var(--amber);"></i>Best Mods 2026</a>
         <a href="/news.html" onclick="toggleMobileMenu()"><i class="fas fa-newspaper" style="margin-right:10px;color:var(--amber);"></i>News</a>
-        <a href="/game-mode-guide.html" onclick="toggleMobileMenu()"><i class="fas fa-question-circle" style="margin-right:10px;color:var(--amber);"></i>Guide</a>
-        <a href="/support.html" onclick="toggleMobileMenu()"><i class="fas fa-headset" style="margin-right:10px;color:var(--amber);"></i>Support</a>
+        <a href="/game-mode-guide.html" onclick="toggleMobileMenu()"><i class="fas fa-question-circle" style="margin-right:10px;color:var(--amber);"></i>How to Install</a>
+        <a href="/support.html" onclick="toggleMobileMenu()"><i class="fas fa-headset" style="margin-right:10px;color:var(--amber);"></i>Help Center</a>
         <a href="/privacy.html" onclick="toggleMobileMenu()"><i class="fas fa-shield-alt" style="margin-right:10px;color:var(--amber);"></i>Privacy</a>
+        <a href="/dmca.html" onclick="toggleMobileMenu()"><i class="fas fa-balance-scale" style="margin-right:10px;color:var(--amber);"></i>DMCA</a>
     </div>
 
     <main class="game-page-container">
@@ -695,6 +697,12 @@
         }
 
         function openLockerModal(platform) {
+            // On mobile: go directly to content locker — skip modal/iframe
+            if (window.innerWidth <= 960) {
+                window.location.href = LOCKER_URL;
+                return;
+            }
+            // Desktop: show modal with embedded locker
             if (currentGame) {
                 document.getElementById('modalGameTitle').innerText = `Unlock ${currentGame.title} (${platform.toUpperCase()})`;
             }

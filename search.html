@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">Game Mod Search — Mod Vault</title>
+    <meta name="description" content="Search for free modded APKs on Mod Vault. Find the best game mods for Android &amp; iOS — unlimited money, unlocked features &amp; no-root cheats.">
+    <meta name="robots" content="noindex, follow">
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon-512.png">
+    <meta name="theme-color" content="#FF6B00">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/style.min.css">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        :root { --amber: #FF6B00; }
+        * { box-sizing: border-box; }
+        body { padding-top: 0; background: #080810; color: #fff; min-height: 100vh; margin: 0; font-family: 'Rajdhani', sans-serif; }
+        .search-page-header { background: linear-gradient(180deg,#0e0e18,#080810); border-bottom:1px solid rgba(255,107,0,0.2); padding:14px 20px; position:sticky; top:0; z-index:100; box-shadow:0 4px 24px rgba(0,0,0,0.5); }
+        .search-page-inner { max-width:1100px; margin:0 auto; display:flex; align-items:center; gap:14px; }
+        .back-home-btn { display:inline-flex; align-items:center; gap:8px; font-family:'Orbitron',sans-serif; font-size:0.72rem; font-weight:700; color:var(--amber); text-decoration:none; letter-spacing:1.5px; text-transform:uppercase; padding:10px 16px; border:1px solid rgba(255,107,0,0.4); border-radius:7px; transition:all 0.2s; white-space:nowrap; flex-shrink:0; }
+        .back-home-btn:hover { background:rgba(255,107,0,0.12); border-color:var(--amber); color:#fff; }
+        .search-bar-wrap { flex:1; display:flex; gap:10px; align-items:center; min-width:0; }
+        .search-bar-input-wrap { position:relative; flex:1; min-width:0; }
+        .search-bar-input-wrap i { position:absolute; left:17px; top:50%; transform:translateY(-50%); color:rgba(255,255,255,0.4); font-size:1rem; pointer-events:none; }
+        .search-bar-input { width:100%; background:rgba(255,255,255,0.05); border:1.5px solid rgba(255,255,255,0.1); border-radius:8px; padding:12px 16px 12px 46px; color:#fff; font-family:'Rajdhani',sans-serif; font-size:1.1rem; font-weight:500; transition:all 0.25s; outline:none; }
+        .search-bar-input::placeholder { color:rgba(255,255,255,0.3); }
+        .search-bar-input:focus { border-color:var(--amber); background:rgba(255,107,0,0.05); box-shadow:0 0 18px rgba(255,107,0,0.15); }
+        .search-submit-btn { display:inline-flex; align-items:center; gap:8px; padding:12px 22px; background:linear-gradient(135deg,#FF6B00,#d95700); color:#000; font-family:'Orbitron',sans-serif; font-size:0.78rem; font-weight:900; letter-spacing:1.5px; text-transform:uppercase; border:none; border-radius:8px; cursor:pointer; transition:all 0.2s; white-space:nowrap; flex-shrink:0; }
+        .search-submit-btn:hover { background:linear-gradient(135deg,#ff8533,#FF6B00); transform:translateY(-1px); box-shadow:0 4px 18px rgba(255,107,0,0.5); }
+        .search-results-container { max-width:1100px; margin:0 auto; padding:26px 20px 70px; }
+        .results-meta { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:22px; flex-wrap:wrap; }
+        .results-meta-title { font-family:'Orbitron',sans-serif; font-size:0.82rem; color:rgba(255,255,255,0.45); letter-spacing:2px; text-transform:uppercase; }
+        .results-meta-title strong { color:var(--amber); font-size:0.95rem; }
+        .results-count-badge { background:rgba(255,107,0,0.1); border:1px solid rgba(255,107,0,0.3); color:var(--amber); font-family:'Orbitron',sans-serif; font-size:0.68rem; font-weight:700; letter-spacing:1.5px; padding:5px 13px; border-radius:20px; text-transform:uppercase; }
+        .search-games-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(175px,1fr)); gap:15px; }
+        .search-game-card { background:linear-gradient(145deg,#111118,#0d0d14); border:1px solid rgba(255,255,255,0.07); border-radius:13px; overflow:hidden; cursor:pointer; transition:transform 0.22s,border-color 0.22s,box-shadow 0.22s; text-decoration:none; display:block; }
+        .search-game-card:hover { transform:translateY(-5px); border-color:rgba(255,107,0,0.55); box-shadow:0 8px 28px rgba(255,107,0,0.2); }
+        .sgc-img-wrap { position:relative; width:100%; aspect-ratio:1/1; overflow:hidden; }
+        .sgc-img-wrap img { width:100%; height:100%; object-fit:cover; display:block; transition:transform 0.3s; }
+        .search-game-card:hover .sgc-img-wrap img { transform:scale(1.06); }
+        .sgc-cat-badge { position:absolute; bottom:8px; left:8px; background:rgba(255,107,0,0.92); color:#000; font-family:'Orbitron',sans-serif; font-size:0.58rem; font-weight:900; letter-spacing:1px; padding:3px 8px; border-radius:5px; text-transform:uppercase; }
+        .sgc-body { padding:11px 13px 13px; }
+        .sgc-title { font-family:'Orbitron',sans-serif; font-size:0.75rem; font-weight:700; color:#eee; letter-spacing:0.5px; margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .sgc-meta { display:flex; gap:8px; flex-wrap:wrap; }
+        .sgc-meta span { font-family:'Rajdhani',sans-serif; font-size:0.77rem; color:#666; display:inline-flex; align-items:center; gap:3px; }
+        .sgc-meta i { color:var(--amber); font-size:0.68rem; }
+        .sgc-dl-bar { display:flex; align-items:center; justify-content:center; gap:6px; margin-top:9px; background:linear-gradient(135deg,rgba(255,107,0,0.15),rgba(255,107,0,0.05)); border:1px solid rgba(255,107,0,0.25); border-radius:7px; padding:7px; font-family:'Orbitron',sans-serif; font-size:0.62rem; font-weight:700; letter-spacing:1.5px; color:var(--amber); text-transform:uppercase; transition:all 0.2s; }
+        .search-game-card:hover .sgc-dl-bar { background:rgba(255,107,0,0.25); border-color:rgba(255,107,0,0.6); color:#fff; }
+        .search-loading { grid-column:1/-1; text-align:center; padding:70px 20px; }
+        .spin-ring { width:36px; height:36px; border:3px solid rgba(255,107,0,0.15); border-top-color:var(--amber); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 16px; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .search-loading p { font-family:'Orbitron',sans-serif; font-size:0.75rem; letter-spacing:3px; color:rgba(255,255,255,0.3); text-transform:uppercase; }
+        .search-empty { grid-column:1/-1; text-align:center; padding:80px 20px; }
+        .search-empty i { font-size:3.5rem; color:rgba(255,107,0,0.25); margin-bottom:20px; display:block; }
+        .search-empty h2 { font-family:'Orbitron',sans-serif; font-size:1rem; color:#aaa; margin-bottom:10px; letter-spacing:2px; text-transform:uppercase; }
+        .search-empty p { color:#555; font-size:0.95rem; line-height:1.7; }
+        .browse-all-btn { display:inline-block; margin-top:20px; padding:12px 28px; background:linear-gradient(135deg,#FF6B00,#d95700); color:#000; font-family:'Orbitron',sans-serif; font-weight:900; font-size:0.78rem; letter-spacing:2px; text-decoration:none; border-radius:8px; text-transform:uppercase; }
+        @media (max-width:600px) {
+            .back-home-btn .back-label { display:none; }
+            .search-submit-btn .btn-label { display:none; }
+            .search-submit-btn { padding:12px 15px; }
+            .search-games-grid { grid-template-columns:repeat(auto-fill,minmax(145px,1fr)); gap:11px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="search-page-header">
+        <div class="search-page-inner">
+            <a href="/" class="back-home-btn">
+                <i class="fas fa-arrow-left"></i>
+                <span class="back-label">MOD VAULT</span>
+            </a>
+            <div class="search-bar-wrap">
+                <div class="search-bar-input-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchBarInput" class="search-bar-input" placeholder="Search game mods..." autocomplete="off" autocorrect="off" spellcheck="false">
+                </div>
+                <button class="search-submit-btn" onclick="doSearch()">
+                    <i class="fas fa-search"></i>
+                    <span class="btn-label">SEARCH</span>
+                </button>
+            </div>
+        </div>
+    </header>
+    <div class="search-results-container">
+        <h1 class="results-meta" id="resultsMeta" style="display:none; font-size: inherit; font-weight: normal; margin: 0 0 22px 0;">
+            <div class="results-meta-title">Results for: <strong id="queryDisplay"></strong></div>
+            <div class="results-count-badge" id="countBadge">0 RESULTS</div>
+        </h1>
+        <div class="search-games-grid" id="searchGrid">
+            <div class="search-loading"><div class="spin-ring"></div><p>Loading game database...</p></div>
+        </div>
+    </div>
+    <script>
+        var gamesDB = [];
+        function getQueryParam() { return (new URLSearchParams(window.location.search).get('q') || '').trim(); }
+        function toSlug(t) { if(!t)return 'game'; return t.toLowerCase().replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-').replace(/-+/g,'-'); }
+        function doSearch() {
+            var q = document.getElementById('searchBarInput').value.trim();
+            if(!q) return;
+            fetch('/api/log-search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})}).catch(function(){});
+            window.location.href = '/search.html?q=' + encodeURIComponent(q);
+        }
+        function buildCard(game) {
+            var slug = game.slug || toSlug(game.title);
+            var cats = (game.categories||[]).filter(function(c){ var l=c.toLowerCase().trim(); return l!=='new'&&l!=='hot'&&l!=='legendary'&&l!==''; });
+            var catLabel = cats.length > 0 ? cats[0] : 'Game';
+            var a = document.createElement('a');
+            a.href = '/game.html?id=' + encodeURIComponent(slug);
+            a.className = 'search-game-card';
+            a.innerHTML = '<div class="sgc-img-wrap"><img src="'+game.img+'" alt="'+game.title+'" loading="lazy" decoding="async"><span class="sgc-cat-badge">'+catLabel+'</span></div><div class="sgc-body"><div class="sgc-title">'+game.title+'</div><div class="sgc-meta"><span><i class="fas fa-code-branch"></i>'+(game.version||'v1.0')+'</span><span><i class="fas fa-hdd"></i>'+(game.size||'N/A')+'</span></div><div class="sgc-dl-bar"><i class="fas fa-download"></i> DOWNLOAD MOD</div></div>';
+            return a;
+        }
+        function renderResults(query) {
+            var grid = document.getElementById('searchGrid');
+            var meta = document.getElementById('resultsMeta');
+            var qd   = document.getElementById('queryDisplay');
+            var cb   = document.getElementById('countBadge');
+            if(!query) {
+                meta.style.display='none'; grid.innerHTML='';
+                var frag=document.createDocumentFragment(); gamesDB.forEach(function(g){frag.appendChild(buildCard(g));}); grid.appendChild(frag); return;
+            }
+            var q = query.toLowerCase();
+            var matched = gamesDB.filter(function(game) {
+                return (game.title||'').toLowerCase().includes(q) || (game.categories||[]).join(' ').toLowerCase().includes(q) || (game.desc||'').toLowerCase().includes(q);
+            });
+            matched.sort(function(a,b){ return ((a.title||'').toLowerCase().startsWith(q)?0:1) - ((b.title||'').toLowerCase().startsWith(q)?0:1); });
+            grid.innerHTML=''; meta.style.display='flex';
+            qd.textContent='"'+query+'"'; cb.textContent=matched.length+(matched.length===1?' RESULT':' RESULTS');
+            if(matched.length===0) {
+                grid.innerHTML='<div class="search-empty"><i class="fas fa-search-minus"></i><h2>No Results Found</h2><p>No mods matched <strong>"'+query+'"</strong>.<br>Try a different spelling or browse our full library.</p><a href="/" class="browse-all-btn"><i class="fas fa-gamepad"></i> Browse All Games</a></div>'; return;
+            }
+            var frag=document.createDocumentFragment(); matched.forEach(function(g){frag.appendChild(buildCard(g));}); grid.appendChild(frag);
+        }
+        async function init() {
+            var query = getQueryParam();
+            if(query) { document.getElementById('pageTitle').textContent='"'+query+'" -- Mod Vault'; document.getElementById('searchBarInput').value=query; }
+            try { var c=localStorage.getItem('gamesDB_cache_v3'); if(c){ var p=JSON.parse(c); if(Array.isArray(p)&&p.length>0){gamesDB=p; renderResults(query);} } } catch(e){}
+            try {
+                var res = await fetch('/api/games?t='+Date.now());
+                var data = await res.json();
+                if(Array.isArray(data)&&data.length>0){ gamesDB=data; localStorage.setItem('gamesDB_cache_v3',JSON.stringify(data)); renderResults(query); }
+            } catch(e) {
+                if(gamesDB.length===0) document.getElementById('searchGrid').innerHTML='<div class="search-empty"><i class="fas fa-wifi"></i><h2>Connection Error</h2><p>Could not load the game database.</p><a href="javascript:location.reload()" class="browse-all-btn">Try Again</a></div>';
+            }
+        }
+        document.getElementById('searchBarInput').addEventListener('keydown',function(e){if(e.key==='Enter')doSearch();});
+        var _deb=null;
+        document.getElementById('searchBarInput').addEventListener('input',function(){ clearTimeout(_deb); var v=this.value.trim(); _deb=setTimeout(function(){if(gamesDB.length>0)renderResults(v);},280); });
+        init();
+    </script>
+</body>
+</html>

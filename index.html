@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://i.postimg.cc" crossorigin>
     <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
     <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
+    <link rel="preconnect" href="https://challenges.cloudflare.com" crossorigin>
     <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
     <link rel="dns-prefetch" href="https://is1-ssl.mzstatic.com">
     <!-- ═══ PRELOAD — LCP hero background image ═══ -->
@@ -17,21 +18,21 @@
     <meta charset="UTF-8">
     <meta name="google-site-verification" content="ylkEz-PhzT_epqyvhBmZBmTZLCn2FOQcD7U9fu0xhdg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mod Vault - Premium Mobile Game Mods &amp; Unlocked Features</title>
-    <meta name="description" content="Discover and download premium mobile game mods, unlocked features, and exclusive game enhancements. The ultimate underground library for mobile gamers. Safe, fast, and secure.">
+    <title>Mod Vault — Modding Mobile Games | Free APK Mods</title>
+    <meta name="description" content="Download free modded APKs for Android & iOS. Access unlimited money, unlocked features, and no-root mods. Safe, verified, and updated daily.">
     <meta name="keywords" content="mobile game mods, game enhancements, unlocked features, premium mods, mobile gaming, android mods, ios mods, game hacks, secure game mods">
     <meta name="author" content="Ultimate Game Mods">
     <link rel="canonical" href="https://www.modvault.games/" />
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://www.modvault.games/">
-    <meta property="og:title" content="Mod Vault — Premium Mobile Game Mods & Unlocked Features">
-    <meta property="og:description" content="Discover and download premium mobile game mods, unlocked features, and exclusive game enhancements. The ultimate underground library for mobile gamers.">
+    <meta property="og:title" content="Mod Vault — Modding Mobile Games | Free APK Mods">
+    <meta property="og:description" content="Download free modded APKs for Android & iOS. Access unlimited money, unlocked features, and no-root mods. Safe, verified, and updated daily.">
     <meta property="og:image" content="https://modvault.games/image.png">
     <meta property="og:site_name" content="Mod Vault">
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://www.modvault.games/">
-    <meta property="twitter:title" content="Mod Vault — Premium Mobile Game Mods & Unlocked Features">
-    <meta property="twitter:description" content="Discover and download premium mobile game mods, unlocked features, and exclusive game enhancements.">
+    <meta property="twitter:title" content="Mod Vault — Modding Mobile Games | Free APK Mods">
+    <meta property="twitter:description" content="Download free modded APKs for Android & iOS. Access unlimited money, unlocked features, and no-root mods. Safe, verified, and updated daily.">
     <meta property="twitter:image" content="https://modvault.games/image.png">
     <!-- ═══ FAVICON — All Browsers & Search Engines ═══ -->
     <!-- ICO fallback: Vercel dashboard, old browsers, search engines -->
@@ -71,19 +72,13 @@
     <noscript><link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet"></noscript>
     <!-- Font Awesome — loaded async to avoid render-blocking (80KB saved from critical path) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    <!-- Cloudflare Turnstile — loaded async, non-blocking -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
     <link rel="stylesheet" href="/style.min.css">
     <!-- Styles loaded from /style.min.css (minified) -->
     <style>
-        /* Critical path: ensure fonts render immediately with system fallback */
-        @font-face {
-            font-family: 'Orbitron';
-            font-display: swap;
-        }
-        @font-face {
-            font-family: 'Rajdhani';
-            font-display: swap;
-        }
+        /* Critical path */
         html { scroll-behavior: smooth; }
         /* ── SEARCH BOX & ROBOTIC SEARCH BUTTON ── */
         .search-box { display:flex !important; gap:10px !important; align-items:center !important; width:100% !important; position:relative !important; }
@@ -223,6 +218,37 @@
 </head>
 <body>
 
+    <!-- ═══ CLOUDFLARE TURNSTILE GATE ═══ -->
+    <div id="cfGate" style="position:fixed;inset:0;background:#080810;z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:15px;">
+        <div class="cf-turnstile" data-sitekey="0x4AAAAAAD_YSqduGwaxBcse" data-callback="onCFVerify" data-error-callback="onCFError" data-theme="dark"></div>
+    </div>
+    <script>
+        var isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        if (sessionStorage.getItem('cf_verified') || isLocal) {
+            var g = document.getElementById('cfGate');
+            if (g) g.style.display = 'none';
+        }
+        function onCFVerify() {
+            sessionStorage.setItem('cf_verified', '1');
+            dismissGate();
+        }
+        function onCFError() {
+            dismissGate();
+        }
+        function dismissGate() {
+            var g = document.getElementById('cfGate');
+            if (!g) return;
+            g.style.transition = 'opacity 0.35s';
+            g.style.opacity = '0';
+            setTimeout(function(){ g.style.display = 'none'; }, 360);
+        }
+        // Safety fallback: if widget stalls or domain mismatch occurs, auto-dismiss after 4 seconds
+        setTimeout(function(){
+            var g = document.getElementById('cfGate');
+            if (g && g.style.display !== 'none') dismissGate();
+        }, 4000);
+    </script>
+
     <header>
         <div class="header-inner">
             <!-- LOGO — always in top-left -->
@@ -248,11 +274,12 @@
 
             <!-- DESKTOP NAV -->
             <nav class="desktop-nav">
-                <a href="/best-games.html" class="nav-btn"><i class="fas fa-trophy"></i><span class="nav-label">Top Games in 2026</span></a>
+                <a href="/best-games.html" class="nav-btn"><i class="fas fa-trophy"></i><span class="nav-label">Best Mods 2026</span></a>
                 <a href="/news.html" class="nav-btn"><i class="fas fa-newspaper"></i><span class="nav-label">News</span></a>
-                <a href="/game-mode-guide.html" class="nav-btn"><i class="fas fa-question-circle"></i><span class="nav-label">Guide</span></a>
-                <a href="/support.html" class="nav-btn"><i class="fas fa-headset"></i><span class="nav-label">Support</span></a>
+                <a href="/game-mode-guide.html" class="nav-btn"><i class="fas fa-question-circle"></i><span class="nav-label">How to Install</span></a>
+                <a href="/support.html" class="nav-btn"><i class="fas fa-headset"></i><span class="nav-label">Help Center</span></a>
                 <a href="/privacy.html" class="nav-btn"><i class="fas fa-shield-alt"></i><span class="nav-label">Privacy</span></a>
+                <a href="/dmca.html" class="nav-btn"><i class="fas fa-balance-scale"></i><span class="nav-label">DMCA</span></a>
             </nav>
 
             <!-- HAMBURGER (mobile only) -->
@@ -264,11 +291,12 @@
 
     <!-- MOBILE MENU DRAWER -->
     <div id="mobileMenu">
-        <a href="/best-games.html" onclick="toggleMobileMenu()"><i class="fas fa-trophy" style="margin-right:10px;color:var(--amber);"></i>Top Games in 2026</a>
+        <a href="/best-games.html" onclick="toggleMobileMenu()"><i class="fas fa-trophy" style="margin-right:10px;color:var(--amber);"></i>Best Mods 2026</a>
         <a href="/news.html" onclick="toggleMobileMenu()"><i class="fas fa-newspaper" style="margin-right:10px;color:var(--amber);"></i>News</a>
-        <a href="/game-mode-guide.html" onclick="toggleMobileMenu()"><i class="fas fa-question-circle" style="margin-right:10px;color:var(--amber);"></i>Guide</a>
-        <a href="/support.html" onclick="toggleMobileMenu()"><i class="fas fa-headset" style="margin-right:10px;color:var(--amber);"></i>Support</a>
+        <a href="/game-mode-guide.html" onclick="toggleMobileMenu()"><i class="fas fa-question-circle" style="margin-right:10px;color:var(--amber);"></i>How to Install</a>
+        <a href="/support.html" onclick="toggleMobileMenu()"><i class="fas fa-headset" style="margin-right:10px;color:var(--amber);"></i>Help Center</a>
         <a href="/privacy.html" onclick="toggleMobileMenu()"><i class="fas fa-shield-alt" style="margin-right:10px;color:var(--amber);"></i>Privacy</a>
+        <a href="/dmca.html" onclick="toggleMobileMenu()"><i class="fas fa-balance-scale" style="margin-right:10px;color:var(--amber);"></i>DMCA</a>
     </div>
 
     <div class="vault-burst-layer" id="vaultBurstLayer"></div>
@@ -276,134 +304,13 @@
     <section class="hero">
         <div class="hero-content">
             <h1 style="font-family:var(--font-head); font-size:clamp(2.2rem,10vw,4rem); color:var(--text-main); text-transform:uppercase; line-height:1.1; margin-bottom:20px;">
-                Premium Mobile <span style="color:#ffffff; text-shadow:0 0 28px rgba(255,255,255,0.65);">Game Mods</span>
+                Modding Mobile <span style="color:#ffffff; text-shadow:0 0 28px rgba(255,255,255,0.65);">Games</span>
             </h1>
-            <p>Discover the underground of mobile gaming. Premium Mods, Unlocked Features, and No Limits. Safe and verified library for all your favorite games.</p>
+            <p>Free APK mods for Android &amp; iOS. Unlimited coins, unlocked characters, and no-root cheats — safe, verified, and updated daily.</p>
         </div>
     </section>
 
-    <!-- ── VIDEO SECTION ──────────────────────────────────────────── -->
-    <section id="videoSection" style="
-        padding: 60px 20px 0;
-        position: relative;
-        z-index: 5;
-    ">
-        <div style="
-            max-width: 880px;
-            margin: 0 auto;
-            position: relative;
-        ">
-            <!-- Corner accents -->
-            <div style="position:absolute;top:-12px;left:-12px;width:28px;height:28px;border-top:2px solid #FF6B00;border-left:2px solid #FF6B00;pointer-events:none;z-index:2;"></div>
-            <div style="position:absolute;top:-12px;right:-12px;width:28px;height:28px;border-top:2px solid #FF6B00;border-right:2px solid #FF6B00;pointer-events:none;z-index:2;"></div>
-            <div style="position:absolute;bottom:-12px;left:-12px;width:28px;height:28px;border-bottom:2px solid #FF6B00;border-left:2px solid #FF6B00;pointer-events:none;z-index:2;"></div>
-            <div style="position:absolute;bottom:-12px;right:-12px;width:28px;height:28px;border-bottom:2px solid #FF6B00;border-right:2px solid #FF6B00;pointer-events:none;z-index:2;"></div>
-
-
-            <!-- Video wrapper — 16:9 responsive -->
-            <div style="
-                position:relative;
-                padding-bottom:56.25%;
-                height:0;
-                background:#000;
-                border-radius:10px;
-                overflow:hidden;
-                border:1px solid rgba(255,107,0,0.35);
-                box-shadow:
-                    0 0 0 1px rgba(255,255,255,0.04),
-                    0 0 60px rgba(255,107,0,0.18),
-                    0 25px 60px rgba(0,0,0,0.75);
-            ">
-                <!-- Scan-line overlay for theme consistency -->
-                <div style="
-                    position:absolute;inset:0;
-                    background:repeating-linear-gradient(
-                        0deg,
-                        transparent,
-                        transparent 3px,
-                        rgba(0,0,0,0.08) 3px,
-                        rgba(0,0,0,0.08) 4px
-                    );
-                    pointer-events:none;z-index:2;border-radius:10px;
-                "></div>
-
-                <video
-                    id="introVideo"
-                    muted
-                    loop
-                    playsinline
-                    controls
-                    preload="none"
-                    style="
-                        position:absolute;top:0;left:0;
-                        width:100%;height:100%;
-                        object-fit:cover;
-                        border-radius:10px;
-                    "
-                >
-                    <source data-src="/video/mod-vault-games.mp4" type="video/mp4">
-                    Your browser does not support HTML5 video.
-                </video>
-                <!-- Play overlay — click to load the 33MB video -->
-                <div id="videoPlayOverlay" style="
-                    position:absolute;inset:0;z-index:3;
-                    display:flex;align-items:center;justify-content:center;
-                    cursor:pointer;background:rgba(0,0,0,0.5);
-                    border-radius:10px;transition:opacity 0.4s;
-                " onclick="launchVideo()">
-                    <div style="
-                        width:72px;height:72px;border-radius:50%;
-                        background:rgba(255,107,0,0.9);display:flex;
-                        align-items:center;justify-content:center;
-                        box-shadow:0 0 40px rgba(255,107,0,0.6);
-                        transition:transform 0.25s,box-shadow 0.25s;
-                    " onmouseover="this.style.transform='scale(1.12)';this.style.boxShadow='0 0 60px rgba(255,107,0,0.9)'" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 0 40px rgba(255,107,0,0.6)'">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="#000"><path d="M8 5v14l11-7z"/></svg>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Caption under video -->
-            <p style="
-                margin-top:12px;text-align:center;
-                font-family:'Rajdhani',sans-serif;
-                font-size:0.82rem;letter-spacing:2px;
-                color:rgba(255,255,255,0.28);text-transform:uppercase;
-            ">▶ MOD VAULT — PREMIUM MOBILE GAME MODS SHOWCASE</p>
-        </div>
-    </section>
-
-    <style>
-    @keyframes vidPulse{0%,100%{opacity:1;box-shadow:0 0 6px rgba(255,107,0,0.9);}50%{opacity:0.4;box-shadow:0 0 14px rgba(255,107,0,0.5);}}
-    /* Tighten on mobile */
-    @media(max-width:600px){
-        #videoSection{padding:40px 14px 0;}
-    }
-    </style>
-
-    <!-- SEO visible text block — boosts text-HTML ratio -->
-    <div style="max-width:1100px;margin:0 auto;padding:36px 24px 10px;">
-        <p style="color:#888;font-size:0.97rem;line-height:1.75;">
-            <strong style="color:#ccc;">Mod Vault</strong> is your #1 destination for safe, verified mobile game mods and unlocked features for Android and iOS.
-            Our library is updated automatically every few hours with the latest titles — from action shooters and racing games to strategy RPGs and casual puzzles.
-            Every entry is hand-checked for quality so you always get working mods with no surveys, no broken links, and no viruses.
-            Simply browse the game catalogue below, pick your title, and follow the quick verification step to unlock your download.
-            We support all major Android versions and most titles run on iOS without a jailbreak.
-            Whether you are hunting for unlimited coins, unlocked characters, godmode, or ad-free gameplay — Mod Vault has you covered.
-            Join thousands of mobile gamers who trust us for daily updates and premium mods delivered straight to their device.
-        </p>
-    </div>
-
-    <!-- ── TOP TRENDING GAMES JULY 2026 ─────────────────────────────── -->
-    <div class="trending-section" id="trendingSection">
-        <div class="trending-header">
-            <span class="fire-icon">🔥</span>
-            <h2>Top Trending Games <span style="color:var(--amber);">July 2026</span></h2>
-        </div>
-        <div class="trending-grid" id="trendingGrid">
-            <div style="grid-column:1/-1;text-align:center;padding:20px;color:#444;font-family:var(--font-head);font-size:0.8rem;letter-spacing:2px;">LOADING TRENDING...</div>
-        </div>
-    </div>
+    <!-- SEARCH & CATEGORIES now live directly above the game grid - no top sections -->
 
     <div class="controls-section">
         <div class="hud-panel">
@@ -435,7 +342,7 @@
 
     <div class="main-container">
         <div class="section-header reveal">
-            <h2 class="section-title">Active <span>Modules</span></h2>
+            <h2 class="section-title">Browse <span>Game Mods</span></h2>
             <div style="color:var(--text-muted); font-size:0.8rem;"> </div>
         </div>
         <div class="games-grid" id="gamesGrid"></div>
@@ -456,7 +363,52 @@
 
 
 
+
+
+    <!-- ── VIDEO SECTION ──────────────────────────────────────────── -->
+    <section id="videoSection" style="padding: 60px 20px 0; position: relative; z-index: 5;">
+        <div style="max-width: 880px; margin: 0 auto; position: relative;">
+            <!-- Corner accents -->
+            <div style="position:absolute;top:-12px;left:-12px;width:28px;height:28px;border-top:2px solid #FF6B00;border-left:2px solid #FF6B00;pointer-events:none;z-index:2;"></div>
+            <div style="position:absolute;top:-12px;right:-12px;width:28px;height:28px;border-top:2px solid #FF6B00;border-right:2px solid #FF6B00;pointer-events:none;z-index:2;"></div>
+            <div style="position:absolute;bottom:-12px;left:-12px;width:28px;height:28px;border-bottom:2px solid #FF6B00;border-left:2px solid #FF6B00;pointer-events:none;z-index:2;"></div>
+            <div style="position:absolute;bottom:-12px;right:-12px;width:28px;height:28px;border-bottom:2px solid #FF6B00;border-right:2px solid #FF6B00;pointer-events:none;z-index:2;"></div>
+            <!-- Video wrapper — 16:9 responsive -->
+            <div style="position:relative;padding-bottom:56.25%;height:0;background:#000;border-radius:10px;overflow:hidden;border:1px solid rgba(255,107,0,0.35);box-shadow:0 0 0 1px rgba(255,255,255,0.04),0 0 60px rgba(255,107,0,0.18),0 25px 60px rgba(0,0,0,0.75);">
+                <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.08) 3px,rgba(0,0,0,0.08) 4px);pointer-events:none;z-index:2;border-radius:10px;"></div>
+                <video id="introVideo" muted loop playsinline controls preload="none" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:10px;">
+                    <source data-src="/video/mod-vault-games.mp4" type="video/mp4">
+                    Your browser does not support HTML5 video.
+                </video>
+                <div id="videoPlayOverlay" style="position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;cursor:pointer;background:rgba(0,0,0,0.5);border-radius:10px;transition:opacity 0.4s;" onclick="launchVideo()">
+                    <div style="width:72px;height:72px;border-radius:50%;background:rgba(255,107,0,0.9);display:flex;align-items:center;justify-content:center;box-shadow:0 0 40px rgba(255,107,0,0.6);transition:transform 0.25s,box-shadow 0.25s;" onmouseover="this.style.transform='scale(1.12)';this.style.boxShadow='0 0 60px rgba(255,107,0,0.9)'" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 0 40px rgba(255,107,0,0.6)'">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="#000"><path d="M8 5v14l11-7z"/></svg>
+                    </div>
+                </div>
+            </div>
+            <p style="margin-top:12px;text-align:center;font-family:'Rajdhani',sans-serif;font-size:0.82rem;letter-spacing:2px;color:rgba(255,255,255,0.28);text-transform:uppercase;">▶ MOD VAULT — PREMIUM MOBILE GAME MODS SHOWCASE</p>
+        </div>
+    </section>
+    <style>
+    @keyframes vidPulse{0%,100%{opacity:1;box-shadow:0 0 6px rgba(255,107,0,0.9);}50%{opacity:0.4;box-shadow:0 0 14px rgba(255,107,0,0.5);}}
+    @media(max-width:600px){ #videoSection{padding:40px 14px 0;} }
+    </style>
+
+    <!-- SEO visible text block — boosts text-HTML ratio -->
+    <div style="max-width:1100px;margin:0 auto;padding:36px 24px 10px;">
+        <p style="color:#888;font-size:0.97rem;line-height:1.75;">
+            <strong style="color:#ccc;">Mod Vault</strong> is your #1 destination for safe, verified mobile game mods and unlocked features for Android and iOS.
+            Our library is updated automatically every few hours with the latest titles — from action shooters and racing games to strategy RPGs and casual puzzles.
+            Every entry is hand-checked for quality so you always get working mods with no surveys, no broken links, and no viruses.
+            Simply browse the game catalogue above, pick your title, and follow the quick verification step to unlock your download.
+            We support all major Android versions and most titles run on iOS without a jailbreak.
+            Whether you are hunting for unlimited coins, unlocked characters, godmode, or ad-free gameplay — Mod Vault has you covered.
+            Join thousands of mobile gamers who trust us for daily updates and premium mods delivered straight to their device.
+        </p>
+    </div>
+
     <section class="community-section reveal" style="border-top:none; padding-top:0; content-visibility:auto; contain-intrinsic-size:0 320px;">
+
         <h2 class="section-title">SYSTEM <span>FEATURES</span></h2>
         <div class="comm-grid">
             <div class="comm-card"><i class="fas fa-shield-alt"></i><h3>Secure Access</h3><p style="color:#888; font-size:0.9rem;">Verified mods and safe downloads only.</p></div>
@@ -467,7 +419,7 @@
 
     <section class="seo-section reveal" style="content-visibility:auto; contain-intrinsic-size:0 600px;">
         <div class="seo-intro">
-            <h1>The New Era of <span class="keyword-bold">Mobile Games</span></h1>
+            <h2>The New Era of <span class="keyword-bold">Modding Mobile Games</span></h2>
             <p>Welcome to the ultimate hub for <span class="keyword-bold">Mobile Phone Mobile Games</span>. In today's digital landscape, <span class="keyword-bold">Gaming on mobile</span> has evolved from simple time-wasters into high-fidelity entertainment powerhouses. Whether you are looking for an <span class="keyword-bold">Online free game</span> to play during a quick break or looking for <span class="keyword-bold">popular Mobile Games</span> with deep <span class="keyword-bold">gameplay</span> mechanics, our library offers something for every type of player.</p>
         </div>
         <div class="seo-accordion">
@@ -478,7 +430,7 @@
             <div class="accordion-item" onclick="toggleAccordion(this)"><div class="accordion-header"><span><span class="keyword-bold">Classic Games</span> &amp; <span class="keyword-bold">Underrated Mobile Games</span></span><i class="fas fa-chevron-down"></i></div><div class="accordion-content">Explore timeless <span class="keyword-bold">classic games</span> remastered for modern devices and <span class="keyword-bold">underrated Mobile Games</span> with unique artistic styles.</div></div>
         </div>
         <div class="seo-intro" style="margin-top:40px;">
-            <p>From the tactile responsiveness of <span class="keyword-bold">dirt bike games</span> to the strategic depth of a <span class="keyword-bold">multiplayer game</span>, <span class="keyword-bold">Gaming on mobile</span> has never been more exciting. Explore our curated selection of <span class="keyword-bold">Mobile Games</span> today.</p>
+            <p>From the tactile responsiveness of <span class="keyword-bold">dirt bike games</span> to the strategic depth of a <span class="keyword-bold">multiplayer game</span>, <span class="keyword-bold">modding mobile games</span> has never been more rewarding. Explore our curated selection of <span class="keyword-bold">free APK mods</span> today.</p>
         </div>
     </section>
 
@@ -496,10 +448,12 @@
             <div style="flex:0 0 200px;">
                 <h4 style="font-family:var(--font-head); color:white; margin-bottom:20px; font-size:1rem;">QUICK LINKS</h4>
                 <ul style="list-style:none; padding:0; margin:0;">
-                    <li style="margin-bottom:10px;"><a href="#" style="color:var(--text-muted); text-decoration:none; font-size:0.9rem; transition:0.3s;">Home</a></li>
-                    <li style="margin-bottom:10px;"><a href="#" onclick="document.querySelector('.main-container').scrollIntoView({behavior:'smooth'}); return false;" style="color:var(--text-muted); text-decoration:none; font-size:0.9rem; transition:0.3s;">Library</a></li>
-                    <li style="margin-bottom:10px;"><a href="support.html" style="color:var(--text-muted); text-decoration:none; font-size:0.9rem; transition:0.3s;">Support</a></li>
-                    <li style="margin-bottom:10px;"><a href="privacy.html" style="color:var(--text-muted); text-decoration:none; font-size:0.9rem; transition:0.3s;">Privacy Policy</a></li>
+                    <li style="margin-bottom:10px;"><a href="/" style="color:var(--text-muted); text-decoration:none; font-size:0.9rem; transition:0.3s;">Home</a></li>
+                    <li style="margin-bottom:10px;"><a href="/best-games.html" style="color:var(--text-muted); text-decoration:none; font-size:0.9rem; transition:0.3s;">Best Mods 2026</a></li>
+                    <li style="margin-bottom:10px;"><a href="/game-mode-guide.html" style="color:var(--text-muted); text-decoration:none; font-size:0.9rem; transition:0.3s;">How to Install</a></li>
+                    <li style="margin-bottom:10px;"><a href="/support.html" style="color:var(--text-muted); text-decoration:none; font-size:0.9rem; transition:0.3s;">Help Center</a></li>
+                    <li style="margin-bottom:10px;"><a href="/privacy.html" style="color:var(--text-muted); text-decoration:none; font-size:0.9rem; transition:0.3s;">Privacy Policy</a></li>
+                    <li style="margin-bottom:10px;"><a href="/dmca.html" style="color:var(--text-muted); text-decoration:none; font-size:0.9rem; transition:0.3s;">DMCA</a></li>
                 </ul>
             </div>
             <div style="flex:0 0 200px;">
@@ -511,8 +465,9 @@
         </div>
         <div style="max-width:1200px; margin:40px auto 0; padding-top:20px; border-top:1px solid rgba(255,255,255,0.05); text-align:center; color:#444; font-size:0.8rem;">
             &copy; 2026 Mod Vault. All rights reserved. &nbsp;|&nbsp;
-            <a href="privacy.html" style="color:#555; text-decoration:none;">Privacy Policy</a> &nbsp;|&nbsp;
-            <a href="support.html" style="color:#555; text-decoration:none;">Support</a>
+            <a href="/privacy.html" style="color:#555; text-decoration:none;">Privacy Policy</a> &nbsp;|&nbsp;
+            <a href="/support.html" style="color:#555; text-decoration:none;">Help Center</a> &nbsp;|&nbsp;
+            <a href="/dmca.html" style="color:#555; text-decoration:none;">DMCA</a>
         </div>
     </footer>
 
@@ -815,37 +770,23 @@
 
         window.executeSearch = function() {
             const query = searchInput.value.trim();
-            currentFilterText = query;
-            renderGames();
+            if (!query) return;
 
-            const gamesSection = document.querySelector('.main-container');
-            if (gamesSection) gamesSection.scrollIntoView({ behavior: 'smooth' });
+            // Log the search query (fire-and-forget)
+            fetch('/api/log-search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: query })
+            }).catch(err => console.error('Failed to log search:', err));
 
-            if (query.length > 0) {
-                fetch('/api/log-search', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: query })
-                }).catch(err => console.error('Failed to log search:', err));
-            }
+            // Navigate to dedicated search results page
+            window.location.href = '/search.html?q=' + encodeURIComponent(query);
         };
 
-        // Instantly reset filter and restore all games when search input is cleared
+        // On Enter key in search input, navigate to search results page
         if (searchInput) {
-            let searchDebounceTimer = null;
-            searchInput.addEventListener('input', function() {
-                const query = this.value.trim();
-                if (query === '') {
-                    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
-                    currentFilterText = '';
-                    renderGames();
-                } else {
-                    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
-                    searchDebounceTimer = setTimeout(() => {
-                        currentFilterText = query;
-                        renderGames();
-                    }, 250);
-                }
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') executeSearch();
             });
         }
 
@@ -1091,41 +1032,9 @@
             }
         });
 
-        /* ── Trending 2026 renderer ── */
-        function renderTrending() {
-            const grid = document.getElementById('trendingGrid');
-            if (!grid || gamesDB.length === 0) return;
-            // Pick 'legendary' + 'hot' games first — cap at 6 on mobile to reduce image requests
-            const isMobileTrend = window.innerWidth < 600;
-            const maxTrending = isMobileTrend ? 6 : 10;
-            const priority = gamesDB.filter(g => {
-                const tags = (g.categories||[]).map(c=>c.toLowerCase().trim());
-                return tags.includes('legendary') || tags.includes('hot') || tags.includes('new');
-            });
-            const rest = gamesDB.filter(g => !priority.includes(g));
-            const pool = [...priority, ...rest].slice(0, maxTrending);
-            grid.innerHTML = '';
-            pool.forEach((game, i) => {
-                const card = document.createElement('div');
-                card.className = 'trending-card';
-                card.onclick = () => viewGame(game.slug || game.id, 'info');
-                card.innerHTML = `
-                    <img src="${game.img}" alt="${game.title}" loading="lazy" decoding="async">
-                    <div class="tc-rank">#${i + 1}</div>
-                    <div class="tc-name">${game.title}</div>
-                `;
-                grid.appendChild(card);
-            });
-        }
+
 
         loadDatabase();
-
-        // Re-render trending after DB loads (hook into fetchFreshGames result)
-        const _origRenderGames = window.renderGames || null;
-        const _trendObserver = new MutationObserver(() => {
-            if (gamesDB.length > 0) { renderTrending(); _trendObserver.disconnect(); }
-        });
-        _trendObserver.observe(document.getElementById('gamesGrid'), { childList: true });
 
         /* ── Deep-link: ?game=GAME_ID opens modal automatically ── */
         (function handleGameDeepLink() {

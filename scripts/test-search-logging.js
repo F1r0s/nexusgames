@@ -11,21 +11,21 @@ async function testSearchLogging() {
     if (webAppUrl) {
         console.log(`🌐 Found Apps Script Web App URL: ${webAppUrl}`);
         try {
-            console.log('Sending POST request...');
-            const res = await axios.post(webAppUrl, JSON.stringify({ query, country }), {
-                headers: { 'Content-Type': 'text/plain' },
-                timeout: 10000,
-                maxRedirects: 5
-            });
-            console.log('✅ POST Response status:', res.status, res.data);
+            console.log('Sending GET request to Apps Script...');
+            const getUrl = `${webAppUrl}${webAppUrl.includes('?') ? '&' : '?'}query=${encodeURIComponent(query)}&country=${encodeURIComponent(country)}`;
+            const res = await axios.get(getUrl, { timeout: 10000, maxRedirects: 5 });
+            console.log('✅ GET Response status:', res.status, res.data);
         } catch (err) {
-            console.warn('⚠️ POST failed, trying GET fallback...', err.message);
+            console.warn('⚠️ GET failed, trying POST fallback...', err.message);
             try {
-                const getUrl = `${webAppUrl}${webAppUrl.includes('?') ? '&' : '?'}query=${encodeURIComponent(query)}&country=${encodeURIComponent(country)}`;
-                const res = await axios.get(getUrl, { timeout: 10000, maxRedirects: 5 });
-                console.log('✅ GET Response status:', res.status, res.data);
-            } catch (getErr) {
-                console.error('❌ GET fallback also failed:', getErr.message);
+                const res = await axios.post(webAppUrl, JSON.stringify({ query, country }), {
+                    headers: { 'Content-Type': 'text/plain' },
+                    timeout: 10000,
+                    maxRedirects: 5
+                });
+                console.log('✅ POST Response status:', res.status, res.data);
+            } catch (postErr) {
+                console.error('❌ POST fallback also failed:', postErr.message);
             }
         }
     } else {

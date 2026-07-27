@@ -560,19 +560,18 @@ async function logSearchToSheets(query, country) {
     const webAppUrl = process.env.SEARCH_LOG_WEBAPP_URL || process.env.SEARCH_TRACKING_WEBAPP_URL;
     if (webAppUrl) {
         try {
-            await axios.post(webAppUrl, JSON.stringify({ query, country }), {
+            const getUrl = `${webAppUrl}${webAppUrl.includes('?') ? '&' : '?'}query=${encodeURIComponent(query)}&country=${encodeURIComponent(country)}`;
+            await axios.get(getUrl, { timeout: 6000, maxRedirects: 5 });
+            console.log(`[SEARCH LOG] Logged search query "${query}" from ${country} via Google Apps Script Web App (GET).`);
+            return;
+        } catch (e) {
+            console.warn('[SEARCH LOG APPS SCRIPT GET FAILED, RETRYING POST]', e.message);
+            const res = await axios.post(webAppUrl, JSON.stringify({ query, country }), {
                 headers: { 'Content-Type': 'text/plain' },
                 timeout: 6000,
                 maxRedirects: 5
             });
-            console.log(`[SEARCH LOG] Logged search query "${query}" from ${country} via Google Apps Script Web App.`);
-            return;
-        } catch (e) {
-            console.warn('[SEARCH LOG APPS SCRIPT POST FAILED, RETRYING GET]', e.message);
-            // Fallback: send via GET parameter (Apps Script redirects POST sometimes)
-            const getUrl = `${webAppUrl}${webAppUrl.includes('?') ? '&' : '?'}query=${encodeURIComponent(query)}&country=${encodeURIComponent(country)}`;
-            await axios.get(getUrl, { timeout: 6000, maxRedirects: 5 });
-            console.log(`[SEARCH LOG] Logged search query "${query}" from ${country} via GET fallback.`);
+            console.log(`[SEARCH LOG] Logged search query "${query}" from ${country} via Google Apps Script Web App (POST).`);
             return;
         }
     }
