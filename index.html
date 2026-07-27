@@ -219,8 +219,40 @@
 <body>
 
     <!-- ═══ CLOUDFLARE TURNSTILE GATE ═══ -->
-    <div id="cfGate" style="position:fixed;inset:0;background:#080810;z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:15px;">
-        <div class="cf-turnstile" data-sitekey="0x4AAAAAAD_YSqduGwaxBcse" data-callback="onCFVerify" data-error-callback="onCFError" data-theme="dark"></div>
+    <div id="cfGate" style="position:fixed;inset:0;background:#080810;z-index:99999;display:flex;align-items:flex-start;justify-content:center;padding:70px 24px 30px;overflow-y:auto;">
+        <div style="max-width:720px;width:100%;text-align:left;">
+            <!-- Brand Logo -->
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:32px;">
+                <span style="font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.8rem;color:#fff;letter-spacing:2px;">MOD</span>
+                <span class="vault-svg-wrap" style="width:36px;height:36px;display:inline-block;">
+                    <svg viewBox="0 0 48 48" fill="none">
+                        <circle cx="24" cy="24" r="21" stroke="#FF6B00" stroke-width="2"/>
+                        <circle cx="24" cy="24" r="14" stroke="rgba(255,107,0,0.5)" stroke-width="1.5"/>
+                        <g class="vault-wheel">
+                            <rect x="22" y="5" width="4" height="6" rx="2" fill="#FF6B00"/>
+                            <rect x="22" y="37" width="4" height="6" rx="2" fill="#FF6B00"/>
+                            <rect x="5" y="22" width="6" height="4" rx="2" fill="#FF6B00"/>
+                            <rect x="37" y="22" width="6" height="4" rx="2" fill="#FF6B00"/>
+                        </g>
+                        <circle cx="24" cy="24" r="3" fill="#FF6B00"/>
+                    </svg>
+                </span>
+                <span style="font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.8rem;color:#FF6B00;letter-spacing:2px;">VAULT</span>
+            </div>
+
+            <!-- Heading -->
+            <h1 style="font-family:'Roboto',sans-serif;font-size:clamp(1.6rem,4vw,2.2rem);font-weight:500;color:#ffffff;margin:0 0 14px 0;line-height:1.2;">
+                Performing security verification
+            </h1>
+
+            <!-- Subtext -->
+            <p style="font-family:'Roboto',sans-serif;font-size:1.05rem;color:#999999;margin:0 0 32px 0;line-height:1.6;font-weight:400;">
+                This website uses a security service to protect against malicious bots. This page is displayed while the website verifies you are not a bot.
+            </p>
+
+            <!-- Native Turnstile Widget -->
+            <div class="cf-turnstile" data-sitekey="0x4AAAAAAD_YSqduGwaxBcse" data-callback="onCFVerify" data-error-callback="onCFError" data-theme="dark"></div>
+        </div>
     </div>
     <script>
         var isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
