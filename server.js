@@ -306,6 +306,22 @@ app.get('/best-games.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'best-games.html'));
 });
 
+app.get('/search', (req, res) => {
+    res.sendFile(path.join(__dirname, 'search.html'));
+});
+
+app.get('/search.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'search.html'));
+});
+
+app.get('/dmca', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dmca.html'));
+});
+
+app.get('/dmca.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dmca.html'));
+});
+
 // ═══ NEWS ROUTES ═══
 const NEWS_JSON_FILE = resolveDataFile('news.json');
 

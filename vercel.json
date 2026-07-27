@@ -5,7 +5,7 @@
       "src": "server.js",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": "games.json,news.json,fallback_games.csv,google-credentials.json"
+        "includeFiles": "games.json,news.json,fallback_games.csv,google-credentials.json,search.html,dmca.html"
       }
     }
   ],
