@@ -38,12 +38,20 @@ jobs:
       # 1. Sync database from user's Google Sheet into games.json & fallback_games.csv
       - name: Sync games.json from Google Sheets
         run: node generate-games-json.js
+        env:
+          GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+          GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
+          SPREADSHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
 
-      # 2. Check AN1 for fresh releases (safe 3-page scan, preserves Google Sheet)
+      # 2. Check AN1 for fresh releases & sync new games directly to Google Sheets
       - name: Run AN1 Scraper for Fresh Releases
         run: node auto-fetcher.js
         env:
           MAX_PAGES: "3"
+          WRITE_TO_GOOGLE_SHEETS: "true"
+          GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+          GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
+          SPREADSHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
 
       # 3. Generate updated sitemap.xml
       - name: Generate sitemap.xml

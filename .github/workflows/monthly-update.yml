@@ -25,9 +25,11 @@ jobs:
       - name: Fetch fresh games
         run: node auto-fetcher.js
         env:
-          # If your auto-fetcher needs any secrets, they should be mapped here
-          # GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
           NODE_ENV: production
+          WRITE_TO_GOOGLE_SHEETS: "true"
+          GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+          GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
+          SPREADSHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
 
       - name: Update Month Texts
         run: node scripts/update-month.js

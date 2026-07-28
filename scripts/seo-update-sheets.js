@@ -116,8 +116,8 @@ async function withRetry(fn, retries = 5, initialDelay = 2000) {
 
 // ── Main ───────────────────────────────────────────────────────────
 async function main() {
-    if (process.env.WRITE_TO_GOOGLE_SHEETS !== 'true') {
-        console.log('🔒 Google Sheets write mode is disabled (WRITE_TO_GOOGLE_SHEETS !== "true"). Preserving existing Google Sheet database.');
+    if (process.env.WRITE_TO_GOOGLE_SHEETS === 'false') {
+        console.log('🔒 Google Sheets write mode is explicitly disabled (WRITE_TO_GOOGLE_SHEETS === "false"). Preserving existing Google Sheet database.');
         return;
     }
 

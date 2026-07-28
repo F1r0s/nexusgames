@@ -187,10 +187,8 @@ async function scrapeAllGames() {
             games.push({
                 'Module Name':  title,
                 'Version':      d.version,
-                'Build Data':   d.buildData,
                 'Size':         d.size,
-                'OS':           d.os,
-                'Architecture': d.architecture,
+                'OS':           'Android',
                 'Tags':         d.tags,
                 'Visual Asset': img,
                 'Access Link':  link,
@@ -262,8 +260,8 @@ const dedupKey = (name, version) =>
     `${String(name).toLowerCase().trim()}|${String(version).toLowerCase().trim()}`;
 
 async function pushToSheets(games) {
-    if (process.env.WRITE_TO_GOOGLE_SHEETS !== 'true') {
-        console.log('\n🔒 Google Sheets write mode is disabled (WRITE_TO_GOOGLE_SHEETS !== "true"). Preserving existing Google Sheet database.');
+    if (process.env.WRITE_TO_GOOGLE_SHEETS === 'false') {
+        console.log('\n🔒 Google Sheets write mode is explicitly disabled (WRITE_TO_GOOGLE_SHEETS === "false"). Preserving existing Google Sheet database.');
         return;
     }
 
@@ -272,19 +270,24 @@ async function pushToSheets(games) {
         return;
     }
 
+    // Check credentials before proceeding
+    const hasEnvCreds = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY;
+    if (!hasEnvCreds && !localCreds) {
+        console.warn('\n⚠️ No Google Sheets credentials available (missing env vars & google-credentials.json). Skipping Google Sheets write.');
+        return;
+    }
+
     console.log('\nConnecting to Google Sheets…');
     const doc = new GoogleSpreadsheet(SPREADSHEET_ID);
 
     // Auth: env vars (GitHub Actions) → local JSON file
-    if (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY) {
+    if (hasEnvCreds) {
         await doc.useServiceAccountAuth({
             client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
             private_key:  process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
         });
     } else if (localCreds) {
         await doc.useServiceAccountAuth(localCreds);
-    } else {
-        throw new Error('No Google Sheets credentials available!');
     }
 
     await withRetry(() => doc.loadInfo());
@@ -294,8 +297,8 @@ async function pushToSheets(games) {
     const headerRow = await withRetry(() => sheet.headerValues);
     if (!headerRow || !headerRow.length) {
         await withRetry(() => sheet.setHeaderRow([
-            'Module Name', 'Version', 'Build Data', 'Size',
-            'OS', 'Architecture', 'Tags', 'Visual Asset', 'Access Link', 'Data Log'
+            'Module Name', 'Version', 'Size', 'OS',
+            'Tags', 'Visual Asset', 'Access Link', 'Data Log'
         ]));
         console.log('Header row created.');
     }
