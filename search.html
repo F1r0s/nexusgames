@@ -142,7 +142,7 @@
             if(query) { document.getElementById('pageTitle').textContent='"'+query+'" -- Mod Vault'; document.getElementById('searchBarInput').value=query; }
             try { var c=localStorage.getItem('gamesDB_cache_v3'); if(c){ var p=JSON.parse(c); if(Array.isArray(p)&&p.length>0){gamesDB=p; renderResults(query);} } } catch(e){}
             try {
-                var res = await fetch('/api/games?t='+Date.now());
+                var res = await fetch('/api/games');
                 var data = await res.json();
                 if(Array.isArray(data)&&data.length>0){ gamesDB=data; localStorage.setItem('gamesDB_cache_v3',JSON.stringify(data)); renderResults(query); }
             } catch(e) {

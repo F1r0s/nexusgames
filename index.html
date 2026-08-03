@@ -256,29 +256,35 @@
     </div>
     <script>
         var isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-        if (sessionStorage.getItem('cf_verified') || isLocal) {
+        // Skip gate if already verified previously or running locally
+        if (localStorage.getItem('cf_verified') || sessionStorage.getItem('cf_verified') || isLocal) {
             var g = document.getElementById('cfGate');
             if (g) g.style.display = 'none';
         }
-        function onCFVerify() {
+        function onCFVerify(token) {
+            localStorage.setItem('cf_verified', '1');
             sessionStorage.setItem('cf_verified', '1');
             dismissGate();
         }
-        function onCFError() {
+        function onCFError(err) {
+            console.warn('[Turnstile] Error or domain mismatch:', err);
+            dismissGate();
+        }
+        function onCFExpired() {
             dismissGate();
         }
         function dismissGate() {
             var g = document.getElementById('cfGate');
             if (!g) return;
-            g.style.transition = 'opacity 0.35s';
+            g.style.transition = 'opacity 0.3s ease';
             g.style.opacity = '0';
-            setTimeout(function(){ g.style.display = 'none'; }, 360);
+            setTimeout(function(){ g.style.display = 'none'; }, 300);
         }
-        // Safety fallback: if widget stalls or domain mismatch occurs, auto-dismiss after 4 seconds
+        // Fail-safe: Never block visitors for more than 1.5 seconds under any circumstances
         setTimeout(function(){
             var g = document.getElementById('cfGate');
             if (g && g.style.display !== 'none') dismissGate();
-        }, 4000);
+        }, 1500);
     </script>
 
     <header>
@@ -645,7 +651,7 @@
                 container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px;"><div class="spinner"></div><p style="color:var(--text-muted); margin-top:10px;">ESTABLISHING UPLINK TO GAME DATABASE...</p></div>';
             }
             try {
-                const response = await fetch('/api/games?t=' + Date.now());
+                const response = await fetch('/api/games');
                 if (!response.ok) throw new Error("Server responded with " + response.status);
                 const data = await response.json();
                 if (data && Array.isArray(data) && data.length > 0) {

@@ -698,7 +698,7 @@ let gamesDB = [];
 async function loadGames() {
     try {
         // Try fetching from API first
-        const res = await fetch('/api/games?t=' + Date.now());
+        const res = await fetch('/api/games');
         if (!res.ok) throw new Error('API error');
         gamesDB = await res.json();
     } catch (e) {
