@@ -530,22 +530,92 @@ app.get('/api/news', (req, res) => {
     res.json([]);
 });
 
+const countryCodeToNameMap = {
+    'US': 'United States', 'GB': 'United Kingdom', 'CA': 'Canada', 'AU': 'Australia',
+    'DE': 'Germany', 'FR': 'France', 'IN': 'India', 'BR': 'Brazil', 'DZ': 'Algeria',
+    'MA': 'Morocco', 'TN': 'Tunisia', 'EG': 'Egypt', 'SA': 'Saudi Arabia', 'AE': 'United Arab Emirates',
+    'ES': 'Spain', 'IT': 'Italy', 'RU': 'Russia', 'NL': 'Netherlands', 'TR': 'Turkey',
+    'ID': 'Indonesia', 'MX': 'Mexico', 'AR': 'Argentina', 'PK': 'Pakistan', 'BD': 'Bangladesh',
+    'PH': 'Philippines', 'VN': 'Vietnam', 'TH': 'Thailand', 'MY': 'Malaysia', 'ZA': 'South Africa',
+    'NG': 'Nigeria', 'KE': 'Kenya', 'JP': 'Japan', 'KR': 'South Korea', 'CN': 'China',
+    'SE': 'Sweden', 'NO': 'Norway', 'FI': 'Finland', 'DK': 'Denmark', 'PL': 'Poland',
+    'UA': 'Ukraine', 'RO': 'Romania', 'GR': 'Greece', 'PT': 'Portugal', 'BE': 'Belgium',
+    'AT': 'Austria', 'CH': 'Switzerland', 'CL': 'Chile', 'CO': 'Colombia', 'PE': 'Peru'
+};
+
+function getCountryDetails(rawInput) {
+    if (!rawInput || rawInput === 'Unknown' || rawInput === 'XX') {
+        return { code: 'Unknown', name: 'Unknown' };
+    }
+    const clean = String(rawInput).trim();
+    const upper = clean.toUpperCase();
+
+    // 1. Direct 2-letter ISO code check
+    if (countryCodeToNameMap[upper]) {
+        return { code: upper, name: countryCodeToNameMap[upper] };
+    }
+
+    // 2. Full country name check (e.g. "United States" -> "US")
+    const foundCode = Object.keys(countryCodeToNameMap).find(k => countryCodeToNameMap[k].toLowerCase() === clean.toLowerCase());
+    if (foundCode) {
+        return { code: foundCode, name: countryCodeToNameMap[foundCode] };
+    }
+
+    // 3. Intl.DisplayNames lookup
+    try {
+        const displayNames = new Intl.DisplayNames(['en'], { type: 'region' });
+        const name = displayNames.of(upper);
+        if (name && name !== upper) {
+            return { code: upper, name: name };
+        }
+    } catch (e) {}
+
+    return { code: upper.length === 2 ? upper : 'Unknown', name: clean };
+}
+
+async function detectCountry(req) {
+    let raw = req.headers['x-vercel-ip-country']
+        || req.headers['cf-ipcountry']
+        || req.headers['x-country-code']
+        || req.headers['x-appengine-country']
+        || (req.body && (req.body.country || req.body.countryCode));
+
+    if (raw && raw !== 'Unknown' && raw !== 'XX') {
+        return getCountryDetails(raw);
+    }
+
+    const rawIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+    const ip = rawIp.split(',')[0].trim();
+    if (ip && ip !== '127.0.0.1' && ip !== '::1' && !ip.startsWith('::ffff:127.')) {
+        try {
+            const geoRes = await axios.get(`http://ip-api.com/json/${ip}?fields=status,country,countryCode`, { timeout: 2500 });
+            if (geoRes.data && geoRes.data.status === 'success') {
+                const code = geoRes.data.countryCode || 'Unknown';
+                const name = geoRes.data.country || getCountryDetails(code).name;
+                return { code, name };
+            }
+        } catch (e) {}
+    }
+
+    return { code: 'Unknown', name: 'Unknown' };
+}
+
 // POST /api/log-search — tracks search terms and user country in Google Sheets
 app.post('/api/log-search', async (req, res) => {
-    const { query } = req.body || {};
+    let body = req.body || {};
+    if (typeof body === 'string') {
+        try { body = JSON.parse(body); } catch (e) {}
+    }
+    const query = body.query;
     if (!query || typeof query !== 'string' || query.trim() === '') {
         return res.status(400).json({ error: 'Query is required' });
     }
 
-    // Detect user country from headers (e.g. Vercel, Cloudflare, or local header)
-    const country = req.headers['x-vercel-ip-country']
-        || req.headers['cf-ipcountry']
-        || req.headers['x-country-code']
-        || 'Unknown';
+    const { code: countryCode, name: countryName } = await detectCountry(req);
 
     try {
-        await logSearchToSheets(query.trim(), country);
-        res.json({ success: true, message: 'Search query logged in Google Sheets' });
+        await logSearchToSheets(query.trim(), countryCode, countryName);
+        res.json({ success: true, message: 'Search query logged in Google Sheets', country: countryCode, countryName: countryName });
     } catch (err) {
         console.error('[SEARCH LOG ERROR]', err.message);
         res.status(500).json({ success: false, error: err.message });
@@ -572,67 +642,67 @@ async function withRetry(fn, retries = 5, initialDelay = 2000) {
     }
 }
 
-async function logSearchToSheets(query, country) {
+async function logSearchToSheets(query, countryCode, countryName) {
+    let sheetLogged = false;
+
+    // 1. Direct Google Sheets Service Account write (instant & 100% reliable)
+    try {
+        const spreadsheetId = process.env.SEARCH_TRACKING_SPREADSHEET_ID || '1Yqyi32SFUBUhT1xGJMseAv8q5ygtqhpREA7yz6ktlb8';
+        const doc = new GoogleSpreadsheet(spreadsheetId);
+
+        const creds = (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY) ? {
+            client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+            private_key:  process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
+        } : loadGoogleCreds();
+
+        if (creds) {
+            await doc.useServiceAccountAuth(creds);
+            await withRetry(() => doc.loadInfo());
+
+            let sheet = doc.sheetsByTitle['Searches'] || doc.sheetsByIndex[0];
+
+            try {
+                await withRetry(() => sheet.loadHeaderRow());
+            } catch (e) {
+                await withRetry(() => sheet.setHeaderRow(['Timestamp', 'Search Query', 'Country']));
+            }
+
+            const timestamp = new Date().toLocaleString('en-US', { timeZone: 'UTC' }) + ' UTC';
+            await withRetry(() => sheet.addRow({
+                'Timestamp': timestamp,
+                'Search Query': query,
+                'Country': countryCode
+            }));
+            console.log(`[SEARCH LOG] Logged search query "${query}" from ${countryName} (${countryCode}) directly to Google Sheets.`);
+            sheetLogged = true;
+        }
+    } catch (err) {
+        console.error('[SEARCH LOG SPREADSHEET DIRECT WRITE ERROR]', err.message);
+    }
+
+    // 2. Apps Script Web App backup sync
     const webAppUrl = process.env.SEARCH_LOG_WEBAPP_URL || process.env.SEARCH_TRACKING_WEBAPP_URL;
     if (webAppUrl) {
-        try {
-            const getUrl = `${webAppUrl}${webAppUrl.includes('?') ? '&' : '?'}query=${encodeURIComponent(query)}&country=${encodeURIComponent(country)}`;
-            await axios.get(getUrl, { timeout: 6000, maxRedirects: 5 });
-            console.log(`[SEARCH LOG] Logged search query "${query}" from ${country} via Google Apps Script Web App (GET).`);
-            return;
-        } catch (e) {
-            console.warn('[SEARCH LOG APPS SCRIPT GET FAILED, RETRYING POST]', e.message);
-            const res = await axios.post(webAppUrl, JSON.stringify({ query, country }), {
-                headers: { 'Content-Type': 'text/plain' },
-                timeout: 6000,
-                maxRedirects: 5
-            });
-            console.log(`[SEARCH LOG] Logged search query "${query}" from ${country} via Google Apps Script Web App (POST).`);
-            return;
-        }
+        axios.post(webAppUrl, JSON.stringify({
+            query: query,
+            country: countryCode,
+            countryName: countryName,
+            country_name: countryName,
+            countryDisplay: `${countryName} (${countryCode})`
+        }), {
+            headers: { 'Content-Type': 'text/plain' },
+            timeout: 5000,
+            maxRedirects: 5
+        }).then(() => {
+            console.log(`[SEARCH LOG] Logged query "${query}" from ${countryName} (${countryCode}) via Apps Script POST.`);
+        }).catch(e => {
+            console.warn('[SEARCH LOG APPS SCRIPT POST FAILED]', e.message);
+        });
     }
 
-    const spreadsheetId = process.env.SEARCH_TRACKING_SPREADSHEET_ID || '1Yqyi32SFUBUhT1xGJMseAv8q5ygtqhpREA7yz6ktlb8';
-    const doc = new GoogleSpreadsheet(spreadsheetId);
-
-    const creds = (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY) ? {
-        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-        private_key:  process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
-    } : loadGoogleCreds();
-
-    if (creds) {
-        await doc.useServiceAccountAuth(creds);
-    } else {
-        throw new Error('Google credentials not available for search logging. Please set SEARCH_LOG_WEBAPP_URL or provide service account credentials.');
+    if (!sheetLogged && !webAppUrl) {
+        throw new Error('No valid Google Sheets credentials or WebApp URL found for logging search query.');
     }
-
-    await withRetry(() => doc.loadInfo());
-
-    // Use sheet named "Searches", fallback to first sheet if it doesn't exist
-    let sheet = doc.sheetsByTitle['Searches'];
-    if (!sheet) {
-        sheet = doc.sheetsByIndex[0];
-    }
-
-    // Initialize headers if sheet is empty
-    try {
-        await withRetry(() => sheet.loadHeaderRow());
-    } catch (e) {
-        await withRetry(() => sheet.setHeaderRow(['Timestamp', 'Search Query', 'Country']));
-    }
-
-    if (!sheet.headerValues || sheet.headerValues.length === 0) {
-        await withRetry(() => sheet.setHeaderRow(['Timestamp', 'Search Query', 'Country']));
-    }
-
-    // Format local timestamp
-    const timestamp = new Date().toLocaleString('en-US', { timeZone: 'UTC' }) + ' UTC';
-    await withRetry(() => sheet.addRow({
-        'Timestamp': timestamp,
-        'Search Query': query,
-        'Country': country
-    }));
-    console.log(`[SEARCH LOG] Logged search query "${query}" from ${country} to Google Sheets.`);
 }
 
 // Background refresh from Google Sheets (only for manual sync)

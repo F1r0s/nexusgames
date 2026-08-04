@@ -1,42 +1,31 @@
 require('dotenv').config();
-const axios = require('axios');
+const { GoogleSpreadsheet } = require('google-spreadsheet');
+const creds = require('../google-credentials.json');
 
 async function testSearchLogging() {
-    const webAppUrl = process.env.SEARCH_LOG_WEBAPP_URL || process.env.SEARCH_TRACKING_WEBAPP_URL;
-    const query = 'Test Search ' + new Date().toLocaleTimeString();
-    const country = 'US';
+    const spreadsheetId = process.env.SEARCH_TRACKING_SPREADSHEET_ID || '1Yqyi32SFUBUhT1xGJMseAv8q5ygtqhpREA7yz6ktlb8';
+    const query = 'FC 24 Mobile ' + new Date().toLocaleTimeString();
+    const countryCode = 'FR';
+    const countryName = 'France';
 
-    console.log('🔍 Testing Search Logging...');
+    console.log('🔍 Testing Direct Google Sheets Logging with Country & Abbreviation...');
+    try {
+        const doc = new GoogleSpreadsheet(spreadsheetId);
+        await doc.useServiceAccountAuth(creds);
+        await doc.loadInfo();
 
-    if (webAppUrl) {
-        console.log(`🌐 Found Apps Script Web App URL: ${webAppUrl}`);
-        try {
-            console.log('Sending GET request to Apps Script...');
-            const getUrl = `${webAppUrl}${webAppUrl.includes('?') ? '&' : '?'}query=${encodeURIComponent(query)}&country=${encodeURIComponent(country)}`;
-            const res = await axios.get(getUrl, { timeout: 10000, maxRedirects: 5 });
-            console.log('✅ GET Response status:', res.status, res.data);
-        } catch (err) {
-            console.warn('⚠️ GET failed, trying POST fallback...', err.message);
-            try {
-                const res = await axios.post(webAppUrl, JSON.stringify({ query, country }), {
-                    headers: { 'Content-Type': 'text/plain' },
-                    timeout: 10000,
-                    maxRedirects: 5
-                });
-                console.log('✅ POST Response status:', res.status, res.data);
-            } catch (postErr) {
-                console.error('❌ POST fallback also failed:', postErr.message);
-            }
-        }
-    } else {
-        console.log('⚠️ No SEARCH_LOG_WEBAPP_URL found in .env.');
-        console.log('Testing local backend endpoint http://localhost:3000/api/log-search ...');
-        try {
-            const res = await axios.post('http://localhost:3000/api/log-search', { query }, { timeout: 5000 });
-            console.log('✅ Server response:', res.data);
-        } catch (err) {
-            console.error('❌ Local server test failed:', err.response ? err.response.data : err.message);
-        }
+        const sheet = doc.sheetsByTitle['Searches'] || doc.sheetsByIndex[0];
+        const timestamp = new Date().toLocaleString('en-US', { timeZone: 'UTC' }) + ' UTC';
+
+        await sheet.addRow({
+            'Timestamp': timestamp,
+            'Search Query': query,
+            'Country': countryCode,
+            'Country Name': countryName
+        });
+        console.log(`✅ Successfully added row: "${query}" | Country: ${countryCode} | Name: ${countryName}`);
+    } catch (err) {
+        console.error('❌ Direct sheet logging failed:', err.message);
     }
 }
 

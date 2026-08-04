@@ -807,14 +807,21 @@
         }
 
         window.executeSearch = function() {
-            const query = searchInput.value.trim();
+            const query = searchInput ? searchInput.value.trim() : '';
             if (!query) return;
 
-            // Log the search query (fire-and-forget)
+            // Log the search query with keepalive & sendBeacon fallback so navigation doesn't cancel the request
+            const payload = JSON.stringify({ query: query });
+            if (navigator.sendBeacon) {
+                try {
+                    navigator.sendBeacon('/api/log-search', new Blob([payload], { type: 'application/json' }));
+                } catch(e) {}
+            }
             fetch('/api/log-search', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: query })
+                body: payload,
+                keepalive: true
             }).catch(err => console.error('Failed to log search:', err));
 
             // Navigate to dedicated search results page

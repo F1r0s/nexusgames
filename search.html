@@ -98,12 +98,17 @@
     </div>
     <script>
         var gamesDB = [];
+        var _lastLogged = '';
         function getQueryParam() { return (new URLSearchParams(window.location.search).get('q') || '').trim(); }
         function toSlug(t) { if(!t)return 'game'; return t.toLowerCase().replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-').replace(/-+/g,'-'); }
         function doSearch() {
             var q = document.getElementById('searchBarInput').value.trim();
             if(!q) return;
-            fetch('/api/log-search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})}).catch(function(){});
+            var payload = JSON.stringify({query:q});
+            if(navigator.sendBeacon) {
+                try { navigator.sendBeacon('/api/log-search', new Blob([payload], {type:'application/json'})); } catch(e){}
+            }
+            fetch('/api/log-search',{method:'POST',headers:{'Content-Type':'application/json'},body:payload,keepalive:true}).catch(function(){});
             window.location.href = '/search.html?q=' + encodeURIComponent(q);
         }
         function buildCard(game) {
@@ -139,7 +144,12 @@
         }
         async function init() {
             var query = getQueryParam();
-            if(query) { document.getElementById('pageTitle').textContent='"'+query+'" -- Mod Vault'; document.getElementById('searchBarInput').value=query; }
+            if(query) {
+                document.getElementById('pageTitle').textContent='"'+query+'" -- Mod Vault';
+                document.getElementById('searchBarInput').value=query;
+                _lastLogged = query;
+                fetch('/api/log-search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:query}),keepalive:true}).catch(function(){});
+            }
             try { var c=localStorage.getItem('gamesDB_cache_v3'); if(c){ var p=JSON.parse(c); if(Array.isArray(p)&&p.length>0){gamesDB=p; renderResults(query);} } } catch(e){}
             try {
                 var res = await fetch('/api/games');
@@ -151,7 +161,17 @@
         }
         document.getElementById('searchBarInput').addEventListener('keydown',function(e){if(e.key==='Enter')doSearch();});
         var _deb=null;
-        document.getElementById('searchBarInput').addEventListener('input',function(){ clearTimeout(_deb); var v=this.value.trim(); _deb=setTimeout(function(){if(gamesDB.length>0)renderResults(v);},280); });
+        document.getElementById('searchBarInput').addEventListener('input',function(){
+            clearTimeout(_deb);
+            var v=this.value.trim();
+            _deb=setTimeout(function(){
+                if(gamesDB.length>0) renderResults(v);
+                if(v.length>=2 && v!==_lastLogged) {
+                    _lastLogged=v;
+                    fetch('/api/log-search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:v}),keepalive:true}).catch(function(){});
+                }
+            },600);
+        });
         init();
     </script>
 </body>
