@@ -600,21 +600,41 @@ async function detectCountry(req) {
     return { code: 'Unknown', name: 'Unknown' };
 }
 
+const recentSearchesCache = new Map();
+
 // POST /api/log-search — tracks search terms and user country in Google Sheets
 app.post('/api/log-search', async (req, res) => {
     let body = req.body || {};
     if (typeof body === 'string') {
         try { body = JSON.parse(body); } catch (e) {}
     }
-    const query = body.query;
-    if (!query || typeof query !== 'string' || query.trim() === '') {
+    const rawQuery = body.query;
+    if (!rawQuery || typeof rawQuery !== 'string' || rawQuery.trim() === '') {
         return res.status(400).json({ error: 'Query is required' });
+    }
+
+    const query = rawQuery.trim();
+    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+    const cacheKey = `${clientIp}:${query.toLowerCase()}`;
+    const now = Date.now();
+
+    // Deduplicate duplicate requests within 10 seconds from the same IP
+    if (recentSearchesCache.has(cacheKey) && (now - recentSearchesCache.get(cacheKey)) < 10000) {
+        return res.json({ success: true, message: 'Search query already logged recently' });
+    }
+    recentSearchesCache.set(cacheKey, now);
+
+    // Clean old cache entries
+    if (recentSearchesCache.size > 1000) {
+        for (const [k, v] of recentSearchesCache.entries()) {
+            if (now - v > 30000) recentSearchesCache.delete(k);
+        }
     }
 
     const { code: countryCode, name: countryName } = await detectCountry(req);
 
     try {
-        await logSearchToSheets(query.trim(), countryCode, countryName);
+        await logSearchToSheets(query, countryCode, countryName);
         res.json({ success: true, message: 'Search query logged in Google Sheets', country: countryCode, countryName: countryName });
     } catch (err) {
         console.error('[SEARCH LOG ERROR]', err.message);

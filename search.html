@@ -104,11 +104,6 @@
         function doSearch() {
             var q = document.getElementById('searchBarInput').value.trim();
             if(!q) return;
-            var payload = JSON.stringify({query:q});
-            if(navigator.sendBeacon) {
-                try { navigator.sendBeacon('/api/log-search', new Blob([payload], {type:'application/json'})); } catch(e){}
-            }
-            fetch('/api/log-search',{method:'POST',headers:{'Content-Type':'application/json'},body:payload,keepalive:true}).catch(function(){});
             window.location.href = '/search.html?q=' + encodeURIComponent(q);
         }
         function buildCard(game) {

@@ -810,21 +810,7 @@
             const query = searchInput ? searchInput.value.trim() : '';
             if (!query) return;
 
-            // Log the search query with keepalive & sendBeacon fallback so navigation doesn't cancel the request
-            const payload = JSON.stringify({ query: query });
-            if (navigator.sendBeacon) {
-                try {
-                    navigator.sendBeacon('/api/log-search', new Blob([payload], { type: 'application/json' }));
-                } catch(e) {}
-            }
-            fetch('/api/log-search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: payload,
-                keepalive: true
-            }).catch(err => console.error('Failed to log search:', err));
-
-            // Navigate to dedicated search results page
+            // Navigate to dedicated search results page (search.html init() handles logging)
             window.location.href = '/search.html?q=' + encodeURIComponent(query);
         };
 
