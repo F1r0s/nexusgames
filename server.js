@@ -665,7 +665,7 @@ async function withRetry(fn, retries = 5, initialDelay = 2000) {
 async function logSearchToSheets(query, countryCode, countryName) {
     let sheetLogged = false;
 
-    // 1. Direct Google Sheets Service Account write (instant & 100% reliable)
+    // 1. Direct Google Sheets Service Account write (Insert at Row 2 — top of sheet)
     try {
         const spreadsheetId = process.env.SEARCH_TRACKING_SPREADSHEET_ID || '1Yqyi32SFUBUhT1xGJMseAv8q5ygtqhpREA7yz6ktlb8';
         const doc = new GoogleSpreadsheet(spreadsheetId);
@@ -680,24 +680,49 @@ async function logSearchToSheets(query, countryCode, countryName) {
             await withRetry(() => doc.loadInfo());
 
             let sheet = doc.sheetsByTitle['Searches'] || doc.sheetsByIndex[0];
-
-            try {
-                await withRetry(() => sheet.loadHeaderRow());
-            } catch (e) {
-                await withRetry(() => sheet.setHeaderRow(['Timestamp', 'Search Query', 'Country']));
-            }
-
             const timestamp = new Date().toLocaleString('en-US', { timeZone: 'UTC' }) + ' UTC';
-            await withRetry(() => sheet.addRow({
-                'Timestamp': timestamp,
-                'Search Query': query,
-                'Country': countryCode
+
+            // Insert new search entry starting at Row 159 (index 158) in the table
+            await withRetry(() => doc.axios.post(`https://sheets.googleapis.com/v4/spreadsheets/${doc.spreadsheetId}:batchUpdate`, {
+                requests: [
+                    {
+                        insertDimension: {
+                            range: {
+                                sheetId: sheet.sheetId,
+                                dimension: 'ROWS',
+                                startIndex: 158,
+                                endIndex: 159
+                            },
+                            inheritFromBefore: true
+                        }
+                    },
+                    {
+                        updateCells: {
+                            range: {
+                                sheetId: sheet.sheetId,
+                                startRowIndex: 158,
+                                endRowIndex: 159,
+                                startColumnIndex: 0,
+                                endColumnIndex: 3
+                            },
+                            rows: [{
+                                values: [
+                                    { userEnteredValue: { stringValue: timestamp } },
+                                    { userEnteredValue: { stringValue: query } },
+                                    { userEnteredValue: { stringValue: countryCode } }
+                                ]
+                            }],
+                            fields: 'userEnteredValue'
+                        }
+                    }
+                ]
             }));
-            console.log(`[SEARCH LOG] Logged search query "${query}" from ${countryName} (${countryCode}) directly to Google Sheets.`);
+
+            console.log(`[SEARCH LOG] Inserted search query "${query}" from ${countryName} (${countryCode}) at Row 159 in Google Sheet.`);
             sheetLogged = true;
         }
     } catch (err) {
-        console.error('[SEARCH LOG SPREADSHEET DIRECT WRITE ERROR]', err.message);
+        console.error('[SEARCH LOG SPREADSHEET TOP INSERT ERROR]', err.message);
     }
 
     // 2. Apps Script Web App backup sync
@@ -713,8 +738,6 @@ async function logSearchToSheets(query, countryCode, countryName) {
             headers: { 'Content-Type': 'text/plain' },
             timeout: 5000,
             maxRedirects: 5
-        }).then(() => {
-            console.log(`[SEARCH LOG] Logged query "${query}" from ${countryName} (${countryCode}) via Apps Script POST.`);
         }).catch(e => {
             console.warn('[SEARCH LOG APPS SCRIPT POST FAILED]', e.message);
         });
