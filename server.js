@@ -682,65 +682,42 @@ async function logSearchToSheets(query, countryCode, countryName) {
             let sheet = doc.sheetsByTitle['Searches'] || doc.sheetsByIndex[0];
             const timestamp = new Date().toLocaleString('en-US', { timeZone: 'UTC' }) + ' UTC';
 
-            // Insert new search entry starting at Row 159 (index 158) in the table
-            await withRetry(() => doc.axios.post(`https://sheets.googleapis.com/v4/spreadsheets/${doc.spreadsheetId}:batchUpdate`, {
-                requests: [
-                    {
-                        insertDimension: {
-                            range: {
-                                sheetId: sheet.sheetId,
-                                dimension: 'ROWS',
-                                startIndex: 158,
-                                endIndex: 159
-                            },
-                            inheritFromBefore: true
-                        }
-                    },
-                    {
-                        updateCells: {
-                            range: {
-                                sheetId: sheet.sheetId,
-                                startRowIndex: 158,
-                                endRowIndex: 159,
-                                startColumnIndex: 0,
-                                endColumnIndex: 3
-                            },
-                            rows: [{
-                                values: [
-                                    { userEnteredValue: { stringValue: timestamp } },
-                                    { userEnteredValue: { stringValue: query } },
-                                    { userEnteredValue: { stringValue: countryCode } }
-                                ]
-                            }],
-                            fields: 'userEnteredValue'
-                        }
-                    }
+            const appendUrl = `https://sheets.googleapis.com/v4/spreadsheets/${doc.spreadsheetId}/values/${encodeURIComponent(sheet.title)}!A:D:append?valueInputOption=USER_ENTERED`;
+            await withRetry(() => doc.axios.post(appendUrl, {
+                values: [
+                    [timestamp, query, countryCode, countryName]
                 ]
             }));
 
-            console.log(`[SEARCH LOG] Inserted search query "${query}" from ${countryName} (${countryCode}) at Row 159 in Google Sheet.`);
+            console.log(`[SEARCH LOG] Logged search query "${query}" from ${countryName} (${countryCode}) to Google Sheets next row.`);
             sheetLogged = true;
         }
     } catch (err) {
         console.error('[SEARCH LOG SPREADSHEET TOP INSERT ERROR]', err.message);
     }
 
-    // 2. Apps Script Web App backup sync
-    const webAppUrl = process.env.SEARCH_LOG_WEBAPP_URL || process.env.SEARCH_TRACKING_WEBAPP_URL;
-    if (webAppUrl) {
-        axios.post(webAppUrl, JSON.stringify({
-            query: query,
-            country: countryCode,
-            countryName: countryName,
-            country_name: countryName,
-            countryDisplay: `${countryName} (${countryCode})`
-        }), {
-            headers: { 'Content-Type': 'text/plain' },
-            timeout: 5000,
-            maxRedirects: 5
-        }).catch(e => {
-            console.warn('[SEARCH LOG APPS SCRIPT POST FAILED]', e.message);
-        });
+    // 2. Apps Script Web App backup sync (only if direct service account write was not available)
+    if (!sheetLogged) {
+        const webAppUrl = process.env.SEARCH_LOG_WEBAPP_URL || process.env.SEARCH_TRACKING_WEBAPP_URL;
+        if (webAppUrl) {
+            try {
+                await axios.post(webAppUrl, JSON.stringify({
+                    query: query,
+                    country: countryCode,
+                    countryName: countryName,
+                    country_name: countryName,
+                    countryDisplay: `${countryName} (${countryCode})`
+                }), {
+                    headers: { 'Content-Type': 'text/plain' },
+                    timeout: 5000,
+                    maxRedirects: 5
+                });
+                console.log(`[SEARCH LOG] Logged query "${query}" via Apps Script backup.`);
+                sheetLogged = true;
+            } catch (e) {
+                console.warn('[SEARCH LOG APPS SCRIPT POST FAILED]', e.message);
+            }
+        }
     }
 
     if (!sheetLogged && !webAppUrl) {
